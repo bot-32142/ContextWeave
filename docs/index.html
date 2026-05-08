@@ -4,10 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Context-Aware Translation Documentation</title>
-    <meta
-      name="description"
-      content="Advanced documentation for Context-Aware Translation features, workflows, glossary summaries, previous-context injection, CLI automation, and format preservation."
-    />
+      <meta
+        name="description"
+        content="Advanced documentation for Context-Aware Translation features, glossary summaries, previous-context injection, CLI automation, and format preservation."
+      />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -15,12 +15,17 @@
       <nav class="nav" aria-label="Main navigation">
         <a class="brand" href="#top">CAT Docs</a>
         <div class="nav-links">
-          <a href="#features-en">Features</a>
-          <a href="#workflow-en">Workflow</a>
-          <a href="#advanced-en">Advanced</a>
-          <a href="#cli-en">CLI</a>
-          <a href="#features-zh">中文</a>
-          <a href="#hosting">Hosting</a>
+          <a href="#features-en" data-section-link="features">Features</a>
+          <a href="#context-en" data-section-link="context">Context</a>
+          <a href="#advanced-en" data-section-link="advanced">Advanced</a>
+          <a href="#cli-en" data-section-link="cli">CLI</a>
+          <label class="language-picker">
+            <span id="language-label">Language</span>
+            <select id="language-select" aria-label="Documentation language">
+              <option value="en">English</option>
+              <option value="zh">中文</option>
+            </select>
+          </label>
         </div>
       </nav>
     </header>
@@ -29,28 +34,24 @@
       <section class="hero section-shell">
         <div>
           <p class="eyebrow">Context-Aware Translation</p>
-          <h1>Advanced Usage and Feature Guide</h1>
-          <p class="hero-copy">
-            A practical guide to CAT's long-document workflow, glossary memory,
+          <h1 id="hero-title">Advanced Usage and Feature Guide</h1>
+          <p class="hero-copy" id="hero-copy">
+            A practical guide to CAT's long-document translation features, glossary memory,
             previous-context injection, format preservation guarantees, OCR
             workflows, manga translation, CLI automation, troubleshooting, and
             cost-aware model routing.
           </p>
-          <div class="hero-actions" aria-label="Language shortcuts">
-            <a class="button primary" href="#features-en">Read in English</a>
-            <a class="button secondary" href="#features-zh">阅读中文文档</a>
-          </div>
         </div>
-        <aside class="hero-card" aria-label="GitHub Pages note">
-          <h2>Free Web Hosting</h2>
-          <p>
-            This page is a static documentation site for GitHub Pages. GitHub can
-            host it directly from the repository's <code>docs/</code> folder.
+        <aside class="hero-card" aria-label="Language selection note">
+          <h2 id="hero-card-title">Language Selection</h2>
+          <p id="hero-card-copy">
+            Use the language dropdown in the navigation bar to switch between
+            English and Chinese. Only the selected language is shown.
           </p>
-          <a href="#hosting">Publishing steps</a>
         </aside>
       </section>
 
+      <div class="language-content" data-language-panel="en">
       <section class="section-shell language-section" lang="en">
         <div class="section-heading">
           <p class="eyebrow">English</p>
@@ -70,15 +71,16 @@
               Import documents in reading order, choose a target language and
               workflow profile, then run the translation pipeline from the UI or
               CLI. Reading order matters because glossary evidence and context
-              are built causally across the book.
+              are accumulated from earlier content to later content.
             </p>
           </article>
           <article class="feature-card">
             <h3>Glossary Extraction</h3>
             <p>
               CAT scans chunks for names, organizations, places, skills, items,
-              settings, and other terms that need stable translation. Extra
-              gleaning passes can recover terms missed by the first extraction.
+              settings, and other terms that need stable translation. Additional
+              extraction passes controlled by <code>max_gleaning</code> can recover
+              terms missed by the first pass.
             </p>
           </article>
           <article class="feature-card">
@@ -95,8 +97,8 @@
             <p>
               Before translating a batch, CAT can summarize earlier chunks in the
               same document and inject the most recent summaries within a prompt
-              budget. This helps resolve omitted subjects, pronouns, speaker
-              direction, and immediate scene continuity.
+              budget. This helps resolve omitted subjects, pronouns, who is
+              speaking or being addressed, and immediate scene continuity.
             </p>
           </article>
           <article class="feature-card">
@@ -112,111 +114,17 @@
             <p>
               Translation can be followed by a polish step that improves target
               language readability without changing facts, terms, point of view,
-              or information order. Review steps help catch glossary quality
-              issues before they propagate.
+              or the order in which information is revealed. Term review and
+              quality review help catch glossary issues before they propagate.
             </p>
           </article>
         </div>
-      </section>
-
-      <section class="section-shell" lang="en">
-        <div class="section-heading">
-          <p class="eyebrow">Playbook</p>
-          <h2 id="workflow-en">End-to-End Workflow</h2>
-          <p>
-            A good CAT project is prepared like a production translation job:
-            inputs are ordered, context is built before translation, terminology
-            is reviewed early, and expensive image workflows are tested on small
-            samples first.
-          </p>
-        </div>
-
-        <div class="detail-grid">
-          <article class="detail-panel">
-            <h3>1. Pick the Target and Profile</h3>
-            <p>
-              Choose the target language and a workflow profile before importing
-              large books. The profile decides which model handles extraction,
-              summarization, glossary translation, main translation, polish,
-              review, OCR, manga translation, and image re-embedding.
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>2. Import in Reading Order</h3>
-            <p>
-              Import chapters, volumes, or page folders in the same order a
-              reader would see them. CAT builds term evidence and context
-              causally, so reordering files can make later chapters miss earlier
-              definitions or relationships.
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>3. Run OCR When Needed</h3>
-            <p>
-              PDFs, scanned books, manga, and EPUB images need OCR before text
-              translation can use their content. Inspect a few pages before a
-              full run because OCR quality determines every later step.
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>4. Build and Review the Glossary</h3>
-            <p>
-              Let CAT extract terms, then review names and important domain
-              terms before translating the body. Importing an existing glossary
-              at this point is better than correcting inconsistent names after a
-              full book has already been translated.
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>5. Translate a Representative Slice</h3>
-            <p>
-              For a new model or provider mix, run one chapter, one subtitle
-              episode, or a few manga pages first. Check terminology, pronouns,
-              formatting, OCR artifacts, and whether polish improves or weakens
-              the target prose.
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>6. Translate and Export</h3>
-            <p>
-              Once the sample looks right, run the full translation. CAT groups
-              chunks into prompt-budgeted batches, injects relevant terms, adds
-              recent local context when enabled, and exports through the document
-              type's supported formats.
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>7. Re-run Only What Changed</h3>
-            <p>
-              If a term translation or page OCR is wrong, fix that source of
-              truth first and rerun the affected document or chunk. This is more
-              reliable than manually editing many repeated mistakes in the final
-              export.
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>8. Archive Config and Output</h3>
-            <p>
-              Keep the workflow profile, source files, and exported output
-              together. For CLI runs, keep reusable settings in YAML and keep API
-              keys in environment variables through <code>api_key_env</code>.
-            </p>
-          </article>
-        </div>
-
-        <aside class="callout">
-          <h3>Rule of Thumb</h3>
-          <p>
-            Spend review time before the expensive steps. A small correction to
-            glossary, OCR, or model routing can save a full-book retranslation.
-          </p>
-        </aside>
       </section>
 
       <section class="section-shell" lang="en">
         <div class="section-heading">
           <p class="eyebrow">Glossary Memory</p>
-          <h2>Term and Context Lifecycle</h2>
+          <h2 id="context-en">Term and Context Lifecycle</h2>
           <p>
             CAT separates term discovery, term translation, term memory, and
             local scene context. This keeps prompts compact while still giving
@@ -230,40 +138,40 @@
             <thead>
               <tr>
                 <th>Stage</th>
-                <th>What CAT Stores</th>
+                <th>What CAT Does</th>
                 <th>Why It Matters</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>Extraction</td>
-                <td>Term name, term type, description, occurrence position, vote data, and source chunk linkage.</td>
-                <td>Stable translations need evidence. Position-linked evidence also lets later prompts avoid future-only spoilers.</td>
+                <td>Records the term name, type, description, occurrence position, and the source chunk each occurrence came from.</td>
+                <td>Stable translations need evidence. Position-linked evidence lets CAT use only information available before the current point in the book.</td>
               </tr>
               <tr>
-                <td>Gleaning</td>
-                <td>Additional candidate terms from follow-up extraction passes controlled by <code>max_gleaning</code>.</td>
+                <td>Additional Extraction</td>
+                <td>Runs follow-up extraction passes controlled by <code>max_gleaning</code> to find additional candidate terms.</td>
                 <td>Names and setting words are often missed on the first pass. More passes improve recall but increase cost.</td>
               </tr>
               <tr>
                 <td>Glossary Translation</td>
-                <td>Target-language term translations generated from source evidence and optional imported glossary entries.</td>
+                <td>Generates target-language term translations from source evidence and optional imported glossary entries.</td>
                 <td>Glossary mistakes propagate widely, so use stronger models or manual review for important names and terminology.</td>
               </tr>
               <tr>
                 <td>Term Summary</td>
-                <td>Compact memory summaries for character and organization terms, built from earlier source occurrences.</td>
+                <td>Builds compact memory summaries for character and organization terms from earlier source occurrences.</td>
                 <td>The translator can see relationships, aliases, and identity facts without sending every raw occurrence again.</td>
               </tr>
               <tr>
-                <td>Prompt Selection</td>
-                <td>Only terms relevant to the current batch text, deduplicated after normalization where possible.</td>
-                <td>This protects prompt budget and reduces the chance that unrelated glossary entries steer the current translation.</td>
+                <td>Term Matching</td>
+                <td>Before each translation batch, CAT selects glossary terms that appear in or are directly relevant to the current source text.</td>
+                <td>The model sees the names and term notes needed for the current passage, without loading unrelated glossary entries from the whole book.</td>
               </tr>
               <tr>
-                <td>Review</td>
-                <td>Issues found by review steps or by the user on the Terms page.</td>
-                <td>Reviewing early reduces cascading mistakes in long projects, especially for aliases, titles, factions, and invented words.</td>
+                <td>Term Review</td>
+                <td>Users confirm or fix term translations, types, aliases, and important notes on the Terms page or from automated review results.</td>
+                <td>Reviewing terms before body translation reduces cascading mistakes, especially for aliases, titles, factions, and invented words.</td>
               </tr>
             </tbody>
           </table>
@@ -275,9 +183,9 @@
           <p class="eyebrow">Local Context</p>
           <h2>Previous-Context Injection in Practice</h2>
           <p>
-            Previous-context injection is deliberately narrow. It helps the
-            model understand immediate continuity, but it must not override,
-            translate, or expand the current source text.
+            Previous-context injection has a narrow purpose: helping the model
+            understand immediate continuity. It must not override, translate, or
+            expand the current source text.
           </p>
         </div>
 
@@ -285,22 +193,22 @@
           <article class="detail-panel">
             <h3>What Gets Injected</h3>
             <p>
-              CAT summarizes recent earlier chunks in the source language and
-              passes those summaries as local context. The summary is short,
+              CAT summarizes the most recent preceding chunks in the source
+              language and passes those summaries as local context. The summary is short,
               factual, and meant to describe what just happened, not to become
               translated output.
             </p>
           </article>
           <article class="detail-panel">
-            <h3>What It Should Fix</h3>
+            <h3>Issues It Helps With</h3>
             <p>
-              It is most useful for omitted subjects or objects, pronouns,
-              speaker direction, response direction, and immediate scene
-              continuity across chunk boundaries.
+              It is most useful for omitted subjects or objects, pronouns, who is
+              speaking, who is being addressed, and immediate scene continuity
+              across chunk boundaries.
             </p>
           </article>
           <article class="detail-panel">
-            <h3>What It Should Not Fix</h3>
+            <h3>What It Must Not Do</h3>
             <p>
               It should not invent missing facts, rewrite the current paragraph,
               add explanations, pull in future revelations, or translate content
@@ -359,18 +267,18 @@
             <span>2</span>
             <h3>Build Term Memory</h3>
             <p>
-              For character and organization terms, CAT builds a causal memory
-              timeline. A translation prompt near chapter 5 can use what was
+              For character and organization terms, CAT builds an ordered memory
+              timeline. When translating a later chapter, CAT can use what was
               known before that point without pulling in future-only revelations.
             </p>
           </article>
           <article>
             <span>3</span>
-            <h3>Select Relevant Terms</h3>
+            <h3>Match Relevant Terms</h3>
             <p>
-              Each translation batch receives only terms that match the current
-              batch text. Duplicate normalized terms with the same translation
-              are collapsed to keep prompts smaller.
+              Each translation batch receives only terms that appear in or are
+              directly relevant to the current source text. Duplicate normalized
+              terms with the same translation are collapsed to keep prompts smaller.
             </p>
           </article>
           <article>
@@ -444,15 +352,15 @@
             <thead>
               <tr>
                 <th>Use case</th>
-                <th>Recommended workflow</th>
+                <th>Recommended approach</th>
                 <th>Advanced notes</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>Long novels and web novels</td>
-                <td>Import all files in reading order, build glossary, translate glossary, review terms, then translate and export.</td>
-                <td>Term summaries and previous-context injection are most useful here because names, relationships, and scene continuity span many chunks.</td>
+                <td>Import all files in reading order, build glossary, translate glossary entries, review key terms, then translate and export.</td>
+                <td>Term memory summaries and previous-context injection are most useful here because names, relationships, and scene continuity span many chunks.</td>
               </tr>
               <tr>
                 <td>Existing fan glossary or terminology list</td>
@@ -467,7 +375,7 @@
               <tr>
                 <td>Manga and image-heavy chapters</td>
                 <td>Use the manga workflow for CBZ or image folders. Inspect OCR and translated pages before export if quality matters.</td>
-                <td>Image editing can be expensive and hallucination-prone. Use a strong vision/image model and smaller test runs before translating a full volume.</td>
+                <td>Image OCR and text re-embedding are costlier and more sensitive to model quality. Use a strong vision/image model and smaller test runs before translating a full volume.</td>
               </tr>
               <tr>
                 <td>Subtitles</td>
@@ -481,13 +389,13 @@
               </tr>
               <tr>
                 <td>Cost-controlled translation</td>
-                <td>Use cheaper models for extraction and summaries, stronger models for glossary translation, main translation, polish, and review.</td>
+                <td>Use cheaper models for extraction and summaries, stronger models for glossary translation, main translation, polish, and quality review.</td>
                 <td>Lower <code>max_gleaning</code>, chunk sizes, concurrency, or polish usage when running exploratory test passes.</td>
               </tr>
               <tr>
                 <td>Large remote batch jobs</td>
                 <td>Use supported batch providers for translation and polish when available.</td>
-                <td>Batch tasks persist request state, poll remote jobs, validate output, and apply successful chunks while preserving task recovery information.</td>
+                <td>Batch tasks persist request state, poll remote jobs, validate output, and keep enough state to recover failed or interrupted jobs.</td>
               </tr>
             </tbody>
           </table>
@@ -551,7 +459,7 @@
           </article>
           <article>
             <h3><code>ocr_dpi</code></h3>
-            <p>Controls OCR image compression. Higher DPI can help small text but increases request size, latency, and cost.</p>
+            <p>Controls the image resolution used for OCR. Higher DPI can help small text but increases request size, latency, and cost.</p>
           </article>
           <article>
             <h3><code>strip_llm_artifacts</code></h3>
@@ -569,8 +477,8 @@
           <p class="eyebrow">Automation</p>
           <h2 id="cli-en">CLI and Config-Driven Runs</h2>
           <p>
-            The CLI is useful for repeatable one-shot translation, CI-style
-            experiments, and scripted library management. It mirrors the setup UI
+            The CLI is useful for repeatable one-shot translation, scripted
+            experiments, and library management. It mirrors the setup UI
             through YAML workflow profiles.
           </p>
         </div>
@@ -663,14 +571,16 @@ cat-cli books show BOOK_ID</code></pre>
               </tr>
               <tr>
                 <td>Costs climb too quickly</td>
-                <td>High gleaning, large chunks, strong models on every step, high concurrency, OCR, or image editing.</td>
-                <td>Run smaller samples, use cheaper extraction/summarization models, lower gleaning, and reserve strong models for final prose.</td>
+                <td>Too many additional extraction passes, large chunks, strong models on every step, high concurrency, OCR, or image redrawing.</td>
+                <td>Run smaller samples, use cheaper extraction/summarization models, lower <code>max_gleaning</code>, and reserve strong models for final prose.</td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
+      </div>
 
+      <div class="language-content" data-language-panel="zh" hidden>
       <section class="section-shell language-section" lang="zh-Hans">
         <div class="section-heading">
           <p class="eyebrow">中文</p>
@@ -684,13 +594,13 @@ cat-cli books show BOOK_ID</code></pre>
           <article class="feature-card">
             <h3>项目流程</h3>
             <p>
-              按阅读顺序导入文档，选择目标语言和工作流配置档案，然后从 UI 或 CLI 启动翻译。阅读顺序很重要，因为术语证据和上下文会沿着整本书的顺序累积。
+              按阅读顺序导入文档，选择目标语言和工作流配置，然后从 UI 或 CLI 启动翻译。阅读顺序很重要，因为术语证据和上下文会从前文向后文累积。
             </p>
           </article>
           <article class="feature-card">
             <h3>术语抽取</h3>
             <p>
-              CAT 会从分块中抽取人物名、组织、地点、技能、物品、设定和其他需要稳定译法的术语。额外 gleaning 轮次可以补捞首轮遗漏的术语。
+              CAT 会从分块中抽取人物名、组织、地点、技能、物品、设定和其他需要稳定译法的术语。由 <code>max_gleaning</code> 控制的额外抽取轮次可以找回首轮遗漏的术语。
             </p>
           </article>
           <article class="feature-card">
@@ -702,96 +612,28 @@ cat-cli books show BOOK_ID</code></pre>
           <article class="feature-card">
             <h3>前文注入</h3>
             <p>
-              翻译一个批次前，CAT 可以为同一文档中更早的分块生成微摘要，并在提示词预算内注入最近的摘要。这能帮助解决省略主语、代词、说话对象和即时场景连续性问题。
+              翻译一个批次前，CAT 可以为同一文档中更早的分块生成短摘要，并在提示词预算内注入最近的摘要。这能帮助判断省略主语、代词、谁在说话、对谁说话，以及即时场景连续性。
             </p>
           </article>
           <article class="feature-card">
             <h3>格式保留</h3>
             <p>
-              原生文本输入会保留 Markdown、行结构和 EPUB 内联标记。需要 OCR 的 PDF 和扫图书会根据识别出的内容重建输出，漫画则使用专门的图像流程。
+              原生文本输入会保留 Markdown、行结构和 EPUB 内联标记。需要 OCR 的 PDF 和扫描书会根据识别出的内容重建输出，漫画则使用专门的图像流程。
             </p>
           </article>
           <article class="feature-card">
             <h3>润色与审查</h3>
             <p>
-              翻译后可以执行润色步骤，提高目标语言可读性，同时不改变事实、术语、视角和信息揭示顺序。审查步骤则用于减少术语质量问题向正文传播。
+              翻译后可以执行润色步骤，提高目标语言可读性，同时不改变事实、术语、视角和信息揭示顺序。术语审查和质量审查用于减少术语问题向正文传播。
             </p>
           </article>
         </div>
-      </section>
-
-      <section class="section-shell" lang="zh-Hans">
-        <div class="section-heading">
-          <p class="eyebrow">流程手册</p>
-          <h2>完整工作流</h2>
-          <p>
-            一个好的 CAT 项目应该像正式翻译项目一样准备：先确定文件顺序，在正文翻译前构建上下文，尽早审查术语，并且先用小样本测试昂贵的图像流程。
-          </p>
-        </div>
-
-        <div class="detail-grid">
-          <article class="detail-panel">
-            <h3>1. 选择目标语言和配置档案</h3>
-            <p>
-              导入大书之前，先选好目标语言和工作流配置档案。配置档案会决定抽取、总结、术语翻译、正文翻译、润色、审查、OCR、漫画翻译和图片回嵌分别使用哪些模型。
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>2. 按阅读顺序导入</h3>
-            <p>
-              章节、分卷或页面文件夹应按读者看到的顺序导入。CAT 会按因果顺序累积术语证据和上下文；顺序错误会导致后续章节缺少前面已经给出的定义或人物关系。
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>3. 必要时先运行 OCR</h3>
-            <p>
-              PDF、扫描书、漫画和 EPUB 图片需要先 OCR，正文翻译才有可用文本。完整运行前先检查几页，因为 OCR 质量会影响之后的所有步骤。
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>4. 构建并审查术语表</h3>
-            <p>
-              先让 CAT 抽取术语，再在正文翻译前审查名称和关键领域词。如果已有术语表，最好此时导入，而不是整本书翻完之后再修一堆不一致的专名。
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>5. 翻译代表性样本</h3>
-            <p>
-              换新模型或新服务商组合时，先跑一章、一集字幕或几页漫画。检查术语、代词、格式、OCR 杂质，以及润色到底是在改善文风还是削弱原意。
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>6. 翻译并导出</h3>
-            <p>
-              样本确认后再跑完整翻译。CAT 会按提示词预算把分块组合成批次，注入相关术语，按配置加入近期上下文，并通过文档类型支持的格式导出。
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>7. 只重跑变更影响的部分</h3>
-            <p>
-              如果术语翻译或页面 OCR 有问题，先修正这个源头，再重跑受影响的文档或分块。这通常比在最终导出里手动修改大量重复错误更可靠。
-            </p>
-          </article>
-          <article class="detail-panel">
-            <h3>8. 保存配置和产物</h3>
-            <p>
-              把工作流配置档案、源文件和导出结果一起归档。CLI 运行时，通用设置放在 YAML 中，API key 通过 <code>api_key_env</code> 留在环境变量里。
-            </p>
-          </article>
-        </div>
-
-        <aside class="callout">
-          <h3>经验原则</h3>
-          <p>
-            把审查时间花在昂贵步骤之前。术语、OCR 或模型路由上的一个小修正，往往能避免整本书重译。
-          </p>
-        </aside>
       </section>
 
       <section class="section-shell" lang="zh-Hans">
         <div class="section-heading">
           <p class="eyebrow">术语记忆</p>
-          <h2>术语和上下文生命周期</h2>
+          <h2 id="context-zh">术语和上下文生命周期</h2>
           <p>
             CAT 会把术语发现、术语翻译、术语记忆和局部场景上下文分开处理。这样既能控制提示词长度，又能把当前批次最可能需要的信息交给翻译模型。
           </p>
@@ -802,18 +644,18 @@ cat-cli books show BOOK_ID</code></pre>
             <thead>
               <tr>
                 <th>阶段</th>
-                <th>CAT 保存什么</th>
+                <th>CAT 如何处理</th>
                 <th>为什么重要</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>抽取</td>
-                <td>术语名称、术语类型、描述、出现位置、投票数据和源分块关联。</td>
-                <td>稳定译名需要证据。带位置的证据也能避免后续提示词使用未来才揭示的信息。</td>
+                <td>记录术语名称、类型、描述、出现位置，以及每次出现来自哪个源分块。</td>
+                <td>稳定译名需要证据。带位置的证据能让 CAT 只使用当前翻译位置之前已经出现的信息，避免引入后文才揭示的内容。</td>
               </tr>
               <tr>
-                <td>补捞</td>
+                <td>补充抽取</td>
                 <td>由 <code>max_gleaning</code> 控制的额外抽取轮次找到的候选术语。</td>
                 <td>人物名和设定词经常第一轮漏掉。更多轮次能提高召回率，但也会增加成本。</td>
               </tr>
@@ -823,19 +665,19 @@ cat-cli books show BOOK_ID</code></pre>
                 <td>术语错误会在整本书里扩散，所以重要名称和术语应使用更强模型或人工审查。</td>
               </tr>
               <tr>
-                <td>术语总结</td>
+                <td>术语记忆摘要</td>
                 <td>人物和组织术语的紧凑记忆摘要，根据更早的源文出现记录生成。</td>
                 <td>翻译模型可以看到关系、别名和身份事实，而不必再次携带所有原始出现记录。</td>
               </tr>
               <tr>
-                <td>提示词选择</td>
-                <td>只选择与当前批次文本相关的术语，并尽量合并规范化后重复的条目。</td>
-                <td>这能节省提示词预算，也减少无关术语影响当前翻译的概率。</td>
+                <td>术语匹配</td>
+                <td>翻译每个批次前，CAT 会从术语表中挑出当前原文实际出现或直接相关的术语，并尽量合并重复条目。</td>
+                <td>这样模型只会看到当前段落需要的译名和术语摘要，避免把整本书的无关术语都塞进提示词。</td>
               </tr>
               <tr>
-                <td>审查</td>
-                <td>审查步骤或用户在 Terms 页发现的问题。</td>
-                <td>早审查能减少长项目中的连锁错误，尤其是别名、称号、阵营和自造词。</td>
+                <td>术语审查</td>
+                <td>用户根据 Terms 页和自动审查结果确认或修正术语译名、类型、别名和重要说明。</td>
+                <td>正文翻译前完成术语审查，能减少长项目中的连锁错误，尤其是别名、称号、阵营和自造词。</td>
               </tr>
             </tbody>
           </table>
@@ -847,7 +689,7 @@ cat-cli books show BOOK_ID</code></pre>
           <p class="eyebrow">局部上下文</p>
           <h2>前文注入的实际作用</h2>
           <p>
-            前文注入的范围是刻意收窄的。它用于帮助模型理解即时连续性，但不能覆盖、翻译或扩写当前源文本。
+            前文注入的用途很具体：帮助模型理解即时连续性，但不能覆盖、翻译或扩写当前源文本。
           </p>
         </div>
 
@@ -855,17 +697,17 @@ cat-cli books show BOOK_ID</code></pre>
           <article class="detail-panel">
             <h3>会注入什么</h3>
             <p>
-              CAT 会用源语言总结最近的早前分块，并把这些摘要作为局部上下文传给翻译模型。摘要很短、只陈述事实，用来说明刚刚发生了什么，而不是作为待翻译正文。
+              CAT 会用源语言总结最近的前文分块，并把这些摘要作为局部上下文传给翻译模型。摘要很短、只陈述事实，用来说明刚刚发生了什么，而不是作为待翻译正文。
             </p>
           </article>
           <article class="detail-panel">
-            <h3>它应该修正什么</h3>
+            <h3>适合解决的问题</h3>
             <p>
-              最适合解决省略主语或宾语、代词、说话对象、回应方向，以及跨分块的即时场景连续性问题。
+              最适合解决省略主语或宾语、代词、谁在说话、对谁说话，以及跨分块的即时场景连续性问题。
             </p>
           </article>
           <article class="detail-panel">
-            <h3>它不应该修正什么</h3>
+            <h3>不应该用于什么</h3>
             <p>
               它不应该发明缺失事实、重写当前段落、添加解释、引入未来剧透，也不应该翻译只存在于摘要里的内容。
             </p>
@@ -885,7 +727,7 @@ cat-cli books show BOOK_ID</code></pre>
           <article class="detail-panel">
             <h3>什么时候调低</h3>
             <p>
-              短篇独立文档、结构化技术文本、时间轴更重要的字幕，或需要尽量省成本时，可以调低或关闭。
+              短篇独立文档、结构化技术文本、时间轴对齐更重要的字幕，或需要尽量省成本时，可以调低或关闭。
             </p>
           </article>
         </div>
@@ -912,14 +754,14 @@ cat-cli books show BOOK_ID</code></pre>
             <span>2</span>
             <h3>构建术语记忆</h3>
             <p>
-              对人物和组织术语，CAT 会构建因果顺序的记忆时间线。第五章附近的翻译可以使用那之前已经知道的信息，而不会主动塞入只在未来才揭示的内容。
+              对人物和组织术语，CAT 会按文本顺序构建记忆时间线。翻译后续章节时，可以使用此前已经知道的信息，而不会主动塞入未来才揭示的内容。
             </p>
           </article>
           <article>
             <span>3</span>
-            <h3>选择相关术语</h3>
+            <h3>匹配相关术语</h3>
             <p>
-              每个翻译批次只会收到与当前文本匹配的术语。规范化后相同且译名相同的重复术语会被合并，以控制提示词大小。
+              每个翻译批次只会收到在当前原文中出现或直接相关的术语。规范化后相同且译名相同的重复术语会被合并，以控制提示词大小。
             </p>
           </article>
           <article>
@@ -937,7 +779,7 @@ cat-cli books show BOOK_ID</code></pre>
           <p class="eyebrow">输出保真</p>
           <h2>格式保留保证</h2>
           <p>
-            CAT 会把源文件格式视为翻译契约的一部分，但保证范围取决于输入类型，以及解析器能实际提取到的结构。当前源文本始终优先于上下文摘要或润色步骤。
+            CAT 会把源文件格式视为翻译结果的一部分要求，但保证范围取决于输入类型，以及解析器能实际提取到的结构。当前源文本始终优先于上下文摘要或润色步骤。
           </p>
         </div>
 
@@ -951,13 +793,13 @@ cat-cli books show BOOK_ID</code></pre>
           <article class="feature-card">
             <h3>EPUB 内联标记</h3>
             <p>
-              EPUB 内联标记，包括启用时的 ruby 相关标记，会作为结构 token 保留，而不是当成普通正文翻译。
+              EPUB 内联标记，包括启用时的 ruby 相关标记，会作为结构标记保留，而不是当成普通正文翻译。
             </p>
           </article>
           <article class="feature-card">
             <h3>OCR 和扫描 PDF</h3>
             <p>
-              OCR 流程保证识别内容的阅读流，而不是逐像素复刻页面排版。预期输出是重建后的 EPUB 或 Markdown 风格结果，而不是原扫描页或 PDF 页面的视觉克隆。
+              OCR 流程保证识别内容的阅读顺序，而不是逐像素复刻页面排版。预期输出是重建后的 EPUB 或 Markdown 风格结果，而不是与原扫描页或 PDF 页面一模一样的版面复制。
             </p>
           </article>
           <article class="feature-card">
@@ -980,20 +822,20 @@ cat-cli books show BOOK_ID</code></pre>
             <thead>
               <tr>
                 <th>用例</th>
-                <th>推荐流程</th>
+                <th>建议做法</th>
                 <th>高级说明</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>长篇小说和网文</td>
-                <td>按阅读顺序导入全部文件，构建术语表，翻译术语，审查术语，然后翻译并导出。</td>
-                <td>术语总结和前文注入在这种场景最有价值，因为名称、关系和场景连续性会跨越大量分块。</td>
+                <td>按阅读顺序导入全部文件，构建术语表，翻译术语，完成术语审查，然后翻译并导出。</td>
+                <td>术语记忆摘要和前文注入在这种场景最有价值，因为名称、关系和场景连续性会跨越大量分块。</td>
               </tr>
               <tr>
                 <td>已有粉丝术语表或专名表</td>
                 <td>翻译前在项目 Terms 页导入 JSON。最简单的 <code>{"原文":"译名"}</code> 映射即可作为基础种子。</td>
-                <td>导入术语可以覆盖模型早期猜测，减少术语错误一路传递到正文。</td>
+                <td>导入术语可以覆盖模型早期猜测，减少术语错误扩散到正文。</td>
               </tr>
               <tr>
                 <td>PDF 和扫描书</td>
@@ -1003,7 +845,7 @@ cat-cli books show BOOK_ID</code></pre>
               <tr>
                 <td>漫画和大量图片章节</td>
                 <td>对 CBZ 或图片文件夹使用漫画流程。如果质量要求高，导出前检查 OCR 和翻译后的页面。</td>
-                <td>图片编辑成本高，也更容易出现幻觉。建议先用强视觉或图像模型跑小样本，再翻译整卷。</td>
+                <td>图片 OCR 和文字回写成本较高，也更依赖模型质量。建议先用强视觉或图像模型跑小样本，再翻译整卷。</td>
               </tr>
               <tr>
                 <td>字幕</td>
@@ -1017,13 +859,13 @@ cat-cli books show BOOK_ID</code></pre>
               </tr>
               <tr>
                 <td>控制成本的翻译</td>
-                <td>抽取和摘要用便宜模型，术语翻译、正文翻译、润色和审查用更强模型。</td>
+                <td>抽取和摘要用便宜模型，术语翻译、正文翻译、润色和质量审查用更强模型。</td>
                 <td>试跑时可以降低 <code>max_gleaning</code>、分块大小、并发或润色使用量。</td>
               </tr>
               <tr>
                 <td>大型远程批处理</td>
                 <td>在支持的服务商上使用批处理翻译和润色。</td>
-                <td>批处理任务会持久化请求状态，轮询远程任务，校验输出，并应用成功分块，同时保留任务恢复信息。</td>
+                <td>批处理任务会持久化请求状态，轮询远程任务，校验输出，并保留足够状态，便于失败或中断后恢复。</td>
               </tr>
             </tbody>
           </table>
@@ -1035,14 +877,14 @@ cat-cli books show BOOK_ID</code></pre>
           <p class="eyebrow">调优</p>
           <h2>配置项说明</h2>
           <p>
-            大多数用户应从设置向导开始。高级用户可以在工作流配置档案或 CLI 配置文件中调这些参数。
+            大多数用户应从设置向导开始。高级用户可以在工作流配置或 CLI 配置文件中调这些参数。
           </p>
         </div>
 
         <div class="settings-grid">
           <article>
             <h3><code>max_gleaning</code></h3>
-            <p>额外术语补捞轮次。轮次越多，越可能找回遗漏术语，但每轮都会增加每个分块的 LLM 调用。</p>
+            <p>额外术语抽取轮次。轮次越多，越可能找回遗漏术语，但每轮都会增加每个分块的 LLM 调用。</p>
           </article>
           <article>
             <h3><code>max_term_description_length</code></h3>
@@ -1050,7 +892,7 @@ cat-cli books show BOOK_ID</code></pre>
           </article>
           <article>
             <h3><code>chunk_size</code></h3>
-            <p>控制源文本分块。小分块更便宜、更稳；大分块能给模型更多局部文本。</p>
+            <p>控制源文本分块。小分块更便宜，也更容易控制质量；大分块能给模型更多局部文本。</p>
           </article>
           <article>
             <h3><code>max_tokens_per_llm_call</code></h3>
@@ -1086,7 +928,7 @@ cat-cli books show BOOK_ID</code></pre>
           </article>
           <article>
             <h3><code>ocr_dpi</code></h3>
-            <p>控制 OCR 图片压缩。更高 DPI 可能改善小字识别，但会增加请求大小、延迟和成本。</p>
+            <p>控制 OCR 使用的图片分辨率。更高 DPI 可能改善小字识别，但会增加请求大小、延迟和成本。</p>
           </article>
           <article>
             <h3><code>strip_llm_artifacts</code></h3>
@@ -1102,9 +944,9 @@ cat-cli books show BOOK_ID</code></pre>
       <section class="section-shell" lang="zh-Hans">
         <div class="section-heading">
           <p class="eyebrow">自动化</p>
-          <h2>CLI 与配置驱动运行</h2>
+          <h2 id="cli-zh">CLI 与配置驱动运行</h2>
           <p>
-            CLI 适合可重复的一次性翻译、类似 CI 的实验，以及脚本化管理书库。它通过 YAML 工作流配置档案复用设置界面的模型路由。
+            CLI 适合可重复的一次性翻译、脚本化实验，以及批量管理书库。它通过 YAML 工作流配置复用设置界面的模型路由。
           </p>
         </div>
 
@@ -1145,7 +987,7 @@ cat-cli books show BOOK_ID</code></pre>
           <p class="eyebrow">质量控制</p>
           <h2>排障和审查清单</h2>
           <p>
-            大多数翻译质量问题来自四个源头：源文提取、术语质量、上下文预算或模型选择。优先修复最早出错的步骤，而不是只修最终导出文件。
+            大多数翻译质量问题来自四个源头：文本提取或 OCR、术语质量、上下文预算或模型路由。优先修复最早出错的步骤，而不是只修最终导出文件。
           </p>
         </div>
 
@@ -1161,7 +1003,7 @@ cat-cli books show BOOK_ID</code></pre>
             <tbody>
               <tr>
                 <td>人名在书中途变了</td>
-                <td>术语漏抽、译错，或审查太晚。</td>
+                <td>术语未抽取、译错，或术语审查太晚。</td>
                 <td>在 Terms 页导入或修正术语，然后重跑受影响的分块或文档。</td>
               </tr>
               <tr>
@@ -1175,8 +1017,8 @@ cat-cli books show BOOK_ID</code></pre>
                 <td>翻译前检查 OCR，小字可提高 <code>ocr_dpi</code>，或换更强视觉模型。</td>
               </tr>
               <tr>
-                <td>PDF 导出不像原页面</td>
-                <td>OCR PDF 和扫描书流程重建内容阅读流，不复刻精确页面排版。</td>
+                <td>OCR/PDF 输出不像原页面</td>
+                <td>OCR PDF 和扫描书流程重建的是内容阅读顺序，不复刻精确页面排版。</td>
                 <td>按 EPUB、Markdown 或文本输出预期处理。只有图像页翻译才使用漫画或图片流程。</td>
               </tr>
               <tr>
@@ -1186,52 +1028,163 @@ cat-cli books show BOOK_ID</code></pre>
               </tr>
               <tr>
                 <td>成本增长过快</td>
-                <td>补捞轮次高、分块大、所有步骤都用强模型、并发高、OCR 或图像编辑成本高。</td>
-                <td>先跑小样本，抽取和总结用便宜模型，降低补捞轮次，把强模型留给最终正文。</td>
+                <td>额外抽取轮次高、分块大、所有步骤都用强模型、并发高、OCR 或图像处理成本高。</td>
+                <td>先跑小样本，抽取和总结用便宜模型，降低额外抽取轮次，把强模型留给最终正文。</td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <section class="section-shell split-section" id="hosting">
-        <div>
-          <p class="eyebrow">GitHub Pages</p>
-          <h2>Publishing This Documentation</h2>
-          <p>
-            GitHub Pages is the simplest free hosting option for this repository.
-            Because this site is static HTML and CSS, no build workflow is
-            required.
-          </p>
-          <ol class="steps">
-            <li>Push the repository with this <code>docs/</code> folder.</li>
-            <li>Open the GitHub repository settings.</li>
-            <li>Go to <code>Pages</code>.</li>
-            <li>Set source to <code>Deploy from a branch</code>.</li>
-            <li>Select the default branch and the <code>/docs</code> folder.</li>
-            <li>Save. GitHub will publish the site at the Pages URL shown there.</li>
-          </ol>
-        </div>
-        <div lang="zh-Hans">
-          <p class="eyebrow">GitHub Pages</p>
-          <h2>发布这份文档</h2>
-          <p>
-            GitHub Pages 是这个仓库最简单的免费托管方式。本页面只有静态 HTML 和 CSS，不需要额外构建流程。
-          </p>
-          <ol class="steps">
-            <li>把包含 <code>docs/</code> 目录的仓库推送到 GitHub。</li>
-            <li>打开 GitHub 仓库设置。</li>
-            <li>进入 <code>Pages</code>。</li>
-            <li>Source 选择 <code>Deploy from a branch</code>。</li>
-            <li>选择默认分支和 <code>/docs</code> 目录。</li>
-            <li>保存后，GitHub 会在页面中显示发布后的 Pages 地址。</li>
-          </ol>
-        </div>
-      </section>
+      </div>
     </main>
 
     <footer class="footer">
-      <p>Context-Aware Translation documentation. Static site ready for GitHub Pages.</p>
+      <p>Context-Aware Translation documentation.</p>
     </footer>
+    <script>
+      const languageSelect = document.getElementById("language-select");
+      const languageLabel = document.getElementById("language-label");
+      const heroTitle = document.getElementById("hero-title");
+      const heroCopy = document.getElementById("hero-copy");
+      const heroCardTitle = document.getElementById("hero-card-title");
+      const heroCardCopy = document.getElementById("hero-card-copy");
+      const languagePanels = document.querySelectorAll("[data-language-panel]");
+      const sectionLinks = document.querySelectorAll("[data-section-link]");
+      const languageConfig = {
+        en: {
+          htmlLang: "en",
+          ui: {
+            languageLabel: "Language",
+            heroTitle: "Advanced Usage and Feature Guide",
+            heroCopy:
+              "A practical guide to CAT's long-document translation features, glossary memory, previous-context injection, format preservation guarantees, OCR workflows, manga translation, CLI automation, troubleshooting, and cost-aware model routing.",
+            heroCardTitle: "Language Selection",
+            heroCardCopy:
+              "Use the language dropdown in the navigation bar to switch between English and Chinese. Only the selected language is shown.",
+          },
+          labels: {
+            features: "Features",
+            context: "Context",
+            advanced: "Advanced",
+            cli: "CLI",
+          },
+          targets: {
+            features: "#features-en",
+            context: "#context-en",
+            advanced: "#advanced-en",
+            cli: "#cli-en",
+          },
+        },
+        zh: {
+          htmlLang: "zh-Hans",
+          ui: {
+            languageLabel: "语言",
+            heroTitle: "高级使用与功能指南",
+            heroCopy:
+              "介绍 CAT 的长文档翻译能力、术语记忆、前文注入、格式保留保证、OCR、漫画翻译、CLI 自动化、排障和成本控制。",
+            heroCardTitle: "选择语言",
+            heroCardCopy:
+              "使用导航栏中的语言下拉菜单在 English 和中文之间切换。页面只显示当前选中的语言。",
+          },
+          labels: {
+            features: "功能",
+            context: "上下文",
+            advanced: "高级用例",
+            cli: "CLI",
+          },
+          targets: {
+            features: "#features-zh",
+            context: "#context-zh",
+            advanced: "#advanced-zh",
+            cli: "#cli-zh",
+          },
+        },
+      };
+
+      function getStoredLanguage() {
+        try {
+          return localStorage.getItem("cat-docs-language");
+        } catch {
+          return null;
+        }
+      }
+
+      function storeLanguage(language) {
+        try {
+          localStorage.setItem("cat-docs-language", language);
+        } catch {
+          // Language selection still works for the current page without storage.
+        }
+      }
+
+      function languageFromHash() {
+        if (location.hash.endsWith("-zh")) {
+          return "zh";
+        }
+        if (location.hash.endsWith("-en")) {
+          return "en";
+        }
+        return null;
+      }
+
+      function currentSectionKey() {
+        for (const config of Object.values(languageConfig)) {
+          for (const [key, target] of Object.entries(config.targets)) {
+            if (target === location.hash) {
+              return key;
+            }
+          }
+        }
+        return "features";
+      }
+
+      function scrollToTarget(target) {
+        const id = target.startsWith("#") ? target.slice(1) : target;
+        document.getElementById(id)?.scrollIntoView({ block: "start" });
+      }
+
+      function setLanguage(language) {
+        const activeLanguage = languageConfig[language] ? language : "en";
+        const config = languageConfig[activeLanguage];
+
+        document.documentElement.lang = config.htmlLang;
+        languageLabel.textContent = config.ui.languageLabel;
+        heroTitle.textContent = config.ui.heroTitle;
+        heroCopy.textContent = config.ui.heroCopy;
+        heroCardTitle.textContent = config.ui.heroCardTitle;
+        heroCardCopy.textContent = config.ui.heroCardCopy;
+        languageSelect.value = activeLanguage;
+        languagePanels.forEach((panel) => {
+          panel.hidden = panel.dataset.languagePanel !== activeLanguage;
+        });
+        sectionLinks.forEach((link) => {
+          const section = link.dataset.sectionLink;
+          link.href = config.targets[section];
+          link.textContent = config.labels[section];
+        });
+        storeLanguage(activeLanguage);
+      }
+
+      const browserLanguage = navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en";
+      const initialLanguage = languageFromHash() || getStoredLanguage() || browserLanguage;
+      setLanguage(initialLanguage);
+
+      if (location.hash) {
+        requestAnimationFrame(() => {
+          scrollToTarget(location.hash);
+        });
+      }
+
+      languageSelect.addEventListener("change", (event) => {
+        const section = currentSectionKey();
+        const selectedLanguage = event.target.value;
+        setLanguage(selectedLanguage);
+        const target = languageConfig[selectedLanguage].targets[section];
+
+        history.replaceState(null, "", target);
+        scrollToTarget(target);
+      });
+    </script>
   </body>
 </html>

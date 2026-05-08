@@ -78,6 +78,7 @@ code {
 
 .nav-links {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.95rem;
@@ -87,6 +88,28 @@ code {
 
 .nav-links a {
   color: var(--muted);
+}
+
+.language-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.language-picker select {
+  min-height: 2rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.9);
+  color: var(--ink);
+  font: inherit;
+  padding: 0.25rem 1.9rem 0.25rem 0.75rem;
+}
+
+.language-content[hidden] {
+  display: none;
 }
 
 .section-shell {
