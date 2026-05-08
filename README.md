@@ -4,6 +4,8 @@
 
 CAT is a fully automatic desktop translation app for long novels, books, PDFs, scanned documents, manga, and subtitles. It aims to preserve source formatting while keeping terminology and translation style consistent across the whole work.
 
+[Advanced documentation](https://bot-32142.github.io/context-aware-translation/) covers glossary memory, previous-context injection, format preservation, CLI automation, and advanced use cases.
+
 ## Who CAT Is For
 
 - Novel, web novel, and light novel translation
@@ -84,12 +86,11 @@ Open `Terms`, then use `Import Terms` if you already have a terminology list you
 
 ## Demo EPUBs
 
-These two sample EPUBs were generated with `Translate and Export` directly from the French Project Gutenberg EPUB for [The Count of Monte Cristo, Tome I](https://www.gutenberg.org/ebooks/17989), using `DeepSeek`.
+This sample EPUB was generated with `Translate and Export` directly from the French Project Gutenberg EPUB for [The Count of Monte Cristo, Tome I](https://www.gutenberg.org/ebooks/17989), using `DeepSeek`.
 
 Quality can be dramatically better with `Gemini` or `GPT`, but the cost is also significantly higher.
 
-- [The Count of Monte Cristo.epub](demo/The Count of Monte Cristo.epub) - English output. Cost: under `$2.5`.
-- [基督山伯爵.epub](demo/基督山伯爵.epub) - Simplified Chinese output. Cost: under `$2.5`.
+- [The Count of Monte Cristo.epub](demo/The%20Count%20of%20Monte%20Cristo.epub) - English output. Cost: under `$2.5`.
 
 ## CLI
 
