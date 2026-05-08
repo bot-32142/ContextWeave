@@ -42,13 +42,6 @@
             cost-aware model routing.
           </p>
         </div>
-        <aside class="hero-card" aria-label="Language selection note">
-          <h2 id="hero-card-title">Language Selection</h2>
-          <p id="hero-card-copy">
-            Use the language dropdown in the navigation bar to switch between
-            English and Chinese. Only the selected language is shown.
-          </p>
-        </aside>
       </section>
 
       <div class="language-content" data-language-panel="en">
@@ -502,6 +495,10 @@ cat-cli books show BOOK_ID</code></pre>
               <code>.cat.yaml</code>, or <code>.cat.yml</code>, then the platform
               default shown by <code>cat-cli config path</code>.
             </p>
+            <p>
+              See the commented example config at
+              <a href="examples/cat-cli.yaml"><code>docs/examples/cat-cli.yaml</code></a>.
+            </p>
           </article>
           <article class="detail-panel">
             <h3>Secrets</h3>
@@ -545,11 +542,6 @@ cat-cli books show BOOK_ID</code></pre>
             </thead>
             <tbody>
               <tr>
-                <td>Names change halfway through a book</td>
-                <td>Glossary term was missed, mistranslated, or reviewed too late.</td>
-                <td>Import or correct the term on the Terms page, then rerun affected chunks or documents.</td>
-              </tr>
-              <tr>
                 <td>Pronouns or speakers are wrong</td>
                 <td>Local context budget is too small, chunks are too isolated, or the model is weak at discourse tracking.</td>
                 <td>Raise <code>dynamic_context_max_prompt_tokens</code>, use a stronger translator model, and test one dialogue-heavy chapter.</td>
@@ -567,7 +559,7 @@ cat-cli books show BOOK_ID</code></pre>
               <tr>
                 <td>Polish changes meaning or timing</td>
                 <td>The polish model is over-editing, or the file is timing-sensitive like subtitles.</td>
-                <td>Disable polish with <code>--no-polish</code> or use a stricter polish prompt/model route.</td>
+                <td>Disable polish with <code>--no-polish</code>, or route the polish step to a model that follows the built-in prompt more reliably and over-edits less.</td>
               </tr>
               <tr>
                 <td>Costs climb too quickly</td>
@@ -966,6 +958,9 @@ cat-cli books show BOOK_ID</code></pre>
             <p>
               CAT 会依次检查 <code>--config</code>、<code>CAT_CONFIG</code>、从当前目录向上查找最近的 <code>cat.yaml</code>、<code>cat.yml</code>、<code>.cat.yaml</code> 或 <code>.cat.yml</code>，最后使用 <code>cat-cli config path</code> 显示的平台默认路径。
             </p>
+            <p>
+              配置文件格式可参考带注释的示例：<a href="examples/cat-cli.yaml"><code>docs/examples/cat-cli.yaml</code></a>。
+            </p>
           </article>
           <article class="detail-panel">
             <h3>密钥管理</h3>
@@ -1002,11 +997,6 @@ cat-cli books show BOOK_ID</code></pre>
             </thead>
             <tbody>
               <tr>
-                <td>人名在书中途变了</td>
-                <td>术语未抽取、译错，或术语审查太晚。</td>
-                <td>在 Terms 页导入或修正术语，然后重跑受影响的分块或文档。</td>
-              </tr>
-              <tr>
                 <td>代词或说话人错误</td>
                 <td>局部上下文预算太小、分块过于孤立，或模型不擅长语篇跟踪。</td>
                 <td>调高 <code>dynamic_context_max_prompt_tokens</code>，换更强正文翻译模型，并用对白密集章节测试。</td>
@@ -1024,7 +1014,7 @@ cat-cli books show BOOK_ID</code></pre>
               <tr>
                 <td>润色改变含义或字幕节奏</td>
                 <td>润色模型过度改写，或文件本身对时长敏感。</td>
-                <td>使用 <code>--no-polish</code> 关闭润色，或换更克制的润色提示词和模型路由。</td>
+                <td>使用 <code>--no-polish</code> 关闭润色，或把润色步骤路由到更稳定遵循内置提示词、较少过度改写的模型。</td>
               </tr>
               <tr>
                 <td>成本增长过快</td>
@@ -1047,8 +1037,6 @@ cat-cli books show BOOK_ID</code></pre>
       const languageLabel = document.getElementById("language-label");
       const heroTitle = document.getElementById("hero-title");
       const heroCopy = document.getElementById("hero-copy");
-      const heroCardTitle = document.getElementById("hero-card-title");
-      const heroCardCopy = document.getElementById("hero-card-copy");
       const languagePanels = document.querySelectorAll("[data-language-panel]");
       const sectionLinks = document.querySelectorAll("[data-section-link]");
       const languageConfig = {
@@ -1059,9 +1047,6 @@ cat-cli books show BOOK_ID</code></pre>
             heroTitle: "Advanced Usage and Feature Guide",
             heroCopy:
               "A practical guide to CAT's long-document translation features, glossary memory, previous-context injection, format preservation guarantees, OCR workflows, manga translation, CLI automation, troubleshooting, and cost-aware model routing.",
-            heroCardTitle: "Language Selection",
-            heroCardCopy:
-              "Use the language dropdown in the navigation bar to switch between English and Chinese. Only the selected language is shown.",
           },
           labels: {
             features: "Features",
@@ -1083,9 +1068,6 @@ cat-cli books show BOOK_ID</code></pre>
             heroTitle: "高级使用与功能指南",
             heroCopy:
               "介绍 CAT 的长文档翻译能力、术语记忆、前文注入、格式保留保证、OCR、漫画翻译、CLI 自动化、排障和成本控制。",
-            heroCardTitle: "选择语言",
-            heroCardCopy:
-              "使用导航栏中的语言下拉菜单在 English 和中文之间切换。页面只显示当前选中的语言。",
           },
           labels: {
             features: "功能",
@@ -1152,8 +1134,6 @@ cat-cli books show BOOK_ID</code></pre>
         languageLabel.textContent = config.ui.languageLabel;
         heroTitle.textContent = config.ui.heroTitle;
         heroCopy.textContent = config.ui.heroCopy;
-        heroCardTitle.textContent = config.ui.heroCardTitle;
-        heroCardCopy.textContent = config.ui.heroCardCopy;
         languageSelect.value = activeLanguage;
         languagePanels.forEach((panel) => {
           panel.hidden = panel.dataset.languagePanel !== activeLanguage;

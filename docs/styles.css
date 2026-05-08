@@ -120,7 +120,7 @@ code {
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   min-height: 74vh;
   gap: 3rem;
@@ -161,7 +161,6 @@ h3 {
 
 .hero-copy,
 .section-heading p,
-.hero-card p,
 .feature-card p,
 .timeline p,
 .settings-grid p,
@@ -208,7 +207,6 @@ h3 {
   color: var(--accent-dark);
 }
 
-.hero-card,
 .feature-card,
 .timeline article,
 .settings-grid article,
@@ -218,14 +216,6 @@ h3 {
   border-radius: 1.35rem;
   background: rgba(255, 253, 248, 0.86);
   box-shadow: var(--shadow);
-}
-
-.hero-card {
-  padding: 1.5rem;
-}
-
-.hero-card h2 {
-  font-size: 1.5rem;
 }
 
 .section-heading {
