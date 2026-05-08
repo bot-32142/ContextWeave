@@ -42,13 +42,6 @@
             cost-aware model routing.
           </p>
         </div>
-        <aside class="hero-card" aria-label="Language selection note">
-          <h2 id="hero-card-title">Language Selection</h2>
-          <p id="hero-card-copy">
-            Use the language dropdown in the navigation bar to switch between
-            English and Chinese. Only the selected language is shown.
-          </p>
-        </aside>
       </section>
 
       <div class="language-content" data-language-panel="en">
@@ -1047,8 +1040,6 @@ cat-cli books show BOOK_ID</code></pre>
       const languageLabel = document.getElementById("language-label");
       const heroTitle = document.getElementById("hero-title");
       const heroCopy = document.getElementById("hero-copy");
-      const heroCardTitle = document.getElementById("hero-card-title");
-      const heroCardCopy = document.getElementById("hero-card-copy");
       const languagePanels = document.querySelectorAll("[data-language-panel]");
       const sectionLinks = document.querySelectorAll("[data-section-link]");
       const languageConfig = {
@@ -1059,9 +1050,6 @@ cat-cli books show BOOK_ID</code></pre>
             heroTitle: "Advanced Usage and Feature Guide",
             heroCopy:
               "A practical guide to CAT's long-document translation features, glossary memory, previous-context injection, format preservation guarantees, OCR workflows, manga translation, CLI automation, troubleshooting, and cost-aware model routing.",
-            heroCardTitle: "Language Selection",
-            heroCardCopy:
-              "Use the language dropdown in the navigation bar to switch between English and Chinese. Only the selected language is shown.",
           },
           labels: {
             features: "Features",
@@ -1083,9 +1071,6 @@ cat-cli books show BOOK_ID</code></pre>
             heroTitle: "高级使用与功能指南",
             heroCopy:
               "介绍 CAT 的长文档翻译能力、术语记忆、前文注入、格式保留保证、OCR、漫画翻译、CLI 自动化、排障和成本控制。",
-            heroCardTitle: "选择语言",
-            heroCardCopy:
-              "使用导航栏中的语言下拉菜单在 English 和中文之间切换。页面只显示当前选中的语言。",
           },
           labels: {
             features: "功能",
@@ -1152,8 +1137,6 @@ cat-cli books show BOOK_ID</code></pre>
         languageLabel.textContent = config.ui.languageLabel;
         heroTitle.textContent = config.ui.heroTitle;
         heroCopy.textContent = config.ui.heroCopy;
-        heroCardTitle.textContent = config.ui.heroCardTitle;
-        heroCardCopy.textContent = config.ui.heroCardCopy;
         languageSelect.value = activeLanguage;
         languagePanels.forEach((panel) => {
           panel.hidden = panel.dataset.languagePanel !== activeLanguage;

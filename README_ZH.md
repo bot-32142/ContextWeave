@@ -4,7 +4,7 @@
 
 CAT 是一个适合长篇小说、书籍、PDF、扫描文档、漫画和字幕的**全自动**桌面翻译工具。它的目标是在尽量保留源文件格式的同时，让整部作品的术语和翻译风格保持一致。
 
-[高级文档](https://bot-32142.github.io/context-aware-translation/) 介绍术语记忆、前文注入、格式保留、CLI 自动化和高级用例。
+[高级文档](https://bot-32142.github.io/context-aware-translation/#features-zh) 介绍术语记忆、前文注入、格式保留、CLI 自动化和高级用例。
 
 ## 适合谁使用
 
