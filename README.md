@@ -117,7 +117,7 @@ A commented starting point is available at [docs/examples/cat-cli.yaml](docs/exa
 ## What To Know Before Using CAT
 
 - The setup wizard path is mainly tested with `DeepSeek` + `Gemini`. `Claude` and `GPT` should also work well, but I do not recommend going below `DeepSeek`-class models.
-- Image editing is expensive, and hallucinations are still common.
+- Image editing is expensive, and hallucinations are still common. For image reembedding, `GPT Image 2` is recommended when available.
 - OCR does not preserve original layout for PDFs and scanned books. It rebuilds from content instead. Manga is the exception.
 - Import in reading order if you want the glossary and context to build correctly.
 - Samples are still limited because testing across formats is expensive. Bug reports are very welcome.
