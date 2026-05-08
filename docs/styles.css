@@ -142,6 +142,9 @@ h3 {
 .feature-card p,
 .timeline p,
 .settings-grid p,
+.detail-panel p,
+.detail-panel li,
+.callout p,
 .split-section p,
 .footer p {
   color: var(--muted);
@@ -185,7 +188,9 @@ h3 {
 .hero-card,
 .feature-card,
 .timeline article,
-.settings-grid article {
+.settings-grid article,
+.detail-panel,
+.callout {
   border: 1px solid var(--line);
   border-radius: 1.35rem;
   background: rgba(255, 253, 248, 0.86);
@@ -215,20 +220,52 @@ h3 {
 }
 
 .feature-grid,
-.settings-grid {
+.settings-grid,
+.detail-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
 }
 
 .feature-card,
-.settings-grid article {
+.settings-grid article,
+.detail-panel,
+.callout {
   padding: 1.25rem;
 }
 
 .feature-card p,
-.settings-grid p {
+.settings-grid p,
+.detail-panel p,
+.callout p {
   margin: 0.7rem 0 0;
+}
+
+.detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.callout {
+  margin-top: 1rem;
+  border-left: 0.38rem solid var(--accent);
+  background: var(--surface-strong);
+}
+
+.code-sample pre {
+  overflow-x: auto;
+  margin: 1rem 0 0;
+  border-radius: 1rem;
+  background: #24160f;
+  color: #fff8ea;
+  padding: 1rem;
+  line-height: 1.55;
+}
+
+.code-sample pre code {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
 }
 
 .timeline {
@@ -339,6 +376,7 @@ td:first-child {
 
   .feature-grid,
   .settings-grid,
+  .detail-grid,
   .timeline {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -360,6 +398,7 @@ td:first-child {
 
   .feature-grid,
   .settings-grid,
+  .detail-grid,
   .timeline {
     grid-template-columns: 1fr;
   }
