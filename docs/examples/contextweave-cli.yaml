@@ -1,14 +1,14 @@
-# Context-Aware Translation CLI config example.
+# ContextWeave CLI config example.
 #
 # This file is intentionally verbose. It is meant to be a single AI-readable
-# reference for generating CAT CLI configs, close to what the Setup Wizard
+# reference for generating ContextWeave CLI configs, close to what the Setup Wizard
 # creates for a Balanced, DeepSeek-only workflow profile.
 #
-# cat-cli resolves config in this order:
+# contextweave-cli resolves config in this order:
 # 1. --config PATH
-# 2. CAT_CONFIG
-# 3. nearest cat.yaml, cat.yml, .cat.yaml, or .cat.yml walking upward from cwd
-# 4. the platform default shown by `cat-cli config path`
+# 2. CONTEXTWEAVE_CONFIG
+# 3. nearest contextweave.yaml, contextweave.yml, .contextweave.yaml, or .contextweave.yml walking upward from cwd
+# 4. the platform default shown by `contextweave-cli config path`
 #
 # The schema mirrors the app setup UI:
 # - connections.* is close to ConnectionDraft
@@ -30,7 +30,7 @@ connections:
     provider: deepseek
 
     # Prefer api_key_env so secrets stay out of config files, book configs, and task snapshots.
-    # The environment variable must be present when running `cat-cli config validate` or `cat-cli run`.
+    # The environment variable must be present when running `contextweave-cli config validate` or `contextweave-cli run`.
     api_key_env: DEEPSEEK_API_KEY
 
     # api_key is accepted for private/local configs, but do not set both api_key and api_key_env.
@@ -65,7 +65,7 @@ workflow_profiles:
     name: Balanced DeepSeek
     kind: shared
 
-    # The language CAT should translate into for books created from this profile.
+    # The language ContextWeave should translate into for books created from this profile.
     target_language: English
 
     routes:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build script for Context-Aware Translation UI."""
+"""Build script for ContextWeave UI."""
 
 import argparse
 import platform
@@ -7,6 +7,8 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+APP_NAME = 'ContextWeave'
 
 
 def get_project_root() -> Path:
@@ -53,17 +55,17 @@ def print_build_info(project_root: Path) -> None:
     print(f"Python: {sys.version}")
 
     if system == 'Darwin':
-        app_path = dist_dir / 'CAT-UI.app'
+        app_path = dist_dir / f'{APP_NAME}.app'
         if app_path.exists():
             print(f"\nmacOS App Bundle: {app_path}")
             print(f"To run: open '{app_path}'")
     elif system == 'Windows':
-        exe_path = dist_dir / 'CAT-UI' / 'CAT-UI.exe'
+        exe_path = dist_dir / APP_NAME / f'{APP_NAME}.exe'
         if exe_path.exists():
             print(f"\nWindows Executable: {exe_path}")
             print(f"To run: {exe_path}")
     else:  # Linux
-        exe_path = dist_dir / 'CAT-UI' / 'CAT-UI'
+        exe_path = dist_dir / APP_NAME / APP_NAME
         if exe_path.exists():
             print(f"\nLinux Executable: {exe_path}")
             print(f"To run: {exe_path}")
@@ -78,7 +80,7 @@ def print_build_info(project_root: Path) -> None:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(description='Build Context-Aware Translation UI')
+    parser = argparse.ArgumentParser(description='Build ContextWeave UI')
     parser.add_argument('--clean', action='store_true', help='Clean build directories before building')
     parser.add_argument('--debug', action='store_true', help='Build with debug enabled')
     parser.add_argument('--no-build', action='store_true', help='Only clean, do not build')

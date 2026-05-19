@@ -10,8 +10,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from platformdirs import user_data_dir
-
+from context_aware_translation.app_identity import default_user_data_dir
 from context_aware_translation.config import (
     CONFIG_SNAPSHOT_VERSION,
     Config,
@@ -26,10 +25,11 @@ from context_aware_translation.storage.schema.book_db import SQLiteBookDB
 from context_aware_translation.storage.schema.registry_db import RegistryDB
 
 # Platform-specific data directory:
-# macOS:   ~/Library/Application Support/ContextAwareTranslation
-# Windows: C:\Users\<User>\AppData\Roaming\ContextAwareTranslation
-# Linux:   ~/.local/share/ContextAwareTranslation
-DEFAULT_LIBRARY_ROOT = Path(user_data_dir("ContextAwareTranslation", appauthor=False))
+# macOS:   ~/Library/Application Support/ContextWeave
+# Windows: C:\Users\<User>\AppData\Roaming\ContextWeave
+# Linux:   ~/.local/share/ContextWeave
+# Existing installs continue using the legacy ContextAwareTranslation directory.
+DEFAULT_LIBRARY_ROOT = default_user_data_dir()
 
 
 class BookManager:

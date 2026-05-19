@@ -11,7 +11,7 @@ permissions:
 
 env:
   PYTHON_VERSION: '3.12'
-  APP_NAME: 'CAT-UI'
+  APP_NAME: 'ContextWeave'
 
 jobs:
   build:
@@ -132,8 +132,8 @@ jobs:
           APP_DIST="dist/${{ env.APP_NAME }}"
 
           # PyInstaller layout may vary across versions/platforms:
-          # - dist/CAT-UI/_internal/opencc/...
-          # - dist/CAT-UI/opencc/...
+          # - dist/ContextWeave/_internal/opencc/...
+          # - dist/ContextWeave/opencc/...
           OPENCC_BASE=""
           for base in "$APP_DIST/_internal" "$APP_DIST"; do
             if [ -f "$base/opencc/config/jp2s.json" ] && [ -d "$base/opencc/dictionary" ]; then
@@ -199,7 +199,7 @@ jobs:
           brew install create-dmg || true
           # create-dmg may return non-zero for cosmetic issues; DMG is still created
           create-dmg \
-            --volname "Context-Aware Translation" \
+            --volname "ContextWeave" \
             --window-pos 200 120 \
             --window-size 600 400 \
             --icon-size 100 \
@@ -313,7 +313,7 @@ jobs:
       - name: Smoke test portable zip (Windows)
         if: runner.os == 'Windows'
         env:
-          CAT_SMOKE_TEST_STARTUP: '1'
+          CONTEXTWEAVE_SMOKE_TEST_STARTUP: '1'
         shell: powershell
         run: |
           $archivePath = Resolve-Path "release\${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.platform_name }}.zip"

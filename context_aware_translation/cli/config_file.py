@@ -7,19 +7,29 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from platformdirs import user_config_dir
 
+from context_aware_translation.app_identity import default_user_config_dir
 from context_aware_translation.application.contracts.app_setup import ConnectionDraft, WorkflowProfileDetail
 from context_aware_translation.application.runtime import build_workflow_profile_payload
 from context_aware_translation.config import EndpointProfile, ensure_valid_persisted_config_payload
 
 from .output import EXIT_USAGE, CliError
 
-CONFIG_ENV_VAR = "CAT_CONFIG"
-LOCAL_CONFIG_NAMES = ("cat.yaml", "cat.yml", ".cat.yaml", ".cat.yml")
+CONFIG_ENV_VAR = "CONTEXTWEAVE_CONFIG"
+LEGACY_CONFIG_ENV_VAR = "CAT_CONFIG"
+LOCAL_CONFIG_NAMES = (
+    "contextweave.yaml",
+    "contextweave.yml",
+    ".contextweave.yaml",
+    ".contextweave.yml",
+    "cat.yaml",
+    "cat.yml",
+    ".cat.yaml",
+    ".cat.yml",
+)
 
 
-STARTER_CONFIG = """# Context-Aware Translation CLI config
+STARTER_CONFIG = """# ContextWeave CLI config
 version: 1
 default_workflow_profile: balanced_deepseek
 
@@ -122,7 +132,7 @@ class ResolvedCliConfig:
 
 
 def default_config_path() -> Path:
-    return Path(user_config_dir("ContextAwareTranslation", appauthor=False)) / "cli.yaml"
+    return default_user_config_dir() / "cli.yaml"
 
 
 def _normalize_path(path: str | Path) -> Path:
@@ -144,6 +154,8 @@ def resolve_config_path(explicit_path: str | None = None, *, require_exists: boo
         path = _normalize_path(explicit_path)
     elif os.environ.get(CONFIG_ENV_VAR):
         path = _normalize_path(os.environ[CONFIG_ENV_VAR])
+    elif os.environ.get(LEGACY_CONFIG_ENV_VAR):
+        path = _normalize_path(os.environ[LEGACY_CONFIG_ENV_VAR])
     else:
         path = find_local_config() or default_config_path()
 

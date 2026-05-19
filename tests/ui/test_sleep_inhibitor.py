@@ -208,7 +208,7 @@ def test_linux_uses_systemd_inhibit(mock_subprocess):
         [
             "systemd-inhibit",
             "--what=idle",
-            "--who=context-aware-translation",
+            "--who=contextweave",
             "--why=Background operation in progress",
             "cat",
         ],

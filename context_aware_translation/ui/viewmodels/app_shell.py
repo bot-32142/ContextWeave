@@ -29,7 +29,7 @@ class AppShellViewModel(RouteStateViewModel):
 
     @Property(str, notify=labels_changed)
     def app_name(self) -> str:
-        return QCoreApplication.translate("MainWindow", "Context-Aware Translation")
+        return QCoreApplication.translate("MainWindow", "ContextWeave")
 
     @Property(str, notify=labels_changed)
     def projects_label(self) -> str:

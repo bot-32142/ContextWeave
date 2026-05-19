@@ -472,7 +472,7 @@ class _FakeProjectShellHost(QWidget):
 
 def _make_context():
     book_manager = MagicMock()
-    book_manager.library_root = Path("/tmp/context-aware-translation-tests")
+    book_manager.library_root = Path("/tmp/contextweave-tests")
     task_store = MagicMock()
     task_engine = _FakeTaskEngine()
     app_setup_service = FakeAppSetupService(state=MagicMock())
