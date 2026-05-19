@@ -14,7 +14,7 @@ Rectangle {
 
     property bool hasCurrentProject: appShell ? appShell.has_current_project : false
     property string currentProjectName: appShell ? appShell.current_project_name : ""
-    property string appName: appShell ? appShell.app_name : "Context-Aware Translation"
+    property string appName: appShell ? appShell.app_name : "ContextWeave"
     property string projectsLabel: appShell ? appShell.projects_label : "Projects"
     property string queueLabelText: appShell ? appShell.queue_label : "Queue"
     property string appSettingsLabelText: appShell ? appShell.app_settings_label : "App Settings"

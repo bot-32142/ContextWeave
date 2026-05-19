@@ -37,7 +37,7 @@ def test_qml_bootstrap_probe_loads():
     try:
         assert instance is not None
         assert instance.objectName() == "qmlBootstrapProbe"
-        assert instance.property("bootstrapMessage") == "CAT QML bootstrap ready"
+        assert instance.property("bootstrapMessage") == "ContextWeave QML bootstrap ready"
     finally:
         if instance is not None:
             instance.deleteLater()

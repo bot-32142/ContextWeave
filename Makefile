@@ -92,8 +92,8 @@ build-macos-app:
 	fi
 	$(PYTHON) scripts/build_ui.py --clean
 	@echo ""
-	@echo "Local macOS app bundle ready: dist/CAT-UI.app"
-	@echo "Open it with: open dist/CAT-UI.app"
+	@echo "Local macOS app bundle ready: dist/ContextWeave.app"
+	@echo "Open it with: open dist/ContextWeave.app"
 
 clean-ui:
 	$(PYTHON) scripts/build_ui.py --no-build --clean

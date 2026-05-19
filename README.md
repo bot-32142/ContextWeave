@@ -1,19 +1,21 @@
 **English** | [中文](README_ZH.md)
 
-# Context-Aware Translation (CAT)
+# ContextWeave
 
-CAT is a fully automatic desktop translation app for long novels, books, PDFs, scanned documents, manga, and subtitles. It aims to preserve source formatting while keeping terminology and translation style consistent across the whole work.
+**Context-aware document translation / 语境感知文档翻译**
+
+ContextWeave (语络译) is a fully automatic desktop translation app for long novels, books, PDFs, scanned documents, manga, and subtitles. It aims to preserve source formatting while keeping terminology and translation style consistent across the whole work.
 
 [Advanced documentation](https://bot-32142.github.io/context-aware-translation/) covers glossary memory, previous-context injection, format preservation, CLI automation, and advanced use cases.
 
-## Who CAT Is For
+## Who ContextWeave Is For
 
 - Novel, web novel, and light novel translation
 - Long books and documents that need consistent naming and terminology
 - Scanned books, PDFs, and manga that need OCR before translation
 - People who want a desktop workflow instead of managing prompts by hand
 
-## Why CAT
+## Why ContextWeave
 
 - Builds a glossary from your source material
 - Carries context forward across chapters and pages, with useful summaries injected alongside glossary context
@@ -27,16 +29,16 @@ Current desktop builds are unsigned, so the first launch may show an OS security
 ### macOS
 
 - Download the latest `.dmg`
-- Open it and drag `CAT-UI.app` into `Applications`
-- Launch `CAT-UI.app` from `Applications`
+- Open it and drag `ContextWeave.app` into `Applications`
+- Launch `ContextWeave.app` from `Applications`
 - If macOS blocks it because the developer cannot be verified, go to `System Settings` -> `Privacy & Security`
-- In the `Security` section, click `Open Anyway` for `CAT-UI.app`, then confirm `Open`
+- In the `Security` section, click `Open Anyway` for `ContextWeave.app`, then confirm `Open`
 
 ### Windows
 
 - Download the latest `.zip`
 - Unzip it anywhere
-- Run `CAT-UI.exe`
+- Run `ContextWeave.exe`
 - If Windows SmartScreen warns that the app is unrecognized, click `More info` -> `Run anyway`
 
 <details>
@@ -56,7 +58,7 @@ The wizard collects the providers it needs up front. For most users, `DeepSeek` 
 
 ### 3. Review the workflow profile
 
-The review step shows which connection and model CAT will use for each workflow step.
+The review step shows which connection and model ContextWeave will use for each workflow step.
 
 ![Workflow profile review](docs/screenshots/EN/latest_setup_wizard_workflow_profile_review.png)
 
@@ -80,7 +82,7 @@ Import files in reading order so terminology and context stay consistent across 
 
 ### 3. Optional: import existing term translations
 
-Open `Terms`, then use `Import Terms` if you already have a terminology list you want CAT to reuse. A simple JSON object like `{"original": "translated"}` is enough.
+Open `Terms`, then use `Import Terms` if you already have a terminology list you want ContextWeave to reuse. A simple JSON object like `{"original": "translated"}` is enough.
 
 ![Terms overview](docs/screenshots/EN/latest_terms_overview.png)
 
@@ -94,27 +96,27 @@ Quality can be dramatically better with `Gemini` or `GPT`, but the cost is also 
 
 ## CLI
 
-CAT also includes a small CLI for config-driven one-shot translation and basic book management. From a source checkout, use `uv run cat-cli`; from an installed package, use `cat-cli`.
+ContextWeave also includes a small CLI for config-driven one-shot translation and basic book management. From a source checkout, use `uv run contextweave-cli`; from an installed package, use `contextweave-cli`.
 
 ```bash
-cat-cli config path
-cat-cli config init
-cat-cli config validate
+contextweave-cli config path
+contextweave-cli config init
+contextweave-cli config validate
 
-cat-cli run ./book.epub --output ./translated/book.epub
-cat-cli run ./chapter.txt --output ./translated/chapter.txt --json
-cat-cli run ./episode.srt --output ./translated/episode.srt --no-polish
+contextweave-cli run ./book.epub --output ./translated/book.epub
+contextweave-cli run ./chapter.txt --output ./translated/chapter.txt --json
+contextweave-cli run ./episode.srt --output ./translated/episode.srt --no-polish
 
-cat-cli books list
-cat-cli books show BOOK_ID
-cat-cli books delete BOOK_ID --yes
+contextweave-cli books list
+contextweave-cli books show BOOK_ID
+contextweave-cli books delete BOOK_ID --yes
 ```
 
-The CLI resolves config from `--config`, then `CAT_CONFIG`, then the nearest `cat.yaml`/`.cat.yaml` walking upward, then the platform default shown by `cat-cli config path`. The config mirrors the setup UI: `connections` define provider endpoints and `workflow_profiles` route each translation step. Prefer `api_key_env` so API keys stay in environment variables instead of config files or task snapshots. Use `--no-polish` when a one-shot run should skip the polish pass, which can be useful for timing-sensitive subtitle output.
+The CLI resolves config from `--config`, then `CONTEXTWEAVE_CONFIG`, then the nearest `contextweave.yaml`/`.contextweave.yaml` walking upward, then the platform default shown by `contextweave-cli config path`. The config mirrors the setup UI: `connections` define provider endpoints and `workflow_profiles` route each translation step. Prefer `api_key_env` so API keys stay in environment variables instead of config files or task snapshots. Use `--no-polish` when a one-shot run should skip the polish pass, which can be useful for timing-sensitive subtitle output.
 
-A commented starting point is available at [docs/examples/cat-cli.yaml](docs/examples/cat-cli.yaml).
+A commented starting point is available at [docs/examples/contextweave-cli.yaml](docs/examples/contextweave-cli.yaml).
 
-## What To Know Before Using CAT
+## What To Know Before Using ContextWeave
 
 - The setup wizard path is mainly tested with `DeepSeek` + `Gemini`. `Claude` and `GPT` should also work well, but I do not recommend going below `DeepSeek`-class models.
 - Image editing is expensive, and hallucinations are still common. For image reembedding, `GPT Image 2` is recommended when available.

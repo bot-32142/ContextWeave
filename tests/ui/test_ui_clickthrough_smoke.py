@@ -435,7 +435,7 @@ def _make_queue_state() -> QueueState:
 
 def _make_context():
     book_manager = MagicMock()
-    book_manager.library_root = Path("/tmp/context-aware-translation-ui-smoke")
+    book_manager.library_root = Path("/tmp/contextweave-ui-smoke")
     task_store = MagicMock()
     task_engine = _FakeTaskEngine()
     work_service = FakeWorkService(state_by_project={"proj-1": _make_workboard_state()})

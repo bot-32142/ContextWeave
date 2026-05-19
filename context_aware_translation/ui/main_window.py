@@ -11,6 +11,12 @@ from PySide6.QtWidgets import (
 )
 
 from context_aware_translation.adapters.qt.application_event_bridge import QtApplicationEventBridge
+from context_aware_translation.app_identity import (
+    APP_NAME,
+    APP_ORGANIZATION_NAME,
+    LEGACY_APP_NAME,
+    LEGACY_APP_ORGANIZATION_NAME,
+)
 from context_aware_translation.application.composition import build_application_context
 from context_aware_translation.application.contracts.common import (
     NavigationTarget,
@@ -57,7 +63,7 @@ class MainWindow(QMainWindow):
     def __init__(self) -> None:
         """Initialize the main window."""
         super().__init__()
-        self.setWindowTitle(self.tr("Context-Aware Translation"))
+        self.setWindowTitle(self.tr("ContextWeave"))
         self.setMinimumSize(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT)
 
         # View registry: name -> widget reference
@@ -195,31 +201,38 @@ class MainWindow(QMainWindow):
 
     def _restore_geometry(self) -> None:
         """Restore window geometry from settings."""
-        settings = QSettings("CAT", "Context-Aware Translation")
-        bounds = settings.value("window_bounds_v2")
-        if isinstance(bounds, QRect) and bounds.isValid() and self._bounds_fit_available_geometry(bounds):
-            self.setGeometry(bounds)
-            return
-
-        geometry = settings.value("geometry")
-        if geometry and self.restoreGeometry(geometry):
-            if (
-                not self.isFullScreen()
-                and not self.isMaximized()
-                and self._bounds_fit_available_geometry(self.geometry())
-            ):
+        for settings in self._settings_candidates():
+            bounds = settings.value("window_bounds_v2")
+            if isinstance(bounds, QRect) and bounds.isValid() and self._bounds_fit_available_geometry(bounds):
+                self.setGeometry(bounds)
                 return
-            self.setWindowState(Qt.WindowState.WindowNoState)
+
+            geometry = settings.value("geometry")
+            if geometry and self.restoreGeometry(geometry):
+                if (
+                    not self.isFullScreen()
+                    and not self.isMaximized()
+                    and self._bounds_fit_available_geometry(self.geometry())
+                ):
+                    return
+                self.setWindowState(Qt.WindowState.WindowNoState)
 
         self._apply_default_window_geometry()
 
     def _save_geometry(self) -> None:
         """Save window geometry to settings."""
-        settings = QSettings("CAT", "Context-Aware Translation")
+        settings = QSettings(APP_ORGANIZATION_NAME, APP_NAME)
         bounds = self.normalGeometry() if self.isFullScreen() or self.isMaximized() else self.geometry()
         if bounds.isValid():
             settings.setValue("window_bounds_v2", bounds)
         settings.remove("geometry")
+
+    @staticmethod
+    def _settings_candidates() -> tuple[QSettings, QSettings]:
+        return (
+            QSettings(APP_ORGANIZATION_NAME, APP_NAME),
+            QSettings(LEGACY_APP_ORGANIZATION_NAME, LEGACY_APP_NAME),
+        )
 
     def _available_geometry(self) -> QRect | None:
         screen = self.screen()
@@ -344,13 +357,12 @@ class MainWindow(QMainWindow):
         """Handle about action."""
         QMessageBox.about(
             self,
-            self.tr("About Context-Aware Translation"),
+            self.tr("About ContextWeave"),
             qarg(
                 self.tr(
-                    "<h3>Context-Aware Translation</h3>"
+                    "<h3>ContextWeave</h3>"
                     "<p>Version %1</p>"
-                    "<p>A desktop application for context-aware document translation "
-                    "with glossary management and OCR support.</p>"
+                    "<p>Context-aware document translation with glossary management and OCR support.</p>"
                     "<p>Built with PySide6 (Qt for Python)</p>"
                 ),
                 APP_VERSION,
@@ -531,7 +543,7 @@ class MainWindow(QMainWindow):
 
     def retranslateUi(self) -> None:
         """Retranslate all UI elements."""
-        self.setWindowTitle(self.tr("Context-Aware Translation"))
+        self.setWindowTitle(self.tr("ContextWeave"))
         self._app_shell.retranslate()
         self._app_settings_dialog.retranslate()
         self._queue_controller.retranslate()

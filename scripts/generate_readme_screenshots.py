@@ -12,6 +12,7 @@ os.environ.setdefault("QT_QUICK_BACKEND", "software")
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QLineEdit, QStyleFactory, QWidget
 
+from context_aware_translation.app_identity import APP_NAME, APP_ORGANIZATION_DOMAIN, APP_ORGANIZATION_NAME
 from context_aware_translation.application.contracts.app_setup import (
     AppSetupState,
     ConnectionDraft,
@@ -104,9 +105,9 @@ def _ensure_app() -> QApplication:
     app = QApplication.instance()
     if app is None:
         app = QApplication([])
-        app.setApplicationName("Context-Aware Translation")
-        app.setOrganizationName("CAT")
-        app.setOrganizationDomain("context-aware-translation")
+        app.setApplicationName(APP_NAME)
+        app.setOrganizationName(APP_ORGANIZATION_NAME)
+        app.setOrganizationDomain(APP_ORGANIZATION_DOMAIN)
     style_name = preferred_style_name(sys.platform, QStyleFactory.keys())
     if style_name:
         app.setStyle(style_name)

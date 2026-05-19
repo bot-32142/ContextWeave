@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 from typing import cast
 
-from platformdirs import user_data_dir
 from PySide6.QtCore import (
     QT_TRANSLATE_NOOP as _QT_TRANSLATE_NOOP,
 )
@@ -17,6 +16,14 @@ from PySide6.QtCore import (
     QTranslator,
 )
 from PySide6.QtWidgets import QApplication
+
+from context_aware_translation.app_identity import (
+    APP_NAME,
+    APP_ORGANIZATION_NAME,
+    LEGACY_APP_NAME,
+    LEGACY_APP_ORGANIZATION_NAME,
+    default_user_data_dir,
+)
 
 
 def QT_TRANSLATE_NOOP(context: str, text: str) -> str:
@@ -90,16 +97,18 @@ def get_saved_language() -> str:
 
     Returns empty string if no preference is saved.
     """
-    settings = QSettings("CAT", "Context-Aware Translation")
-    saved = settings.value("ui_language", "", type=str)
-    # QSettings.value can return object type, ensure it's a string
-    saved_str = str(saved) if saved else ""
-    return saved_str if saved_str in SUPPORTED_LANGUAGES else ""
+    for settings in _settings_candidates():
+        saved = settings.value("ui_language", "", type=str)
+        # QSettings.value can return object type, ensure it's a string
+        saved_str = str(saved) if saved else ""
+        if saved_str in SUPPORTED_LANGUAGES:
+            return saved_str
+    return ""
 
 
 def get_default_registry_db_path() -> Path:
     """Return the default registry database path used for first-run detection."""
-    return Path(user_data_dir("ContextAwareTranslation", appauthor=False)) / "registry.db"
+    return default_user_data_dir() / "registry.db"
 
 
 def resolve_startup_language() -> str:
@@ -127,8 +136,15 @@ def save_language(locale_code: str) -> None:
     """Save the language preference to QSettings."""
     if locale_code not in SUPPORTED_LANGUAGES:
         raise ValueError(f"Unsupported language: {locale_code}")
-    settings = QSettings("CAT", "Context-Aware Translation")
+    settings = QSettings(APP_ORGANIZATION_NAME, APP_NAME)
     settings.setValue("ui_language", locale_code)
+
+
+def _settings_candidates() -> tuple[QSettings, QSettings]:
+    return (
+        QSettings(APP_ORGANIZATION_NAME, APP_NAME),
+        QSettings(LEGACY_APP_ORGANIZATION_NAME, LEGACY_APP_NAME),
+    )
 
 
 def load_translation(app: QApplication, locale_code: str) -> bool:

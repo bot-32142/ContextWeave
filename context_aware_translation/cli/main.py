@@ -72,7 +72,7 @@ def build_parser() -> argparse.ArgumentParser:
     common.add_argument("--quiet", action="store_true")
     common.add_argument("--verbose", action="store_true")
 
-    parser = argparse.ArgumentParser(prog="cat-cli", parents=[common])
+    parser = argparse.ArgumentParser(prog="contextweave-cli", parents=[common])
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     config_parser = subparsers.add_parser("config", parents=[common])
@@ -192,7 +192,7 @@ def run_one_shot(args: argparse.Namespace) -> dict[str, Any]:
         if len(imported_rows) != 1:
             raise CliError(
                 "unsupported_import",
-                "cat-cli run expects exactly one imported document in v1.",
+                "contextweave-cli run expects exactly one imported document in v1.",
                 exit_code=EXIT_BLOCKED,
                 details={"imported_count": len(imported_rows), "book_id": book_id},
             )

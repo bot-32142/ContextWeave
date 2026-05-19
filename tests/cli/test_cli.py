@@ -6,7 +6,7 @@ from typing import Any
 
 from context_aware_translation.application.contracts.common import AcceptedCommand, UserMessage, UserMessageSeverity
 from context_aware_translation.application.services.document import DefaultDocumentService
-from context_aware_translation.cli.config_file import default_config_path
+from context_aware_translation.cli.config_file import CONFIG_ENV_VAR, default_config_path
 from context_aware_translation.cli.main import run
 
 
@@ -57,7 +57,7 @@ workflow_profiles:
 
 
 def _write_config(tmp_path: Path, text: str | None = None) -> Path:
-    config_path = tmp_path / "cat.yaml"
+    config_path = tmp_path / "contextweave.yaml"
     config_path.write_text(text or _config_text(), encoding="utf-8")
     return config_path
 
@@ -83,7 +83,7 @@ def _fake_run_translate_and_export(self: DefaultDocumentService, request: Any) -
 
 
 def test_config_path_reports_explicit_path(tmp_path: Path, capsys: Any) -> None:
-    config_path = tmp_path / "cat.yaml"
+    config_path = tmp_path / "contextweave.yaml"
 
     exit_code = run(["--config", str(config_path), "--json", "config", "path"])
 
@@ -96,7 +96,7 @@ def test_config_path_reports_explicit_path(tmp_path: Path, capsys: Any) -> None:
 
 def test_config_path_uses_default_when_no_overrides(tmp_path: Path, monkeypatch: Any, capsys: Any) -> None:
     monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("CAT_CONFIG", raising=False)
+    monkeypatch.delenv(CONFIG_ENV_VAR, raising=False)
 
     exit_code = run(["--json", "config", "path"])
 
@@ -112,7 +112,7 @@ def test_config_path_prefers_env_over_local_config(tmp_path: Path, monkeypatch: 
     child = tmp_path / "child"
     child.mkdir()
     monkeypatch.chdir(child)
-    monkeypatch.setenv("CAT_CONFIG", str(env_config))
+    monkeypatch.setenv(CONFIG_ENV_VAR, str(env_config))
 
     exit_code = run(["--json", "config", "path"])
 
@@ -123,7 +123,7 @@ def test_config_path_prefers_env_over_local_config(tmp_path: Path, monkeypatch: 
 
 
 def test_config_init_writes_and_refuses_overwrite(tmp_path: Path, capsys: Any) -> None:
-    config_path = tmp_path / "cat.yaml"
+    config_path = tmp_path / "contextweave.yaml"
 
     assert run(["--config", str(config_path), "--json", "config", "init"]) == 0
     assert config_path.exists()
@@ -148,7 +148,7 @@ def test_config_validate_accepts_valid_config(tmp_path: Path, monkeypatch: Any, 
 
 def test_documented_example_config_validates(monkeypatch: Any, capsys: Any) -> None:
     monkeypatch.setenv("DEEPSEEK_API_KEY", "test-key")
-    config_path = Path("docs/examples/cat-cli.yaml")
+    config_path = Path("docs/examples/contextweave-cli.yaml")
 
     exit_code = run(["--config", str(config_path), "--json", "config", "validate"])
 
@@ -336,7 +336,7 @@ def test_run_with_book_id_reuses_existing_book(tmp_path: Path, monkeypatch: Any,
 
 
 def test_run_rejects_config_with_book_id(tmp_path: Path, capsys: Any) -> None:
-    config_path = tmp_path / "cat.yaml"
+    config_path = tmp_path / "contextweave.yaml"
 
     exit_code = run(
         [

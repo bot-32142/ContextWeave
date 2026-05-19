@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec file for Context-Aware Translation UI."""
+"""PyInstaller spec file for ContextWeave UI."""
 
 import sys
 import tomllib
@@ -249,7 +249,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='CAT-UI',
+    name='ContextWeave',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -271,19 +271,19 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='CAT-UI',
+    name='ContextWeave',
 )
 
 # macOS app bundle
 if sys.platform == 'darwin':
     app = BUNDLE(
         coll,
-        name='CAT-UI.app',
+        name='ContextWeave.app',
         icon=None,  # TODO: Add .icns file
-        bundle_identifier='com.context-aware-translation.cat-ui',
+        bundle_identifier='com.contextweave.contextweave',
         info_plist={
-            'CFBundleName': 'Context-Aware Translation',
-            'CFBundleDisplayName': 'Context-Aware Translation',
+            'CFBundleName': 'ContextWeave',
+            'CFBundleDisplayName': 'ContextWeave',
             'CFBundleVersion': APP_VERSION,
             'CFBundleShortVersionString': APP_VERSION,
             'NSHighResolutionCapable': True,

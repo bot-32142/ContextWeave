@@ -1,1 +1,1 @@
-"""Command-line interface for Context-Aware Translation."""
+"""Command-line interface for ContextWeave."""

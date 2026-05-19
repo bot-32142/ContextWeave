@@ -64,7 +64,7 @@ class SleepInhibitor:
                 [
                     "systemd-inhibit",
                     "--what=idle",
-                    "--who=context-aware-translation",
+                    "--who=contextweave",
                     "--why=Background operation in progress",
                     "cat",
                 ]
