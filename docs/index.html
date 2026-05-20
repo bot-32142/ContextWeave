@@ -3,17 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Context-Aware Translation Documentation</title>
+    <title>ContextWeave Documentation</title>
       <meta
         name="description"
-        content="Advanced documentation for Context-Aware Translation features, glossary summaries, previous-context injection, CLI automation, and format preservation."
+        content="Advanced documentation for ContextWeave context-aware document translation features, glossary summaries, previous-context injection, CLI automation, and format preservation."
       />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="site-header">
       <nav class="nav" aria-label="Main navigation">
-        <a class="brand" href="#top">CAT Docs</a>
+        <a class="brand" href="#top">ContextWeave Docs</a>
         <div class="nav-links">
           <a href="#features-en" data-section-link="features">Features</a>
           <a href="#context-en" data-section-link="context">Context</a>
@@ -33,10 +33,10 @@
     <main id="top">
       <section class="hero section-shell">
         <div>
-          <p class="eyebrow">Context-Aware Translation</p>
+          <p class="eyebrow">ContextWeave</p>
           <h1 id="hero-title">Advanced Usage and Feature Guide</h1>
           <p class="hero-copy" id="hero-copy">
-            A practical guide to CAT's long-document translation features, glossary memory,
+            A practical guide to ContextWeave's long-document translation features, glossary memory,
             previous-context injection, format preservation guarantees, OCR
             workflows, manga translation, CLI automation, troubleshooting, and
             cost-aware model routing.
@@ -50,7 +50,7 @@
           <p class="eyebrow">English</p>
           <h2 id="features-en">Feature Introduction</h2>
           <p>
-            CAT is designed around a project-level translation pipeline. It does
+            ContextWeave is designed around a project-level translation pipeline. It does
             not ask users to manually maintain long prompts. Instead, it extracts
             source text, builds a glossary, summarizes context, translates in
             batches, optionally polishes the result, and exports the final file.
@@ -70,7 +70,7 @@
           <article class="feature-card">
             <h3>Glossary Extraction</h3>
             <p>
-              CAT scans chunks for names, organizations, places, skills, items,
+              ContextWeave scans chunks for names, organizations, places, skills, items,
               settings, and other terms that need stable translation. Additional
               extraction passes controlled by <code>max_gleaning</code> can recover
               terms missed by the first pass.
@@ -88,7 +88,7 @@
           <article class="feature-card">
             <h3>Previous-Context Injection</h3>
             <p>
-              Before translating a batch, CAT can summarize earlier chunks in the
+              Before translating a batch, ContextWeave can summarize earlier chunks in the
               same document and inject the most recent summaries within a prompt
               budget. This helps resolve omitted subjects, pronouns, who is
               speaking or being addressed, and immediate scene continuity.
@@ -119,7 +119,7 @@
           <p class="eyebrow">Glossary Memory</p>
           <h2 id="context-en">Term and Context Lifecycle</h2>
           <p>
-            CAT separates term discovery, term translation, term memory, and
+            ContextWeave separates term discovery, term translation, term memory, and
             local scene context. This keeps prompts compact while still giving
             the translator the facts most likely to matter for the current
             batch.
@@ -131,7 +131,7 @@
             <thead>
               <tr>
                 <th>Stage</th>
-                <th>What CAT Does</th>
+                <th>What ContextWeave Does</th>
                 <th>Why It Matters</th>
               </tr>
             </thead>
@@ -139,7 +139,7 @@
               <tr>
                 <td>Extraction</td>
                 <td>Records the term name, type, description, occurrence position, and the source chunk each occurrence came from.</td>
-                <td>Stable translations need evidence. Position-linked evidence lets CAT use only information available before the current point in the book.</td>
+                <td>Stable translations need evidence. Position-linked evidence lets ContextWeave use only information available before the current point in the book.</td>
               </tr>
               <tr>
                 <td>Additional Extraction</td>
@@ -158,7 +158,7 @@
               </tr>
               <tr>
                 <td>Term Matching</td>
-                <td>Before each translation batch, CAT selects glossary terms that appear in or are directly relevant to the current source text.</td>
+                <td>Before each translation batch, ContextWeave selects glossary terms that appear in or are directly relevant to the current source text.</td>
                 <td>The model sees the names and term notes needed for the current passage, without loading unrelated glossary entries from the whole book.</td>
               </tr>
               <tr>
@@ -186,7 +186,7 @@
           <article class="detail-panel">
             <h3>What Gets Injected</h3>
             <p>
-              CAT summarizes the most recent preceding chunks in the source
+              ContextWeave summarizes the most recent preceding chunks in the source
               language and passes those summaries as local context. The summary is short,
               factual, and meant to describe what just happened, not to become
               translated output.
@@ -241,7 +241,7 @@
           <p class="eyebrow">Mechanics</p>
           <h2>How Context Is Used</h2>
           <p>
-            CAT combines global glossary memory with short local context. This is
+            ContextWeave combines global glossary memory with short local context. This is
             the core difference between a one-off prompt and a book-scale
             translation workflow.
           </p>
@@ -260,8 +260,8 @@
             <span>2</span>
             <h3>Build Term Memory</h3>
             <p>
-              For character and organization terms, CAT builds an ordered memory
-              timeline. When translating a later chapter, CAT can use what was
+              For character and organization terms, ContextWeave builds an ordered memory
+              timeline. When translating a later chapter, ContextWeave can use what was
               known before that point without pulling in future-only revelations.
             </p>
           </article>
@@ -278,7 +278,7 @@
             <span>4</span>
             <h3>Inject Recent Summaries</h3>
             <p>
-              CAT can reserve part of the prompt budget for recent prior-chunk
+              ContextWeave can reserve part of the prompt budget for recent prior-chunk
               summaries. Current source text always takes priority if the summary
               is irrelevant or conflicts with the batch.
             </p>
@@ -291,7 +291,7 @@
           <p class="eyebrow">Output Fidelity</p>
           <h2>Format Preservation Guarantee</h2>
           <p>
-            CAT treats source formatting as part of the translation contract, but
+            ContextWeave treats source formatting as part of the translation contract, but
             the guarantee is scoped by the input type and by what the parser can
             extract. The current source text still has priority over contextual
             summaries or polish steps.
@@ -377,7 +377,7 @@
               </tr>
               <tr>
                 <td>CLI automation</td>
-                <td>Use <code>cat-cli run ./book.epub --output ./translated/book.epub</code> with a project config file.</td>
+                <td>Use <code>contextweave-cli run ./book.epub --output ./translated/book.epub</code> with a project config file.</td>
                 <td>Use <code>api_key_env</code> in config so keys stay in environment variables instead of checked-in files.</td>
               </tr>
               <tr>
@@ -420,7 +420,7 @@
           </article>
           <article>
             <h3><code>max_tokens_per_llm_call</code></h3>
-            <p>Caps each translation request payload. CAT uses this to group chunks into batches without exceeding the request budget.</p>
+            <p>Caps each translation request payload. ContextWeave uses this to group chunks into batches without exceeding the request budget.</p>
           </article>
           <article>
             <h3><code>dynamic_context_enabled</code></h3>
@@ -479,25 +479,25 @@
         <div class="detail-grid">
           <article class="detail-panel code-sample">
             <h3>Common Commands</h3>
-            <pre><code>cat-cli config path
-cat-cli config init
-cat-cli config validate
-cat-cli run ./book.epub --output ./translated/book.epub
-cat-cli run ./episode.srt --output ./translated/episode.srt --no-polish
-cat-cli books list
-cat-cli books show BOOK_ID</code></pre>
+            <pre><code>contextweave-cli config path
+contextweave-cli config init
+contextweave-cli config validate
+contextweave-cli run ./book.epub --output ./translated/book.epub
+contextweave-cli run ./episode.srt --output ./translated/episode.srt --no-polish
+contextweave-cli books list
+contextweave-cli books show BOOK_ID</code></pre>
           </article>
           <article class="detail-panel">
             <h3>Config Resolution</h3>
             <p>
-              CAT checks <code>--config</code>, then <code>CAT_CONFIG</code>, then
-              the nearest <code>cat.yaml</code>, <code>cat.yml</code>,
-              <code>.cat.yaml</code>, or <code>.cat.yml</code>, then the platform
-              default shown by <code>cat-cli config path</code>.
+              ContextWeave checks <code>--config</code>, then <code>CONTEXTWEAVE_CONFIG</code>, then
+              the nearest <code>contextweave.yaml</code>, <code>contextweave.yml</code>,
+              <code>.contextweave.yaml</code>, or <code>.contextweave.yml</code>, then the platform
+              default shown by <code>contextweave-cli config path</code>.
             </p>
             <p>
               See the commented example config at
-              <a href="examples/cat-cli.yaml"><code>docs/examples/cat-cli.yaml</code></a>.
+              <a href="examples/contextweave-cli.yaml"><code>docs/examples/contextweave-cli.yaml</code></a>.
             </p>
           </article>
           <article class="detail-panel">
@@ -511,7 +511,7 @@ cat-cli books show BOOK_ID</code></pre>
           <article class="detail-panel">
             <h3>One-Shot Limits</h3>
             <p>
-              In the current v1 CLI flow, <code>cat-cli run</code> imports one
+              In the current v1 CLI flow, <code>contextweave-cli run</code> imports one
               input document and expects exactly one imported document. Existing
               <code>--book-id</code> runs cannot be combined with
               <code>--config</code>.
@@ -578,7 +578,7 @@ cat-cli books show BOOK_ID</code></pre>
           <p class="eyebrow">中文</p>
           <h2 id="features-zh">功能介绍</h2>
           <p>
-            CAT 的核心是项目级翻译流程，而不是让用户手写长提示词。它会提取源文本，构建术语表，总结上下文，分批翻译，可选润色，最后导出成目标格式。
+            语络译的核心是项目级翻译流程，而不是让用户手写长提示词。它会提取源文本，构建术语表，总结上下文，分批翻译，可选润色，最后导出成目标格式。
           </p>
         </div>
 
@@ -592,7 +592,7 @@ cat-cli books show BOOK_ID</code></pre>
           <article class="feature-card">
             <h3>术语抽取</h3>
             <p>
-              CAT 会从分块中抽取人物名、组织、地点、技能、物品、设定和其他需要稳定译法的术语。由 <code>max_gleaning</code> 控制的额外抽取轮次可以找回首轮遗漏的术语。
+              语络译会从分块中抽取人物名、组织、地点、技能、物品、设定和其他需要稳定译法的术语。由 <code>max_gleaning</code> 控制的额外抽取轮次可以找回首轮遗漏的术语。
             </p>
           </article>
           <article class="feature-card">
@@ -604,7 +604,7 @@ cat-cli books show BOOK_ID</code></pre>
           <article class="feature-card">
             <h3>前文注入</h3>
             <p>
-              翻译一个批次前，CAT 可以为同一文档中更早的分块生成短摘要，并在提示词预算内注入最近的摘要。这能帮助判断省略主语、代词、谁在说话、对谁说话，以及即时场景连续性。
+              翻译一个批次前，语络译可以为同一文档中更早的分块生成短摘要，并在提示词预算内注入最近的摘要。这能帮助判断省略主语、代词、谁在说话、对谁说话，以及即时场景连续性。
             </p>
           </article>
           <article class="feature-card">
@@ -627,7 +627,7 @@ cat-cli books show BOOK_ID</code></pre>
           <p class="eyebrow">术语记忆</p>
           <h2 id="context-zh">术语和上下文生命周期</h2>
           <p>
-            CAT 会把术语发现、术语翻译、术语记忆和局部场景上下文分开处理。这样既能控制提示词长度，又能把当前批次最可能需要的信息交给翻译模型。
+            语络译会把术语发现、术语翻译、术语记忆和局部场景上下文分开处理。这样既能控制提示词长度，又能把当前批次最可能需要的信息交给翻译模型。
           </p>
         </div>
 
@@ -636,7 +636,7 @@ cat-cli books show BOOK_ID</code></pre>
             <thead>
               <tr>
                 <th>阶段</th>
-                <th>CAT 如何处理</th>
+                <th>语络译如何处理</th>
                 <th>为什么重要</th>
               </tr>
             </thead>
@@ -644,7 +644,7 @@ cat-cli books show BOOK_ID</code></pre>
               <tr>
                 <td>抽取</td>
                 <td>记录术语名称、类型、描述、出现位置，以及每次出现来自哪个源分块。</td>
-                <td>稳定译名需要证据。带位置的证据能让 CAT 只使用当前翻译位置之前已经出现的信息，避免引入后文才揭示的内容。</td>
+                <td>稳定译名需要证据。带位置的证据能让语络译只使用当前翻译位置之前已经出现的信息，避免引入后文才揭示的内容。</td>
               </tr>
               <tr>
                 <td>补充抽取</td>
@@ -663,7 +663,7 @@ cat-cli books show BOOK_ID</code></pre>
               </tr>
               <tr>
                 <td>术语匹配</td>
-                <td>翻译每个批次前，CAT 会从术语表中挑出当前原文实际出现或直接相关的术语，并尽量合并重复条目。</td>
+                <td>翻译每个批次前，语络译会从术语表中挑出当前原文实际出现或直接相关的术语，并尽量合并重复条目。</td>
                 <td>这样模型只会看到当前段落需要的译名和术语摘要，避免把整本书的无关术语都塞进提示词。</td>
               </tr>
               <tr>
@@ -689,7 +689,7 @@ cat-cli books show BOOK_ID</code></pre>
           <article class="detail-panel">
             <h3>会注入什么</h3>
             <p>
-              CAT 会用源语言总结最近的前文分块，并把这些摘要作为局部上下文传给翻译模型。摘要很短、只陈述事实，用来说明刚刚发生了什么，而不是作为待翻译正文。
+              语络译会用源语言总结最近的前文分块，并把这些摘要作为局部上下文传给翻译模型。摘要很短、只陈述事实，用来说明刚刚发生了什么，而不是作为待翻译正文。
             </p>
           </article>
           <article class="detail-panel">
@@ -730,7 +730,7 @@ cat-cli books show BOOK_ID</code></pre>
           <p class="eyebrow">机制</p>
           <h2>上下文如何参与翻译</h2>
           <p>
-            CAT 同时使用全局术语记忆和短期局部上下文。这是它与一次性提示词翻译最大的区别。
+            语络译同时使用全局术语记忆和短期局部上下文。这是它与一次性提示词翻译最大的区别。
           </p>
         </div>
 
@@ -746,7 +746,7 @@ cat-cli books show BOOK_ID</code></pre>
             <span>2</span>
             <h3>构建术语记忆</h3>
             <p>
-              对人物和组织术语，CAT 会按文本顺序构建记忆时间线。翻译后续章节时，可以使用此前已经知道的信息，而不会主动塞入未来才揭示的内容。
+              对人物和组织术语，语络译会按文本顺序构建记忆时间线。翻译后续章节时，可以使用此前已经知道的信息，而不会主动塞入未来才揭示的内容。
             </p>
           </article>
           <article>
@@ -760,7 +760,7 @@ cat-cli books show BOOK_ID</code></pre>
             <span>4</span>
             <h3>注入近期摘要</h3>
             <p>
-              CAT 可以为最近前文摘要预留一部分提示词预算。如果摘要与当前原文无关或冲突，当前原文始终优先。
+              语络译可以为最近前文摘要预留一部分提示词预算。如果摘要与当前原文无关或冲突，当前原文始终优先。
             </p>
           </article>
         </div>
@@ -771,7 +771,7 @@ cat-cli books show BOOK_ID</code></pre>
           <p class="eyebrow">输出保真</p>
           <h2>格式保留保证</h2>
           <p>
-            CAT 会把源文件格式视为翻译结果的一部分要求，但保证范围取决于输入类型，以及解析器能实际提取到的结构。当前源文本始终优先于上下文摘要或润色步骤。
+            语络译会把源文件格式视为翻译结果的一部分要求，但保证范围取决于输入类型，以及解析器能实际提取到的结构。当前源文本始终优先于上下文摘要或润色步骤。
           </p>
         </div>
 
@@ -779,7 +779,7 @@ cat-cli books show BOOK_ID</code></pre>
           <article class="feature-card">
             <h3>原生文本文档</h3>
             <p>
-              对 Markdown、纯文本和 EPUB 提取出的文本等原生文本输入，CAT 会保留 Markdown 块、段落顺序、行结构和受支持的内联标记。
+              对 Markdown、纯文本和 EPUB 提取出的文本等原生文本输入，语络译会保留 Markdown 块、段落顺序、行结构和受支持的内联标记。
             </p>
           </article>
           <article class="feature-card">
@@ -846,7 +846,7 @@ cat-cli books show BOOK_ID</code></pre>
               </tr>
               <tr>
                 <td>CLI 自动化</td>
-                <td>使用 <code>cat-cli run ./book.epub --output ./translated/book.epub</code> 和项目配置文件。</td>
+                <td>使用 <code>contextweave-cli run ./book.epub --output ./translated/book.epub</code> 和项目配置文件。</td>
                 <td>配置中优先使用 <code>api_key_env</code>，让密钥留在环境变量里，不进入代码仓库。</td>
               </tr>
               <tr>
@@ -888,7 +888,7 @@ cat-cli books show BOOK_ID</code></pre>
           </article>
           <article>
             <h3><code>max_tokens_per_llm_call</code></h3>
-            <p>限制每个翻译请求的输入预算。CAT 用它决定如何把多个分块合并到一个批次中。</p>
+            <p>限制每个翻译请求的输入预算。语络译用它决定如何把多个分块合并到一个批次中。</p>
           </article>
           <article>
             <h3><code>dynamic_context_enabled</code></h3>
@@ -945,21 +945,21 @@ cat-cli books show BOOK_ID</code></pre>
         <div class="detail-grid">
           <article class="detail-panel code-sample">
             <h3>常用命令</h3>
-            <pre><code>cat-cli config path
-cat-cli config init
-cat-cli config validate
-cat-cli run ./book.epub --output ./translated/book.epub
-cat-cli run ./episode.srt --output ./translated/episode.srt --no-polish
-cat-cli books list
-cat-cli books show BOOK_ID</code></pre>
+            <pre><code>contextweave-cli config path
+contextweave-cli config init
+contextweave-cli config validate
+contextweave-cli run ./book.epub --output ./translated/book.epub
+contextweave-cli run ./episode.srt --output ./translated/episode.srt --no-polish
+contextweave-cli books list
+contextweave-cli books show BOOK_ID</code></pre>
           </article>
           <article class="detail-panel">
             <h3>配置查找顺序</h3>
             <p>
-              CAT 会依次检查 <code>--config</code>、<code>CAT_CONFIG</code>、从当前目录向上查找最近的 <code>cat.yaml</code>、<code>cat.yml</code>、<code>.cat.yaml</code> 或 <code>.cat.yml</code>，最后使用 <code>cat-cli config path</code> 显示的平台默认路径。
+              语络译会依次检查 <code>--config</code>、<code>CONTEXTWEAVE_CONFIG</code>、从当前目录向上查找最近的 <code>contextweave.yaml</code>、<code>contextweave.yml</code>、<code>.contextweave.yaml</code> 或 <code>.contextweave.yml</code>，最后使用 <code>contextweave-cli config path</code> 显示的平台默认路径。
             </p>
             <p>
-              配置文件格式可参考带注释的示例：<a href="examples/cat-cli.yaml"><code>docs/examples/cat-cli.yaml</code></a>。
+              配置文件格式可参考带注释的示例：<a href="examples/contextweave-cli.yaml"><code>docs/examples/contextweave-cli.yaml</code></a>。
             </p>
           </article>
           <article class="detail-panel">
@@ -971,7 +971,7 @@ cat-cli books show BOOK_ID</code></pre>
           <article class="detail-panel">
             <h3>一次性运行限制</h3>
             <p>
-              当前 v1 CLI 流程中，<code>cat-cli run</code> 会导入一个输入文档，并要求导入结果也正好是一个文档。使用已有 <code>--book-id</code> 时不能同时指定 <code>--config</code>。
+              当前 v1 CLI 流程中，<code>contextweave-cli run</code> 会导入一个输入文档，并要求导入结果也正好是一个文档。使用已有 <code>--book-id</code> 时不能同时指定 <code>--config</code>。
             </p>
           </article>
         </div>
@@ -1030,7 +1030,7 @@ cat-cli books show BOOK_ID</code></pre>
     </main>
 
     <footer class="footer">
-      <p>Context-Aware Translation documentation.</p>
+      <p>ContextWeave documentation.</p>
     </footer>
     <script>
       const languageSelect = document.getElementById("language-select");
@@ -1046,7 +1046,7 @@ cat-cli books show BOOK_ID</code></pre>
             languageLabel: "Language",
             heroTitle: "Advanced Usage and Feature Guide",
             heroCopy:
-              "A practical guide to CAT's long-document translation features, glossary memory, previous-context injection, format preservation guarantees, OCR workflows, manga translation, CLI automation, troubleshooting, and cost-aware model routing.",
+              "A practical guide to ContextWeave's long-document translation features, glossary memory, previous-context injection, format preservation guarantees, OCR workflows, manga translation, CLI automation, troubleshooting, and cost-aware model routing.",
           },
           labels: {
             features: "Features",
@@ -1067,7 +1067,7 @@ cat-cli books show BOOK_ID</code></pre>
             languageLabel: "语言",
             heroTitle: "高级使用与功能指南",
             heroCopy:
-              "介绍 CAT 的长文档翻译能力、术语记忆、前文注入、格式保留保证、OCR、漫画翻译、CLI 自动化、排障和成本控制。",
+              "介绍语络译的长文档翻译能力、术语记忆、前文注入、格式保留保证、OCR、漫画翻译、CLI 自动化、排障和成本控制。",
           },
           labels: {
             features: "功能",
@@ -1086,7 +1086,7 @@ cat-cli books show BOOK_ID</code></pre>
 
       function getStoredLanguage() {
         try {
-          return localStorage.getItem("cat-docs-language");
+          return localStorage.getItem("contextweave-docs-language");
         } catch {
           return null;
         }
@@ -1094,7 +1094,7 @@ cat-cli books show BOOK_ID</code></pre>
 
       function storeLanguage(language) {
         try {
-          localStorage.setItem("cat-docs-language", language);
+          localStorage.setItem("contextweave-docs-language", language);
         } catch {
           // Language selection still works for the current page without storage.
         }
