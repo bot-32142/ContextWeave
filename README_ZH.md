@@ -6,7 +6,7 @@
 
 语络译（ContextWeave）是一个能完美保留原文格式，保证术语和翻译风格一致性的**全自动**桌面翻译工具，适合翻译长篇小说、书籍、PDF、扫描文档、漫画和字幕。
 
-[高级文档](https://bot-32142.github.io/context-aware-translation/#features-zh) 介绍术语记忆、前文注入、格式保留、CLI 自动化和高级用例。
+[高级文档](https://bot-32142.github.io/ContextWeave/#features-zh) 介绍术语记忆、前文注入、格式保留、CLI 自动化和高级用例。
 
 ## 适合谁使用
 

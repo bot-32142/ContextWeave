@@ -6,7 +6,7 @@
 
 ContextWeave (语络译) is a fully automatic desktop translation app for long novels, books, PDFs, scanned documents, manga, and subtitles. It aims to preserve source formatting while keeping terminology and translation style consistent across the whole work.
 
-[Advanced documentation](https://bot-32142.github.io/context-aware-translation/) covers glossary memory, previous-context injection, format preservation, CLI automation, and advanced use cases.
+[Advanced documentation](https://bot-32142.github.io/ContextWeave/) covers glossary memory, previous-context injection, format preservation, CLI automation, and advanced use cases.
 
 ## Who ContextWeave Is For
 
