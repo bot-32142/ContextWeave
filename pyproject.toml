@@ -59,10 +59,10 @@ contextweave-cli = "context_aware_translation.cli.main:main"
 contextweave-ui = "context_aware_translation.ui.main:main"
 
 [project.urls]
-Homepage = "https://github.com/bot-32142/context-aware-translation"
-Documentation = "https://bot-32142.github.io/context-aware-translation/"
-Repository = "https://github.com/bot-32142/context-aware-translation"
-Issues = "https://github.com/bot-32142/context-aware-translation/issues"
+Homepage = "https://github.com/bot-32142/ContextWeave"
+Documentation = "https://bot-32142.github.io/ContextWeave/"
+Repository = "https://github.com/bot-32142/ContextWeave"
+Issues = "https://github.com/bot-32142/ContextWeave/issues"
 
 [dependency-groups]
 dev = [
