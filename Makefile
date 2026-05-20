@@ -1,7 +1,7 @@
 .PHONY: install install-dev test test-py test-ui test-cov test-cov-py test-ui-cov lint format typecheck check clean help eval eval-clean build-ui build-macos-app clean-ui lupdate release
 
 PYTHON := uv run python
-PYTEST := uv run pytest
+PYTEST := $(PYTHON) -m pytest
 RUFF := uv run ruff
 # Invoke tools through Python so they still work if the project directory moves
 # and the generated .venv wrapper shebangs become stale.
