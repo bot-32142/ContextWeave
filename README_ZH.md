@@ -1,4 +1,4 @@
-**中文** | [English](README.md)
+**中文** | [English](https://github.com/bot-32142/ContextWeave/blob/master/README.md)
 
 # 语络译（ContextWeave）
 
@@ -6,7 +6,7 @@
 
 语络译（ContextWeave）是一个能完美保留原文格式，保证术语和翻译风格一致性的**全自动**桌面翻译工具，适合翻译长篇小说、书籍、PDF、扫描文档、漫画和字幕。
 
-[高级文档](https://bot-32142.github.io/context-aware-translation/#features-zh) 介绍术语记忆、前文注入、格式保留、CLI 自动化和高级用例。
+[高级文档](https://bot-32142.github.io/ContextWeave/#features-zh) 介绍术语记忆、前文注入、格式保留、CLI 自动化和高级用例。
 
 ## 适合谁使用
 
@@ -48,19 +48,19 @@
 
 这里是项目首页。第一次使用时，直接点 `设置向导` 就行。
 
-![项目首页](docs/screenshots/CN/latest_projects_overview.png)
+![项目首页](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/CN/latest_projects_overview.png)
 
 ### 2. 选择服务商并填入 API key
 
 向导会先收集需要的连接。对大多数用户来说，`DeepSeek` + `Gemini` 是最实用的起点。
 
-![设置向导服务商选择](docs/screenshots/CN/latest_setup_wizard_provider_selection.png)
+![设置向导服务商选择](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/CN/latest_setup_wizard_provider_selection.png)
 
 ### 3. 检查工作流配置档案
 
 这个步骤会展示每个流程步骤实际会使用哪个连接和模型。
 
-![工作流配置档案检查](docs/screenshots/CN/latest_setup_wizard_workflow_profile_review.png)
+![工作流配置档案检查](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/CN/latest_setup_wizard_workflow_profile_review.png)
 
 `质量优先` 会非常非常贵，除非你只用 `DeepSeek`。`均衡` 适合作为默认选择。`预算优先` 适合优先压低成本。
 
@@ -72,19 +72,19 @@
 
 填写项目名、目标语言和工作流配置档案。
 
-![新建项目对话框](docs/screenshots/CN/latest_new_project_dialog.png)
+![新建项目对话框](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/CN/latest_new_project_dialog.png)
 
 ### 2. 打开项目工作页
 
 按阅读顺序导入文件，这样术语和上下文才能在整本书里保持一致，然后点击翻译并导出开始翻译。双击文件如果你想手动审查每一步的结果或者修图。
 
-![项目工作页](docs/screenshots/CN/latest_project_work_overview.png)
+![项目工作页](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/CN/latest_project_work_overview.png)
 
 ### 3. 可选：导入现成术语翻译
 
 打开 `术语` 页，如果你已经有术语表，就用 `导入术语` 直接导入。最简单的 JSON 形式就是 `{"original": "translated"}`。
 
-![术语总览](docs/screenshots/CN/latest_terms_overview.png)
+![术语总览](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/CN/latest_terms_overview.png)
 
 ## 示例 EPUB
 
@@ -92,7 +92,7 @@
 
 如果换成 `Gemini` 或 `GPT`，质量通常会明显更好，但成本也会显著上升。
 
-- [基督山伯爵.epub](demo/基督山伯爵.epub) - 简体中文版，每本成本不到 `18 元人民币`。
+- [基督山伯爵.epub](https://github.com/bot-32142/ContextWeave/raw/master/demo/%E5%9F%BA%E7%9D%A3%E5%B1%B1%E4%BC%AF%E7%88%B5.epub) - 简体中文版，每本成本不到 `18 元人民币`。
 
 ## CLI
 
@@ -114,7 +114,7 @@ contextweave-cli books delete BOOK_ID --yes
 
 CLI 会依次从 `--config`、`CONTEXTWEAVE_CONFIG`、向上查找最近的 `contextweave.yaml`/`.contextweave.yaml`，以及 `contextweave-cli config path` 显示的平台默认路径读取配置。配置结构与设置界面对应：`connections` 定义服务商端点，`workflow_profiles` 决定每个翻译步骤使用哪条模型路线。建议使用 `api_key_env`，让 API key 留在环境变量中，而不是写入配置文件或任务快照。一次性运行需要跳过润色时可使用 `--no-polish`，这对时间轴敏感的字幕输出很有用。
 
-带注释的起始配置可参考 [docs/examples/contextweave-cli.yaml](docs/examples/contextweave-cli.yaml)。
+带注释的起始配置可参考 [docs/examples/contextweave-cli.yaml](https://github.com/bot-32142/ContextWeave/blob/master/docs/examples/contextweave-cli.yaml)。
 
 ## 使用前需要知道
 

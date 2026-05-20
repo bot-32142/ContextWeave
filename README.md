@@ -1,4 +1,4 @@
-**English** | [中文](README_ZH.md)
+**English** | [中文](https://github.com/bot-32142/ContextWeave/blob/master/README_ZH.md)
 
 # ContextWeave
 
@@ -6,7 +6,7 @@
 
 ContextWeave (语络译) is a fully automatic desktop translation app for long novels, books, PDFs, scanned documents, manga, and subtitles. It aims to preserve source formatting while keeping terminology and translation style consistent across the whole work.
 
-[Advanced documentation](https://bot-32142.github.io/context-aware-translation/) covers glossary memory, previous-context injection, format preservation, CLI automation, and advanced use cases.
+[Advanced documentation](https://bot-32142.github.io/ContextWeave/) covers glossary memory, previous-context injection, format preservation, CLI automation, and advanced use cases.
 
 ## Who ContextWeave Is For
 
@@ -48,19 +48,19 @@ Current desktop builds are unsigned, so the first launch may show an OS security
 
 This is the home screen for projects. Use `Setup Wizard` for the quickest first-time setup.
 
-![Projects overview](docs/screenshots/EN/latest_projects_overview.png)
+![Projects overview](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/EN/latest_projects_overview.png)
 
 ### 2. Choose providers and paste API keys
 
 The wizard collects the providers it needs up front. For most users, `DeepSeek` + `Gemini` is the most practical starting point.
 
-![Setup wizard provider selection](docs/screenshots/EN/latest_setup_wizard_provider_selection.png)
+![Setup wizard provider selection](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/EN/latest_setup_wizard_provider_selection.png)
 
 ### 3. Review the workflow profile
 
 The review step shows which connection and model ContextWeave will use for each workflow step.
 
-![Workflow profile review](docs/screenshots/EN/latest_setup_wizard_workflow_profile_review.png)
+![Workflow profile review](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/EN/latest_setup_wizard_workflow_profile_review.png)
 
 `Quality` spends more for better reasoning and can get very, very expensive unless you are using only `DeepSeek`. `Balanced` is the safest default. `Budget` is the cheapest option when you want to minimize cost.
 
@@ -72,19 +72,19 @@ The review step shows which connection and model ContextWeave will use for each 
 
 Pick a project name, target language, and workflow profile.
 
-![New project dialog](docs/screenshots/EN/latest_new_project_dialog.png)
+![New project dialog](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/EN/latest_new_project_dialog.png)
 
 ### 2. Open the project work page
 
 Import files in reading order so terminology and context stay consistent across the whole book, then click `Translate and Export` to start. Double-click a file if you want to inspect each step manually or retouch images.
 
-![Project work page](docs/screenshots/EN/latest_project_work_overview.png)
+![Project work page](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/EN/latest_project_work_overview.png)
 
 ### 3. Optional: import existing term translations
 
 Open `Terms`, then use `Import Terms` if you already have a terminology list you want ContextWeave to reuse. A simple JSON object like `{"original": "translated"}` is enough.
 
-![Terms overview](docs/screenshots/EN/latest_terms_overview.png)
+![Terms overview](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/EN/latest_terms_overview.png)
 
 ## Demo EPUBs
 
@@ -92,7 +92,7 @@ This sample EPUB was generated with `Translate and Export` directly from the Fre
 
 Quality can be dramatically better with `Gemini` or `GPT`, but the cost is also significantly higher.
 
-- [The Count of Monte Cristo.epub](demo/The%20Count%20of%20Monte%20Cristo.epub) - English output. Cost: under `$2.5`.
+- [The Count of Monte Cristo.epub](https://github.com/bot-32142/ContextWeave/raw/master/demo/The%20Count%20of%20Monte%20Cristo.epub) - English output. Cost: under `$2.5`.
 
 ## CLI
 
@@ -114,7 +114,7 @@ contextweave-cli books delete BOOK_ID --yes
 
 The CLI resolves config from `--config`, then `CONTEXTWEAVE_CONFIG`, then the nearest `contextweave.yaml`/`.contextweave.yaml` walking upward, then the platform default shown by `contextweave-cli config path`. The config mirrors the setup UI: `connections` define provider endpoints and `workflow_profiles` route each translation step. Prefer `api_key_env` so API keys stay in environment variables instead of config files or task snapshots. Use `--no-polish` when a one-shot run should skip the polish pass, which can be useful for timing-sensitive subtitle output.
 
-A commented starting point is available at [docs/examples/contextweave-cli.yaml](docs/examples/contextweave-cli.yaml).
+A commented starting point is available at [docs/examples/contextweave-cli.yaml](https://github.com/bot-32142/ContextWeave/blob/master/docs/examples/contextweave-cli.yaml).
 
 ## What To Know Before Using ContextWeave
 
