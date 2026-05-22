@@ -45,11 +45,14 @@ class WorkflowStepId(StrEnum):
 
 
 _DEFAULT_CONNECTION_CONCURRENCY = 5
-_DEEPSEEK_DEFAULT_CONNECTION_CONCURRENCY = 15
+_DEEPSEEK_DEFAULT_CONNECTION_CONCURRENCY = 500
+_DEEPSEEK_FLASH_DEFAULT_CONNECTION_CONCURRENCY = 2500
 
 
-def default_connection_concurrency(provider: ProviderKind | None) -> int:
+def default_connection_concurrency(provider: ProviderKind | None, model: str | None = None) -> int:
     if provider is ProviderKind.DEEPSEEK:
+        if (model or "").strip().lower() == "deepseek-v4-flash":
+            return _DEEPSEEK_FLASH_DEFAULT_CONNECTION_CONCURRENCY
         return _DEEPSEEK_DEFAULT_CONNECTION_CONCURRENCY
     return _DEFAULT_CONNECTION_CONCURRENCY
 
@@ -122,7 +125,7 @@ class ConnectionDraft(ContractModel):
             return data
 
         payload = dict(data)
-        payload["concurrency"] = default_connection_concurrency(provider)
+        payload["concurrency"] = default_connection_concurrency(provider, data.get("default_model"))
         return payload
 
 

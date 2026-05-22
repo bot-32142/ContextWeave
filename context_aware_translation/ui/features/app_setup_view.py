@@ -130,7 +130,7 @@ class _TokenLimitSpec:
 _CONNECTION_SPIN_FIELDS = (
     _SpinFieldSpec(QT_TRANSLATE_NOOP("ConnectionDraftForm", "Timeout"), "timeout_spin", 1, 600, 60, " s"),
     _SpinFieldSpec(QT_TRANSLATE_NOOP("ConnectionDraftForm", "Max retries"), "retries_spin", 0, 10, 3),
-    _SpinFieldSpec(QT_TRANSLATE_NOOP("ConnectionDraftForm", "Concurrency"), "concurrency_spin", 1, 50, 5),
+    _SpinFieldSpec(QT_TRANSLATE_NOOP("ConnectionDraftForm", "Concurrency"), "concurrency_spin", 1, 2500, 5),
 )
 
 _CONNECTION_TOKEN_LIMIT_FIELDS = (
@@ -289,7 +289,7 @@ class ConnectionDraftForm(QWidget):
         self.timeout_spin.setValue(draft.timeout)
         self.retries_spin.setValue(draft.max_retries)
         self.concurrency_spin.setValue(draft.concurrency)
-        self._auto_concurrency_default = default_connection_concurrency(draft.provider)
+        self._auto_concurrency_default = default_connection_concurrency(draft.provider, draft.default_model)
         self.total_limit_checkbox.setChecked(draft.token_limit is not None)
         if draft.token_limit is not None:
             self.total_limit_spin.setValue(draft.token_limit)
@@ -351,7 +351,7 @@ class ConnectionDraftForm(QWidget):
     def _on_provider_changed(self, _index: int) -> None:
         provider = self.current_provider()
         display_name, base_url, default_model = _provider_defaults(provider)
-        provider_concurrency = default_connection_concurrency(provider)
+        provider_concurrency = default_connection_concurrency(provider, default_model)
         self.base_url_edit.setText(base_url or "")
         self.default_model_edit.setText(default_model or "")
         if self._auto_concurrency_default is None or self.concurrency_spin.value() == self._auto_concurrency_default:
@@ -768,7 +768,7 @@ class SetupWizardDialog(QDialog):
             temperature=0.0,
             timeout=60,
             max_retries=3,
-            concurrency=default_connection_concurrency(provider),
+            concurrency=default_connection_concurrency(provider, default_model),
         )
 
     def _persist_drafts(self) -> None:
