@@ -266,13 +266,14 @@ def get_document_classes() -> list[type[Document]]:
     Uses late imports to avoid circular dependencies.
     """
     from context_aware_translation.documents.epub import EPUBDocument
+    from context_aware_translation.documents.galgame import GalgameDocument
     from context_aware_translation.documents.manga import MangaDocument
     from context_aware_translation.documents.pdf import PDFDocument
     from context_aware_translation.documents.scanned_book import ScannedBookDocument
     from context_aware_translation.documents.subtitle import SubtitleDocument
     from context_aware_translation.documents.text import TextDocument
 
-    return [TextDocument, SubtitleDocument, PDFDocument, ScannedBookDocument, MangaDocument, EPUBDocument]
+    return [TextDocument, SubtitleDocument, GalgameDocument, PDFDocument, ScannedBookDocument, MangaDocument, EPUBDocument]
 
 
 def is_ocr_required_for_type(document_type: str) -> bool:

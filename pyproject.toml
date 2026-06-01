@@ -52,6 +52,7 @@ dependencies = [
     "transformers>=4.57.3",
     "protobuf>=4.25.0",
     "superqt>=0.8.0",
+    "openpyxl>=3.1.5",
 ]
 
 [project.scripts]
@@ -157,6 +158,7 @@ module = [
     "transformers.*",
     "PIL.*",
     "opencc.*",
+    "openpyxl.*",
 ]
 ignore_missing_imports = true
 
