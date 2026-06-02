@@ -1123,6 +1123,7 @@ def map_document_type_code(document_type: str | None) -> DocumentTypeCode:
         "subtitle": DocumentTypeCode.SUBTITLE,
         "scanned_book": DocumentTypeCode.SCANNED_BOOK,
         "manga": DocumentTypeCode.MANGA,
+        "galgame": DocumentTypeCode.GALGAME,
     }
     return mapping.get(str(document_type or ""), DocumentTypeCode.OTHER)
 
