@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -68,6 +69,41 @@ async def test_llm_client_success():
         mock_client.chat.completions.create.assert_called_once()
         call_kwargs = mock_client.chat.completions.create.call_args[1]
         assert call_kwargs["temperature"] == 0.0
+
+
+@pytest.mark.asyncio
+async def test_llm_client_preview_is_safe_for_gbk_stderr():
+    from context_aware_translation.config import ExtractorConfig
+
+    config = LLMConfig(api_key="test-key", base_url="https://api.test.com/v1")
+    step_config = ExtractorConfig(
+        api_key="test-key",
+        base_url="https://api.test.com/v1",
+        model="test-model",
+    )
+    stderr_buffer = io.BytesIO()
+    gbk_stderr = io.TextIOWrapper(stderr_buffer, encoding="gbk", errors="strict")
+
+    with patch("context_aware_translation.llm.client.OpenAI") as mock_openai:
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message = MagicMock()
+        mock_response.choices[0].message.content = "Alice・Bob"
+        mock_response.usage = None
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_response
+        mock_openai.return_value = mock_client
+
+        client = LLMClient(config)
+        with patch("context_aware_translation.llm.client.sys.stderr", gbk_stderr):
+            result = await client.chat(
+                messages=[{"role": "user", "content": "test"}],
+                step_config=step_config,
+            )
+            gbk_stderr.flush()
+
+    assert result == "Alice・Bob"
+    assert "Alice\\u30fbBob" in stderr_buffer.getvalue().decode("gbk")
 
 
 @pytest.mark.asyncio

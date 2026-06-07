@@ -26,6 +26,21 @@ _UNSUPPORTED_OPENAI_CREATE_KWARGS = frozenset({"provider", "_ui_display_name", "
 _OPENAI_BASE_URL_PREFIX = "https://api.openai.com/"
 
 
+def _text_for_stream(text: str, stream: Any) -> str:
+    encoding = getattr(stream, "encoding", None) or "utf-8"
+    try:
+        return text.encode(encoding, errors="backslashreplace").decode(encoding, errors="replace")
+    except LookupError:
+        return text.encode("utf-8", errors="backslashreplace").decode("utf-8", errors="replace")
+
+
+def _print_stderr_safely(text: str) -> None:
+    try:
+        print(_text_for_stream(text, sys.stderr), file=sys.stderr)
+    except (OSError, UnicodeEncodeError, ValueError):
+        logger.debug("Could not write LLM preview to stderr", exc_info=True)
+
+
 def _openai_supports_reasoning_effort_none(model: str) -> bool:
     normalized = model.strip().lower()
     return normalized.startswith("o") or normalized.startswith("gpt-5")
@@ -358,7 +373,7 @@ class LLMClient:
                 len(content),
             )
         # Preview to console only (not log file, which already has the full response)
-        print(f"Preview: {response_preview}{'...' if len(content) > 200 else ''}", file=sys.stderr)
+        _print_stderr_safely(f"Preview: {response_preview}{'...' if len(content) > 200 else ''}")
 
         return str(content)
 
