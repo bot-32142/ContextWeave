@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import io
+import json
 import tempfile
 from pathlib import Path
 
@@ -136,6 +137,31 @@ Yes.
                 assert sources[0]["source_type"] == "text"
                 assert sources[0]["relative_path"] == file_path.name
                 assert sources[0]["text_content"] == subtitle_text
+        finally:
+            file_path.unlink()
+
+    def test_import_single_galgame_mtool_file(self, import_test_config: Config):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
+            f.write(json.dumps({"こんにちは": ""}, ensure_ascii=False))
+            f.flush()
+            file_path = Path(f.name)
+
+        try:
+            with WorkflowSession(import_test_config) as translator:
+                result = _import_path(translator, file_path)
+
+                assert result["imported"] == 1
+                assert result["skipped"] == 0
+
+                db = translator.document_repo
+                doc = db.get_document_row()
+                assert doc is not None
+                assert doc["document_type"] == "galgame"
+
+                sources = db.get_document_sources(doc["document_id"])
+                assert len(sources) == 1
+                assert sources[0]["source_type"] == "text"
+                assert sources[0]["relative_path"] == file_path.name
         finally:
             file_path.unlink()
 
@@ -592,6 +618,38 @@ Yes.
                 output_file = output_folder / str(doc_id) / "test.txt"
                 assert output_file.exists()
                 assert output_file.read_text() == "翻译后的内容"
+
+    async def test_export_galgame_file_preserves_structure(self, import_test_config: Config):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            input_file = Path(tmpdir) / "script.json"
+            output_folder = Path(tmpdir) / "output"
+            input_file.write_text(json.dumps({"こんにちは": "", "またね": ""}, ensure_ascii=False), encoding="utf-8")
+
+            with WorkflowSession(import_test_config) as translator:
+                _import_path(translator, input_file)
+
+                db = translator.document_repo
+                doc = db.get_document_row()
+                doc_id = doc["document_id"]
+                from context_aware_translation.documents.base import Document
+                from context_aware_translation.storage.repositories.term_repository import BatchUpdate
+
+                document = Document.load_by_id(db, doc_id)
+                assert document is not None
+                translator.manager.add_text(document.get_text(), 1000, doc_id, document.document_type)
+                db.update_all_sources_text_added(doc_id)
+
+                chunks = translator.manager.term_repo.list_chunks(document_id=doc_id)
+                assert [chunk.text for chunk in chunks] == ["こんにちは\nまたね"]
+                chunks[0].is_translated = True
+                chunks[0].translation = "你好\n再见"
+                translator.manager.term_repo.apply_batch(BatchUpdate(keyed_context=[], chunk_records=chunks))
+
+                await _export_preserve_structure(translator, output_folder)
+
+                output_file = output_folder / str(doc_id) / "script.json"
+                assert output_file.exists()
+                assert json.loads(output_file.read_text(encoding="utf-8")) == {"こんにちは": "你好", "またね": "再见"}
 
     async def test_export_image_file_copied(self, import_test_config: Config):
         """Scanned books do not support structure-preserving export."""

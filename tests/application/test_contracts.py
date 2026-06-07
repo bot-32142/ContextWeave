@@ -290,8 +290,15 @@ def test_recommended_workflow_profile_uses_ranked_step_rules() -> None:
 
 def test_connection_draft_defaults_deepseek_concurrency() -> None:
     draft = ConnectionDraft(display_name="DeepSeek", provider=ProviderKind.DEEPSEEK, api_key="dkey")
+    flash_draft = ConnectionDraft(
+        display_name="DeepSeek Flash",
+        provider=ProviderKind.DEEPSEEK,
+        api_key="dkey",
+        default_model="deepseek-v4-flash",
+    )
 
-    assert draft.concurrency == 15
+    assert draft.concurrency == 500
+    assert flash_draft.concurrency == 2500
 
 
 def test_recommended_workflow_profile_skips_unsupported_openai_ocr_reasoning_none() -> None:

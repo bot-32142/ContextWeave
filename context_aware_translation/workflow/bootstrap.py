@@ -5,6 +5,7 @@ from transformers import PreTrainedTokenizer
 from context_aware_translation.config import Config, WorkflowRuntimeConfig
 from context_aware_translation.core.context_extractor import TermExtractor
 from context_aware_translation.core.context_manager import TranslationContextManager, TranslationContextManagerAdapter
+from context_aware_translation.core.galgame_document_handler import GalgameDocumentHandler
 from context_aware_translation.core.manga_document_handler import MangaDocumentHandler
 from context_aware_translation.llm.client import LLMClient
 from context_aware_translation.llm.translation_strategies import (
@@ -83,6 +84,17 @@ def _build_manager(
         dynamic_context_max_prompt_tokens=translator_config.dynamic_context_max_prompt_tokens,
     )
     manager = TranslationContextManagerAdapter(base_manager)
+    max_tokens_per_call = int(getattr(translator_config, "max_tokens_per_llm_call", 2000) or 2000)
+    if max_tokens_per_call <= 0:
+        max_tokens_per_call = 2000
+    manager.register_handler(
+        "galgame",
+        GalgameDocumentHandler(
+            concurrency=translator_config.concurrency,
+            batch_size=0,
+            max_tokens_per_batch=max_tokens_per_call,
+        ),
+    )
 
     manga_config = runtime_config.manga_translator_config
     if manga_config is not None:

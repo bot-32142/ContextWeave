@@ -337,11 +337,11 @@ def test_setup_wizard_creates_curated_connections_and_named_profile(tmp_path: Pa
             next(
                 profile for profile in endpoint_profiles if profile.name == "recommended-DeepSeek V4 Flash"
             ).concurrency
-            == 15
+            == 2500
         )
         assert (
             next(profile for profile in endpoint_profiles if profile.name == "recommended-DeepSeek V4 Pro").concurrency
-            == 15
+            == 500
         )
 
         created_profile = next(

@@ -234,7 +234,7 @@ def _app_setup_state() -> AppSetupState:
                 provider=ProviderKind.DEEPSEEK,
                 base_url="https://api.deepseek.com",
                 model="deepseek-v4-pro",
-                concurrency=15,
+                concurrency=500,
             ),
             _connection_summary(
                 connection_id="conn-gemini",

@@ -90,6 +90,7 @@ class DocumentTypeCode(StrEnum):
     SUBTITLE = "subtitle"
     SCANNED_BOOK = "scanned_book"
     MANGA = "manga"
+    GALGAME = "galgame"
     OTHER = "other"
 
 

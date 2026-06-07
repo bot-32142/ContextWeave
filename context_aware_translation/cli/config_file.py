@@ -43,7 +43,7 @@ connections:
     temperature: 0
     timeout: 180
     max_retries: 3
-    concurrency: 15
+    concurrency: 2500
 
   deepseek_pro:
     display_name: DeepSeek V4 Pro
@@ -54,7 +54,7 @@ connections:
     temperature: 0
     timeout: 300
     max_retries: 3
-    concurrency: 15
+    concurrency: 500
 
 workflow_profiles:
   balanced_deepseek:

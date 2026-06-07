@@ -264,7 +264,7 @@ _WIZARD_MODEL_CATALOG: dict[ProviderKind, tuple[WizardModelTemplate, ...]] = {
             "DeepSeek V4 Flash",
             "deepseek-v4-flash",
             "https://api.deepseek.com",
-            concurrency=default_connection_concurrency(ProviderKind.DEEPSEEK),
+            concurrency=default_connection_concurrency(ProviderKind.DEEPSEEK, "deepseek-v4-flash"),
         ),
         WizardModelTemplate(
             ProviderKind.DEEPSEEK,
@@ -272,7 +272,7 @@ _WIZARD_MODEL_CATALOG: dict[ProviderKind, tuple[WizardModelTemplate, ...]] = {
             "deepseek-v4-pro",
             "https://api.deepseek.com",
             timeout=300,
-            concurrency=default_connection_concurrency(ProviderKind.DEEPSEEK),
+            concurrency=default_connection_concurrency(ProviderKind.DEEPSEEK, "deepseek-v4-pro"),
         ),
     ),
     ProviderKind.ANTHROPIC: (
@@ -1123,6 +1123,7 @@ def map_document_type_code(document_type: str | None) -> DocumentTypeCode:
         "subtitle": DocumentTypeCode.SUBTITLE,
         "scanned_book": DocumentTypeCode.SCANNED_BOOK,
         "manga": DocumentTypeCode.MANGA,
+        "galgame": DocumentTypeCode.GALGAME,
     }
     return mapping.get(str(document_type or ""), DocumentTypeCode.OTHER)
 
