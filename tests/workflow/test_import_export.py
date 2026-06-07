@@ -640,10 +640,9 @@ Yes.
                 db.update_all_sources_text_added(doc_id)
 
                 chunks = translator.manager.term_repo.list_chunks(document_id=doc_id)
-                assert [chunk.text for chunk in chunks] == ["こんにちは", "またね"]
-                for chunk, translation in zip(chunks, ["你好", "再见"], strict=True):
-                    chunk.is_translated = True
-                    chunk.translation = translation
+                assert [chunk.text for chunk in chunks] == ["こんにちは\nまたね"]
+                chunks[0].is_translated = True
+                chunks[0].translation = "你好\n再见"
                 translator.manager.term_repo.apply_batch(BatchUpdate(keyed_context=[], chunk_records=chunks))
 
                 await _export_preserve_structure(translator, output_folder)

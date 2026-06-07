@@ -289,6 +289,79 @@ def test_run_no_polish_submits_translate_and_export_without_polish(
     assert captured_requests[0].enable_polish is False
 
 
+def test_run_preserve_structure_submits_export_options(
+    tmp_path: Path,
+    monkeypatch: Any,
+    capsys: Any,
+) -> None:
+    monkeypatch.setenv("CAT_TEST_API_KEY", "test-key")
+    config_path = _write_config(tmp_path)
+    captured_requests: list[Any] = []
+
+    def _capture_request(self: DefaultDocumentService, request: Any) -> AcceptedCommand:
+        captured_requests.append(request)
+        return _fake_run_translate_and_export(self, request)
+
+    monkeypatch.setattr(DefaultDocumentService, "run_translate_and_export", _capture_request)
+
+    exit_code = run(
+        [
+            "--library-root",
+            str(tmp_path / "library"),
+            "--config",
+            str(config_path),
+            "--json",
+            "run",
+            _text_input(tmp_path),
+            "--output",
+            str(tmp_path / "translated"),
+            "--preserve-structure",
+            "--allow-original-fallback",
+        ]
+    )
+
+    assert exit_code == 0
+    payload = _json_stdout(capsys)
+    assert payload["data"]["preserve_structure"] is True
+    assert len(captured_requests) == 1
+    assert captured_requests[0].options == {"preserve_structure": True, "allow_original_fallback": True}
+
+
+def test_galgame_inspect_reports_importable_json(tmp_path: Path, capsys: Any) -> None:
+    source = tmp_path / "script.json"
+    source.write_text(
+        json.dumps(
+            [
+                {"key": "line1", "original": "こんにちは", "translation": "", "speaker": "Alice"},
+                {"key": "line2", "original": "またね", "translation": ""},
+            ],
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = run(["--json", "galgame", "inspect", str(source)])
+
+    assert exit_code == 0
+    payload = _json_stdout(capsys)
+    assert payload["data"]["imported"] == 1
+    assert payload["data"]["total_units"] == 2
+    assert payload["data"]["files"][0]["adapter_name"] == "paratranz_json"
+
+
+def test_galgame_skill_writes_skill_file(tmp_path: Path, capsys: Any) -> None:
+    skill_dir = tmp_path / "contextweave-galgame-translation"
+
+    exit_code = run(["--json", "galgame", "skill", "--output", str(skill_dir)])
+
+    assert exit_code == 0
+    payload = _json_stdout(capsys)
+    skill_path = skill_dir / "SKILL.md"
+    assert payload["data"]["written"] is True
+    assert payload["data"]["path"] == str(skill_path.resolve())
+    assert skill_path.read_text(encoding="utf-8").startswith("---\nname: contextweave-galgame-translation")
+
+
 def test_run_with_book_id_reuses_existing_book(tmp_path: Path, monkeypatch: Any, capsys: Any) -> None:
     monkeypatch.setenv("CAT_TEST_API_KEY", "test-key")
     config_path = _write_config(tmp_path)

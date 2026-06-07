@@ -4,9 +4,6 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from context_aware_translation.core.cancellation import raise_if_cancelled
-from context_aware_translation.documents.galgame import deserialize_translation_unit_stream
-from context_aware_translation.storage.schema.book_db import ChunkRecord
-from context_aware_translation.utils.hashing import compute_chunk_hash
 
 if TYPE_CHECKING:
     from context_aware_translation.core.context_manager import TranslationContextManager
@@ -14,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class GalgameDocumentHandler:
-    """DocumentTypeHandler for unit-preserving galgame translation."""
+    """DocumentTypeHandler for galgame documents using the generic text pipeline."""
 
     def __init__(
         self,
@@ -30,36 +27,12 @@ class GalgameDocumentHandler:
     def add_text(
         self,
         text: str,
-        max_token_size_per_chunk: int,  # noqa: ARG002
+        max_token_size_per_chunk: int,
         document_id: int,
         manager: TranslationContextManager,
     ) -> int:
-        """Store one chunk per translation unit without deduping repeated dialogue text."""
-        units = deserialize_translation_unit_stream(text)
-        chunk_records: list[ChunkRecord] = []
-        chunk_id = manager.term_repo.get_next_chunk_id()
-        for unit in units:
-            if not unit.text.strip():
-                continue
-            identity_text = f"{unit.relative_path}\0{unit.unit_id}\0{unit.text}"
-            chunk_records.append(
-                ChunkRecord(
-                    chunk_id=chunk_id,
-                    hash=compute_chunk_hash(identity_text, document_id=document_id),
-                    text=unit.text,
-                    document_id=document_id,
-                    is_extracted=False,
-                    is_summarized=False,
-                )
-            )
-            chunk_id += 1
-
-        new_chunk_records = [
-            chunk_record for chunk_record in chunk_records if not manager.term_repo.chunk_exists_by_hash(chunk_record.hash)
-        ]
-        if new_chunk_records:
-            manager._state_update([], new_chunk_records)
-        return chunk_id - 1
+        """Let the normal semantic chunker group galgame text."""
+        return manager.add_text(text, max_token_size_per_chunk, document_id)
 
     async def translate_chunks(
         self,
@@ -70,7 +43,7 @@ class GalgameDocumentHandler:
         cancel_check: Callable[[], bool] | None = None,
         progress_callback: ProgressCallback | None = None,
     ) -> None:
-        """Delegate to the generic text translator while preserving one chunk per unit."""
+        """Delegate to generic text translation with configured batching."""
         _ = source_ids
         raise_if_cancelled(cancel_check)
         await manager.translate_chunks(
@@ -88,14 +61,5 @@ class GalgameDocumentHandler:
         document_id: int,
         manager: TranslationContextManager,
     ) -> list[str]:
-        """Return one translated entry per galgame translation unit."""
-        chunks = manager.term_repo.list_chunks(document_id=document_id)
-        if not chunks:
-            raise ValueError("No chunks found in the database")
-
-        sorted_chunks = sorted(chunks, key=lambda chunk: chunk.chunk_id)
-        untranslated = [chunk for chunk in sorted_chunks if not chunk.is_translated or chunk.translation is None]
-        if untranslated:
-            untranslated_ids = [chunk.chunk_id for chunk in untranslated]
-            raise ValueError(f"Cannot export: chunks {untranslated_ids} are not translated yet")
-        return [chunk.translation for chunk in sorted_chunks if chunk.translation is not None]
+        """Use the normal chunk concatenation and newline split behavior."""
+        return manager.get_translated_lines(document_id)

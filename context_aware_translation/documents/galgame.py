@@ -1148,11 +1148,7 @@ class GalgameDocument(Document):
         return 0
 
     def get_text(self) -> str:
-        units: list[TranslationUnit] = []
-        for source in self._ordered_sources():
-            relative_path, text_content, adapter = _source_adapter(source)
-            units.extend(adapter.extract_units(relative_path, text_content))
-        return serialize_translation_units(units)
+        return "\n".join(unit.text for unit in self._all_translation_units())
 
     def get_glossary_seeds(self) -> tuple[GalgameGlossarySeed, ...]:
         seeds: list[GalgameGlossarySeed] = []
@@ -1180,7 +1176,7 @@ class GalgameDocument(Document):
     ) -> int:
         _ = progress_callback
         raise_if_cancelled(cancel_check)
-        self._translated_lines = [_coerce_export_line_to_translation(line) for line in lines]
+        self._translated_lines = _expand_galgame_export_lines(lines, self._all_translation_units())
         return len(lines)
 
     async def reembed(
@@ -1250,6 +1246,13 @@ class GalgameDocument(Document):
     def _ordered_sources(self) -> list[dict[str, object]]:
         sources = cast("list[dict[str, object]]", self.repo.get_document_sources(self.document_id))
         return sorted(sources, key=_source_sequence_number)
+
+    def _all_translation_units(self) -> list[TranslationUnit]:
+        units: list[TranslationUnit] = []
+        for source in self._ordered_sources():
+            relative_path, text_content, adapter = _source_adapter(source)
+            units.extend(adapter.extract_units(relative_path, text_content))
+        return units
 
     def _source_translation_batches(
         self,
@@ -1621,6 +1624,39 @@ def _safe_output_path(output_folder: Path, relative_path: str) -> Path:
     if relative.is_absolute() or any(part in {"", ".", ".."} for part in relative.parts):
         raise ValueError(f"Unsafe galgame source relative path: {relative_path}")
     return output_folder.joinpath(*relative.parts)
+
+
+def _expand_galgame_export_lines(lines: list[str], units: list[TranslationUnit]) -> list[str]:
+    translated_lines: list[str] = []
+    for line in lines:
+        translated_lines.extend(_split_galgame_chunk_translation(_coerce_export_line_to_translation(line)))
+
+    expanded: list[str] = []
+    unit_index = 0
+    line_index = 0
+    while unit_index < len(units):
+        source_line_count = _galgame_unit_line_count(units[unit_index].text)
+        next_line_index = line_index + source_line_count
+        if next_line_index > len(translated_lines):
+            raise ValueError("Translated galgame line stream is shorter than the source unit stream.")
+        expanded.append("\n".join(translated_lines[line_index:next_line_index]))
+        unit_index += 1
+        line_index = next_line_index
+
+    extra_lines = [line for line in translated_lines[line_index:] if line]
+    if extra_lines:
+        raise ValueError("Translated galgame line stream is longer than the source unit stream.")
+    return expanded
+
+
+def _split_galgame_chunk_translation(text: str) -> list[str]:
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    return [decode_compressed_line(line) for line in normalized.split("\n")]
+
+
+def _galgame_unit_line_count(text: str) -> int:
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    return max(1, len(normalized.split("\n")))
 
 
 def _coerce_export_line_to_translation(line: str) -> str:
