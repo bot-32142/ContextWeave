@@ -73,25 +73,48 @@ QComboBox::down-arrow {
     margin-right: 6px;
 }
 
+/* Checkboxes */
+QCheckBox {
+    spacing: 8px;
+    color: #333333;
+}
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #cccccc;
+    border-radius: 4px;
+    background: white;
+}
+QCheckBox::indicator:checked {
+    background: #0078d4;
+    border-color: #0078d4;
+}
+QCheckBox::indicator:checked:hover {
+    background: #106ebe;
+}
+QCheckBox::indicator:unchecked:hover {
+    background: #f0f0f0;
+}
+
 /* Tables */
-QTableView {
+QTableView, QTableWidget {
     background-color: white;
     color: #333333;
     border: 1px solid #e0e0e0;
     gridline-color: #e0e0e0;
 }
 
-QTableView::item {
+QTableView::item, QTableWidget::item {
     padding: 8px;
     color: #333333;
 }
 
-QTableView::item:selected {
+QTableView::item:selected, QTableWidget::item:selected {
     background-color: #eef2f6;
     color: #333333;
 }
 
-QTableView::item:hover {
+QTableView::item:hover, QTableWidget::item:hover {
     background-color: transparent;
 }
 

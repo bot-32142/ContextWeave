@@ -98,7 +98,7 @@ MIN_WINDOW_WIDTH: Final[int] = 800
 MIN_WINDOW_HEIGHT: Final[int] = 600
 
 # Sidebar width
-SIDEBAR_WIDTH: Final[int] = 200
+SIDEBAR_WIDTH: Final[int] = 280
 
 # Table defaults
 DEFAULT_PAGE_SIZE: Final[int] = 50
