@@ -4,7 +4,7 @@ Rectangle {
     id: root
     objectName: "documentShellChrome"
     color: "#f5f0e8"
-    implicitWidth: 240
+    implicitWidth: 280
 
     signal backRequested
     signal ocrRequested
