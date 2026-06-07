@@ -8,10 +8,16 @@ from context_aware_translation.application.contracts.common import ContractModel
 from context_aware_translation.application.contracts.document import RunTranslateAndExportRequest
 from context_aware_translation.application.contracts.work import ImportDocumentsRequest, InspectImportPathsRequest
 from context_aware_translation.application.errors import ApplicationError
+from context_aware_translation.documents.galgame import (
+    inspect_galgame_external_helpers,
+    inspect_galgame_glossary_seeds,
+    inspect_galgame_import,
+)
 from context_aware_translation.storage.models.book import BookStatus
 from context_aware_translation.workflow.tasks.models import STATUS_COMPLETED
 
 from .config_file import load_cli_config, resolve_config_path, write_starter_config
+from .galgame_skill import GALGAME_CODEX_SKILL_TEXT
 from .output import (
     EXIT_BLOCKED,
     EXIT_TASK_FAILED,
@@ -89,7 +95,24 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--book-name")
     run_parser.add_argument("--type", dest="document_type")
     run_parser.add_argument("--format", dest="format_id")
+    run_parser.add_argument("--preserve-structure", action="store_true")
+    run_parser.add_argument("--allow-original-fallback", action="store_true")
     run_parser.add_argument("--no-polish", action="store_true")
+
+    galgame_parser = subparsers.add_parser("galgame", parents=[common])
+    galgame_subparsers = galgame_parser.add_subparsers(dest="galgame_command", required=True)
+    galgame_inspect_parser = galgame_subparsers.add_parser("inspect", parents=[common])
+    galgame_inspect_parser.add_argument("input")
+    galgame_inspect_parser.add_argument("--adapter")
+    galgame_helpers_parser = galgame_subparsers.add_parser("helpers", parents=[common])
+    galgame_helpers_parser.add_argument("input")
+    galgame_helpers_parser.add_argument("--output-folder")
+    galgame_helpers_parser.add_argument("--tool", action="append", dest="tools")
+    galgame_glossary_parser = galgame_subparsers.add_parser("glossary-seeds", parents=[common])
+    galgame_glossary_parser.add_argument("input")
+    galgame_glossary_parser.add_argument("--adapter")
+    galgame_skill_parser = galgame_subparsers.add_parser("skill", parents=[common])
+    galgame_skill_parser.add_argument("--output")
 
     books_parser = subparsers.add_parser("books", parents=[common])
     books_subparsers = books_parser.add_subparsers(dest="books_command", required=True)
@@ -109,6 +132,8 @@ def command_name(args: argparse.Namespace) -> str:
         return f"config.{getattr(args, 'config_command', '')}"
     if command == "books":
         return f"books.{getattr(args, 'books_command', '')}"
+    if command == "galgame":
+        return f"galgame.{getattr(args, 'galgame_command', '')}"
     return command
 
 
@@ -118,6 +143,8 @@ def dispatch(args: argparse.Namespace) -> dict[str, Any]:
         return dispatch_config(args)
     if command == "books":
         return dispatch_books(args)
+    if command == "galgame":
+        return dispatch_galgame(args)
     if command == "run":
         return run_one_shot(args)
     raise CliError("usage", f"Unsupported command: {command}", exit_code=EXIT_USAGE)
@@ -156,6 +183,77 @@ def dispatch_books(args: argparse.Namespace) -> dict[str, Any]:
             )
             return {"book_id": str(args.book_id), "deleted": True, "permanent": bool(getattr(args, "permanent", False))}
     raise CliError("usage", f"Unsupported books command: {books_command}", exit_code=EXIT_USAGE)
+
+
+def dispatch_galgame(args: argparse.Namespace) -> dict[str, Any]:
+    galgame_command = str(args.galgame_command)
+    if galgame_command == "inspect":
+        path = Path(str(args.input)).expanduser().resolve()
+        import_summary = inspect_galgame_import(path, adapter_name=getattr(args, "adapter", None))
+        return {
+            "path": str(path),
+            "imported": import_summary.imported,
+            "skipped": import_summary.skipped,
+            "total_units": import_summary.total_units,
+            "adapters": list(import_summary.adapters),
+            "files": [
+                {
+                    "relative_path": source.relative_path,
+                    "adapter_name": source.adapter_name,
+                    "unit_count": source.unit_count,
+                    "confidence": source.confidence,
+                }
+                for source in import_summary.files
+            ],
+        }
+    if galgame_command == "helpers":
+        path = Path(str(args.input)).expanduser().resolve()
+        output_folder = _optional_path(getattr(args, "output_folder", None))
+        helper_summary = inspect_galgame_external_helpers(
+            path,
+            output_folder=output_folder,
+            tool_names=getattr(args, "tools", None),
+        )
+        return {
+            "path": str(path),
+            "usable": helper_summary.usable,
+            "commands": [
+                {
+                    "source_path": command.source_path,
+                    "output_folder": command.output_folder,
+                    "tool_name": command.tool_name,
+                    "executable": command.executable,
+                    "argv": list(command.argv),
+                    "note": command.note,
+                }
+                for command in helper_summary.commands
+            ],
+            "issues": [
+                {
+                    "source_path": issue.source_path,
+                    "source_extension": issue.source_extension,
+                    "message": issue.message,
+                }
+                for issue in helper_summary.issues
+            ],
+        }
+    if galgame_command == "glossary-seeds":
+        path = Path(str(args.input)).expanduser().resolve()
+        seeds = inspect_galgame_glossary_seeds(path, adapter_name=getattr(args, "adapter", None))
+        return {
+            "path": str(path),
+            "seeds": [
+                {"term": seed.term, "category": seed.category, "source": seed.source, "context": seed.context}
+                for seed in seeds
+            ],
+        }
+    if galgame_command == "skill":
+        output = getattr(args, "output", None)
+        if output is None:
+            return {"skill": GALGAME_CODEX_SKILL_TEXT, "written": False, "path": None}
+        output_path = _write_galgame_skill(Path(str(output)).expanduser())
+        return {"skill": GALGAME_CODEX_SKILL_TEXT, "written": True, "path": str(output_path)}
+    raise CliError("usage", f"Unsupported galgame command: {galgame_command}", exit_code=EXIT_USAGE)
 
 
 def run_one_shot(args: argparse.Namespace) -> dict[str, Any]:
@@ -208,6 +306,10 @@ def run_one_shot(args: argparse.Namespace) -> dict[str, Any]:
                 use_batch=False,
                 use_reembedding=False,
                 enable_polish=not bool(getattr(args, "no_polish", False)),
+                options={
+                    "preserve_structure": bool(getattr(args, "preserve_structure", False)),
+                    "allow_original_fallback": bool(getattr(args, "allow_original_fallback", False)),
+                },
             )
         )
         task_id = accepted.queue_item_id or accepted.command_id
@@ -222,6 +324,7 @@ def run_one_shot(args: argparse.Namespace) -> dict[str, Any]:
             "status": record.status,
             "phase": record.phase,
             "output_path": str(output_path),
+            "preserve_structure": bool(getattr(args, "preserve_structure", False)),
         }
         if record.status != STATUS_COMPLETED:
             raise CliError(
@@ -326,6 +429,27 @@ def print_human_success(command: str, data: dict[str, Any]) -> None:
         print(f"Task: {data['task_id']}")
         print(f"Done: {data['output_path']}")
         return
+    if command == "galgame.inspect":
+        print(f"Importable files: {data['imported']} ({data['total_units']} units)")
+        for item in data.get("files", []):
+            print(f"{item['relative_path']}\t{item['adapter_name']}\t{item['unit_count']}\t{item['confidence']}")
+        return
+    if command == "galgame.helpers":
+        for command_item in data.get("commands", []):
+            print(" ".join(command_item["argv"]))
+        for issue in data.get("issues", []):
+            print(f"{issue['source_path']}: {issue['message']}")
+        return
+    if command == "galgame.glossary-seeds":
+        for seed in data.get("seeds", []):
+            print(f"{seed['term']}\t{seed['category']}\t{seed['source']}")
+        return
+    if command == "galgame.skill":
+        if data.get("written"):
+            print(f"Wrote skill: {data['path']}")
+        else:
+            print(data["skill"])
+        return
     print(data)
 
 
@@ -348,6 +472,13 @@ def _optional_path(value: str | None) -> Path | None:
     if value is None:
         return None
     return Path(value).expanduser().resolve()
+
+
+def _write_galgame_skill(output_path: Path) -> Path:
+    skill_path = output_path / "SKILL.md" if output_path.suffix == "" else output_path
+    skill_path.parent.mkdir(parents=True, exist_ok=True)
+    skill_path.write_text(GALGAME_CODEX_SKILL_TEXT, encoding="utf-8")
+    return skill_path.resolve()
 
 
 def _payload(value: Any) -> Any:
