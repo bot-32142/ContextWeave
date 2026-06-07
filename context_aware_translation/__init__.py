@@ -9,6 +9,8 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from context_aware_translation.stdio import configure_standard_streams
+
 if TYPE_CHECKING:
     from context_aware_translation.config import Config
 
@@ -52,6 +54,8 @@ def configure_logging(config: "Config") -> None:
         config: Config instance with log_dir set
     """
     global _logging_configured
+
+    configure_standard_streams()
 
     # Skip configuration if we're in a test environment (pytest will handle it)
     is_test_env = (

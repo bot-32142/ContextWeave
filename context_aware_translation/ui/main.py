@@ -13,6 +13,7 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QApplication, QMessageBox, QStyleFactory
 
+from context_aware_translation import configure_standard_streams
 from context_aware_translation.app_identity import APP_NAME, APP_ORGANIZATION_DOMAIN, APP_ORGANIZATION_NAME
 from context_aware_translation.ui import i18n
 from context_aware_translation.ui.main_window import MainWindow
@@ -106,6 +107,7 @@ def _apply_preferred_style(app: QApplication) -> None:
 
 def main() -> None:
     """Launch the application."""
+    configure_standard_streams()
     # Keep packaged and local runs consistent on high-DPI displays.
     _configure_qt_environment()
     QGuiApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)

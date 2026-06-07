@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 from typing import Any, cast
 
+from context_aware_translation import configure_standard_streams
 from context_aware_translation.application.contracts.common import ContractModel
 from context_aware_translation.application.contracts.document import RunTranslateAndExportRequest
 from context_aware_translation.application.contracts.work import ImportDocumentsRequest, InspectImportPathsRequest
@@ -36,6 +37,7 @@ def main() -> None:
 
 
 def run(argv: list[str] | None = None) -> int:
+    configure_standard_streams()
     parser = build_parser()
     args = parser.parse_args(argv)
     command = command_name(args)
