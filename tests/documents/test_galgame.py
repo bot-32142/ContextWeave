@@ -20,7 +20,6 @@ from context_aware_translation.documents.galgame import (
     TranslatorPlusPlusTransAdapter,
     VnTextJsonAdapter,
     WolfRpgXlsxAdapter,
-    deserialize_translation_unit_stream,
     get_galgame_bridge_formats,
     get_galgame_external_tool_specs,
     inspect_galgame_external_helpers,
@@ -462,8 +461,7 @@ async def test_galgame_document_preserve_export_uses_imported_json_adapter_mime_
     sources = repo.get_document_sources(row["document_id"])
     assert sources[0]["mime_type"] == VnTextJsonAdapter.mime_type
 
-    units = deserialize_translation_unit_stream(document.get_text())
-    assert [(unit.text, unit.speaker) for unit in units] == [("こんにちは", "Alice")]
+    assert document.get_text().splitlines() == ["こんにちは"]
 
     await document.set_text(["你好"])
     output_folder = tmp_path / "out"
@@ -492,8 +490,7 @@ async def test_galgame_document_preserve_export_writes_imported_xlsx_adapter(tmp
     sources = repo.get_document_sources(row["document_id"])
     assert sources[0]["mime_type"] == TppXlsxAdapter.mime_type
 
-    units = deserialize_translation_unit_stream(document.get_text())
-    assert [(unit.text, unit.speaker) for unit in units] == [("こんにちは", "Alice")]
+    assert document.get_text().splitlines() == ["こんにちは"]
 
     await document.set_text(["你好"])
     output_folder = tmp_path / "out"
@@ -518,8 +515,7 @@ async def test_galgame_document_imports_and_exports_renpy_script(tmp_path: Path)
     sources = repo.get_document_sources(row["document_id"])
     assert sources[0]["mime_type"] == RenPyScriptAdapter.mime_type
 
-    units = deserialize_translation_unit_stream(document.get_text())
-    assert [(unit.relative_path, unit.text, unit.speaker) for unit in units] == [("script.rpy", "こんにちは", "e")]
+    assert document.get_text().splitlines() == ["こんにちは"]
 
     await document.set_text(["你好"])
     output_folder = tmp_path / "out"
@@ -561,10 +557,7 @@ async def test_galgame_document_imports_and_exports_rpg_maker_folder(tmp_path: P
     sources = repo.get_document_sources(row["document_id"])
     assert sources[0]["mime_type"] == RpgMakerMvMzJsonAdapter.mime_type
 
-    units = deserialize_translation_unit_stream(document.get_text())
-    assert [(unit.relative_path, unit.text, unit.context) for unit in units] == [
-        ("www/data/Map001.json", "こんにちは", "Map event 1, page 1")
-    ]
+    assert document.get_text().splitlines() == ["こんにちは"]
 
     await document.set_text(["你好"])
     output_folder = tmp_path / "out"
@@ -589,8 +582,7 @@ async def test_galgame_document_imports_single_rpg_maker_map_file(tmp_path: Path
     sources = repo.get_document_sources(row["document_id"])
     assert sources[0]["relative_path"] == "Map001.json"
     assert sources[0]["mime_type"] == RpgMakerMvMzJsonAdapter.mime_type
-    units = deserialize_translation_unit_stream(document.get_text())
-    assert [(unit.relative_path, unit.text) for unit in units] == [("Map001.json", "こんにちは")]
+    assert document.get_text().splitlines() == ["こんにちは"]
 
 
 def test_galgame_folder_scan_rejects_rpg_maker_named_json_outside_data_folder(tmp_path: Path) -> None:
@@ -649,11 +641,7 @@ async def test_galgame_document_import_get_text_and_preserve_export(tmp_path: Pa
     assert sources[0]["relative_path"] == "data/script.json"
 
     document = GalgameDocument(repo, row["document_id"])
-    units = deserialize_translation_unit_stream(document.get_text())
-    assert [(unit.relative_path, unit.unit_id, unit.text) for unit in units] == [
-        ("data/script.json", "0", "こんにちは"),
-        ("data/script.json", "1", "またね"),
-    ]
+    assert document.get_text().splitlines() == ["こんにちは", "またね"]
 
     await document.set_text(["你好", "再见"])
     output_folder = tmp_path / "out"
@@ -661,6 +649,40 @@ async def test_galgame_document_import_get_text_and_preserve_export(tmp_path: Pa
 
     patched = json.loads((output_folder / "data" / "script.json").read_text(encoding="utf-8"))
     assert patched == {"こんにちは": "你好", "またね": "再见"}
+
+
+async def test_galgame_document_splits_grouped_chunk_translation_by_original_unit_lines(tmp_path: Path) -> None:
+    source = tmp_path / "script.json"
+    _write_mtool_json(source, {"こんにちは": "", "またね": ""})
+    repo = _setup_repo(tmp_path)
+    GalgameDocument.do_import(repo, source)
+    row = repo.get_document_row()
+    assert row is not None
+    document = GalgameDocument(repo, row["document_id"])
+
+    await document.set_text(["你好\n再见"])
+    output_folder = tmp_path / "out"
+    document.export_preserve_structure(output_folder)
+
+    patched = json.loads((output_folder / "script.json").read_text(encoding="utf-8"))
+    assert patched == {"こんにちは": "你好", "またね": "再见"}
+
+
+async def test_galgame_document_splits_multiline_units_by_original_line_counts(tmp_path: Path) -> None:
+    source = tmp_path / "script.json"
+    _write_mtool_json(source, {"こんにちは\n世界": "", "またね": ""})
+    repo = _setup_repo(tmp_path)
+    GalgameDocument.do_import(repo, source)
+    row = repo.get_document_row()
+    assert row is not None
+    document = GalgameDocument(repo, row["document_id"])
+
+    await document.set_text(["你好\n世界\n再见"])
+    output_folder = tmp_path / "out"
+    document.export_preserve_structure(output_folder)
+
+    patched = json.loads((output_folder / "script.json").read_text(encoding="utf-8"))
+    assert patched == {"こんにちは\n世界": "你好\n世界", "またね": "再见"}
 
 
 async def test_galgame_document_coerces_serialized_units_for_original_fallback(tmp_path: Path) -> None:
@@ -680,7 +702,7 @@ async def test_galgame_document_coerces_serialized_units_for_original_fallback(t
     assert patched == {"こんにちは": "こんにちは", "またね": "またね"}
 
 
-async def test_galgame_export_raises_on_short_translation_stream(tmp_path: Path) -> None:
+async def test_galgame_export_raises_on_short_translation_stream() -> None:
     mock_repo = MagicMock()
     mock_repo.get_document_sources.return_value = [
         {
@@ -690,7 +712,6 @@ async def test_galgame_export_raises_on_short_translation_stream(tmp_path: Path)
         }
     ]
     document = GalgameDocument(mock_repo, 1)
-    await document.set_text(["你好"])
 
     with pytest.raises(ValueError, match="shorter than the source unit stream"):
-        document.export_preserve_structure(tmp_path / "out")
+        await document.set_text(["你好"])

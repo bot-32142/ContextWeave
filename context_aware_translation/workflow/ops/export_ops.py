@@ -26,8 +26,6 @@ def get_lines_with_original_fallback(workflow: WorkflowContext, document: Docume
 
     if document.document_type == "manga":
         return [chunk.translation if chunk.is_translated and chunk.translation is not None else "" for chunk in chunks]
-    if document.document_type == "galgame":
-        return [chunk.translation if chunk.is_translated and chunk.translation is not None else chunk.text for chunk in chunks]
 
     merged_chunks = [
         chunk.translation if chunk.is_translated and chunk.translation is not None else chunk.text for chunk in chunks

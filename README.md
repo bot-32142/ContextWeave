@@ -106,13 +106,18 @@ contextweave-cli config validate
 contextweave-cli run ./book.epub --output ./translated/book.epub
 contextweave-cli run ./chapter.txt --output ./translated/chapter.txt --json
 contextweave-cli run ./episode.srt --output ./translated/episode.srt --no-polish
+contextweave-cli galgame inspect ./extracted-game --json
+contextweave-cli galgame skill --output ./contextweave-galgame-translation
+contextweave-cli run ./extracted-game --type galgame --output ./translated-patch --preserve-structure --json
 
 contextweave-cli books list
 contextweave-cli books show BOOK_ID
 contextweave-cli books delete BOOK_ID --yes
 ```
 
-The CLI resolves config from `--config`, then `CONTEXTWEAVE_CONFIG`, then the nearest `contextweave.yaml`/`.contextweave.yaml` walking upward, then the platform default shown by `contextweave-cli config path`. The config mirrors the setup UI: `connections` define provider endpoints and `workflow_profiles` route each translation step. Prefer `api_key_env` so API keys stay in environment variables instead of config files or task snapshots. Use `--no-polish` when a one-shot run should skip the polish pass, which can be useful for timing-sensitive subtitle output.
+The CLI resolves config from `--config`, then `CONTEXTWEAVE_CONFIG`, then the nearest `contextweave.yaml`/`.contextweave.yaml` walking upward, then the platform default shown by `contextweave-cli config path`. The config mirrors the setup UI: `connections` define provider endpoints and `workflow_profiles` route each translation step. Prefer `api_key_env` so API keys stay in environment variables instead of config files or task snapshots. Use `--no-polish` when a one-shot run should skip the polish pass, which can be useful for timing-sensitive subtitle output. Use `--preserve-structure` for patchable galgame/script exports.
+
+For unsupported game engines, convert extracted script text into a supported intermediate format such as ParaTranz JSON or Translator++ `.trans`, then import that file or folder as `--type galgame`. `contextweave-cli galgame skill` writes a Codex/OpenAI-style skill file with this workflow for external extractor agents.
 
 A commented starting point is available at [docs/examples/contextweave-cli.yaml](https://github.com/bot-32142/ContextWeave/blob/master/docs/examples/contextweave-cli.yaml).
 
@@ -134,3 +139,4 @@ A commented starting point is available at [docs/examples/contextweave-cli.yaml]
 | Manga | `.cbz`, image folders | `cbz` | Yes |
 | EPUB | `.epub` | `epub`, `md`, `docx`, `html` | No, but image OCR is supported |
 | Subtitle | `.srt`, `.vtt`, `.ass`, `.ssa` | `srt`, `vtt`, `ass`, `ssa` | No |
+| Galgame | `.rpy`, `.ks`, RPG Maker MV/MZ JSON, MTool JSON, Translator++ `.trans`, VNText JSON, ParaTranz JSON, TPP/Translator++ `.xlsx`, Wolf RPG `.xlsx` | `txt`, preserve-structure folder | No |
