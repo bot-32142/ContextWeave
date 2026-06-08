@@ -117,6 +117,26 @@ async def test_translate_chunk_uses_block_lists_and_reconstructs(temp_config: Co
 
 
 @pytest.mark.asyncio
+async def test_translate_chunk_removes_newlines_inside_json_elements(temp_config: Config):
+    chunks = ["こんにちは\nまたね"]
+    terms = [_make_term()]
+
+    llm_client = MagicMock(spec=LLMClient)
+    llm_client.chat = AsyncMock(return_value=_translation_response(["你好\n补一句", "再见"]))
+
+    result = await translate_chunk(
+        chunks=chunks,
+        terms=terms,
+        llm_client=llm_client,
+        translator_config=temp_config.translator_config,
+        source_language="日语",
+        target_language=temp_config.translation_target_language,
+    )
+
+    assert result == ["你好 补一句\n再见"]
+
+
+@pytest.mark.asyncio
 async def test_translate_chunk_injects_local_context_only_into_translation(temp_config: Config):
     chunks = ["そうだな"]
     terms = [_make_term()]
