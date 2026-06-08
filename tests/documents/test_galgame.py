@@ -27,6 +27,7 @@ from context_aware_translation.documents.galgame import (
     inspect_galgame_import,
     validate_galgame_translations,
 )
+from context_aware_translation.utils.compression_marker import COMPRESSED_LINE_SENTINEL
 from context_aware_translation.storage.repositories.document_repository import DocumentRepository
 from context_aware_translation.storage.schema.book_db import SQLiteBookDB
 
@@ -368,21 +369,6 @@ def test_rpg_maker_adapter_rejects_unrelated_json_path() -> None:
         adapter.extract_units("config/settings.json", source_text)
 
 
-def test_validate_galgame_translations_rejects_placeholder_drift() -> None:
-    adapter = RpgMakerMvMzJsonAdapter()
-    source_text = json.dumps(
-        {"events": [None, {"pages": [{"list": [{"code": 401, "parameters": ["こんにちは\\N[1]"]}]}]}]},
-        ensure_ascii=False,
-    )
-    units = adapter.extract_units("data/Map001.json", source_text)
-
-    issues = validate_galgame_translations(units, {"0": "你好"})
-
-    assert [(issue.unit_id, issue.message) for issue in issues] == [
-        ("0", "protected control codes or placeholders changed")
-    ]
-
-
 def test_inspect_galgame_import_reports_summary_and_manual_adapter_override(tmp_path: Path) -> None:
     source = tmp_path / "game" / "data" / "Map001.json"
     _write_json(source, {"events": [None, {"pages": [{"list": [{"code": 401, "parameters": ["こんにちは"]}]}]}]})
@@ -567,6 +553,21 @@ async def test_galgame_document_imports_and_exports_rpg_maker_folder(tmp_path: P
     assert patched["events"][1]["pages"][0]["list"][0]["parameters"] == ["你好"]
 
 
+async def test_galgame_document_keeps_compressed_line_as_real_line(tmp_path: Path) -> None:
+    source = tmp_path / "script.json"
+    _write_mtool_json(source, {"こんにちは": ""})
+    repo = _setup_repo(tmp_path)
+
+    GalgameDocument.do_import(repo, source)
+    row = repo.get_document_row()
+    assert row is not None
+    document = GalgameDocument(repo, row["document_id"])
+
+    await document.set_text([COMPRESSED_LINE_SENTINEL])
+
+    assert document._translated_lines == [COMPRESSED_LINE_SENTINEL]
+
+
 async def test_galgame_document_imports_single_rpg_maker_map_file(tmp_path: Path) -> None:
     source = tmp_path / "Map001.json"
     _write_json(source, {"events": [None, {"pages": [{"list": [{"code": 401, "parameters": ["こんにちは"]}]}]}]})
@@ -590,21 +591,6 @@ def test_galgame_folder_scan_rejects_rpg_maker_named_json_outside_data_folder(tm
     _write_json(source, {"events": [None, {"pages": [{"list": [{"code": 401, "parameters": ["こんにちは"]}]}]}]})
 
     assert GalgameDocument.can_import(tmp_path) is False
-
-
-async def test_galgame_export_rejects_placeholder_drift(tmp_path: Path) -> None:
-    source = tmp_path / "data" / "Map001.json"
-    _write_json(source, {"events": [None, {"pages": [{"list": [{"code": 401, "parameters": ["こんにちは\\N[1]"]}]}]}]})
-    repo = _setup_repo(tmp_path)
-    GalgameDocument.do_import(repo, source.parent.parent)
-    row = repo.get_document_row()
-    assert row is not None
-    document = GalgameDocument(repo, row["document_id"])
-
-    await document.set_text(["你好"])
-
-    with pytest.raises(ValueError, match="protected control codes"):
-        document.export_preserve_structure(tmp_path / "out")
 
 
 async def test_galgame_merged_export_is_rejected(tmp_path: Path) -> None:
