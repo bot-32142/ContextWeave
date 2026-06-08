@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -153,6 +154,44 @@ def _insert_subtitle_document(
     return document_id
 
 
+def _insert_galgame_json_document(
+    context,
+    project_id: str,
+    *,
+    chunk_id: int,
+    translated: bool,
+    label: str,
+) -> int:
+    with context.runtime.open_book_db(project_id) as dbx:
+        document_id = dbx.document_repo.insert_document("galgame")
+        dbx.document_repo.insert_document_source(
+            document_id,
+            0,
+            "text",
+            relative_path=label,
+            text_content=json.dumps({"こんにちは": ""}, ensure_ascii=False),
+            mime_type="application/x-contextweave-galgame-mtool-json",
+            is_text_added=True,
+            is_ocr_completed=True,
+        )
+        dbx.db.upsert_chunks(
+            [
+                TranslationChunkRecord(
+                    chunk_id=chunk_id,
+                    hash=f"galgame-hash-{chunk_id}",
+                    text="こんにちは",
+                    normalized_text="こんにちは",
+                    document_id=document_id,
+                    is_extracted=True,
+                    is_occurrence_mapped=True,
+                    is_translated=translated,
+                    translation="你好" if translated else None,
+                )
+            ]
+        )
+    return document_id
+
+
 def _insert_epub_document_with_archive_filename(
     context,
     project_id: str,
@@ -281,6 +320,34 @@ def test_prepare_export_defaults_subtitle_to_imported_extension(tmp_path: Path) 
         assert Path(state.default_output_path).name == "episode.ass"
         assert state.supports_preserve_structure is True
         assert state.supports_original_image_export is False
+    finally:
+        context.close()
+
+
+def test_prepare_export_defaults_galgame_to_single_imported_json_source(tmp_path: Path) -> None:
+    _ensure_qt_app()
+    context = _build_configured_context(tmp_path)
+    try:
+        created = context.services.projects.create_project(
+            CreateProjectRequest(name="Galgame JSON Export Test", target_language="English")
+        )
+        project_id = created.project.project_id
+        document_id = _insert_galgame_json_document(
+            context,
+            project_id,
+            chunk_id=31,
+            translated=True,
+            label="script.json",
+        )
+
+        state = context.services.work.prepare_export(
+            PrepareExportRequest(project_id=project_id, document_ids=[document_id])
+        )
+
+        assert state.document_labels == ["script.json"]
+        assert [option.format_id for option in state.available_formats] == ["json", "txt"]
+        assert next(option.format_id for option in state.available_formats if option.is_default) == "json"
+        assert Path(state.default_output_path).name == "script.json"
     finally:
         context.close()
 
