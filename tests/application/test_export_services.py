@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from PySide6.QtWidgets import QApplication
 
 from context_aware_translation.application.composition import build_application_context
@@ -16,6 +17,7 @@ from context_aware_translation.application.contracts.work import (
     PrepareExportRequest,
     RunExportRequest,
 )
+from context_aware_translation.application.errors import ApplicationError, ApplicationErrorCode
 from context_aware_translation.storage.schema.book_db import TranslationChunkRecord
 
 
@@ -351,6 +353,46 @@ def test_prepare_export_requires_galgame_native_preserve_structure(tmp_path: Pat
         assert state.supports_preserve_structure is True
         assert Path(state.default_output_path).suffix == ""
         assert Path(state.default_output_path).name == "script"
+    finally:
+        context.close()
+
+
+def test_run_export_rejects_stale_galgame_format_ids(tmp_path: Path) -> None:
+    _ensure_qt_app()
+    context = _build_configured_context(tmp_path)
+    try:
+        created = context.services.projects.create_project(
+            CreateProjectRequest(name="Galgame Stale Format Export Test", target_language="English")
+        )
+        project_id = created.project.project_id
+        document_id = _insert_galgame_json_document(
+            context,
+            project_id,
+            chunk_id=32,
+            translated=True,
+            label="script.json",
+        )
+
+        with (
+            patch(
+                "context_aware_translation.application.services._export_support.export_ops.export_preserve_structure",
+                new_callable=AsyncMock,
+            ) as export_mock,
+            pytest.raises(ApplicationError) as exc_info,
+        ):
+            context.services.work.run_export(
+                RunExportRequest(
+                    project_id=project_id,
+                    document_ids=[document_id],
+                    format_id="json",
+                    output_path=str(tmp_path / "out"),
+                    options={},
+                )
+            )
+
+        assert exc_info.value.payload.code is ApplicationErrorCode.VALIDATION
+        assert exc_info.value.payload.message == "Unsupported export format: json."
+        export_mock.assert_not_called()
     finally:
         context.close()
 

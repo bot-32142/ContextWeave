@@ -797,21 +797,17 @@ async def test_galgame_document_splits_multiline_units_by_original_line_counts(t
     assert patched == {"こんにちは\n世界": "你好\n世界", "またね": "再见"}
 
 
-async def test_galgame_document_coerces_serialized_units_for_original_fallback(tmp_path: Path) -> None:
+async def test_galgame_document_rejects_unit_count_aligned_but_short_physical_line_stream(tmp_path: Path) -> None:
     source = tmp_path / "script.json"
-    _write_mtool_json(source, {"こんにちは": "", "またね": ""})
+    _write_mtool_json(source, {"こんにちは\n世界": "", "またね": ""})
     repo = _setup_repo(tmp_path)
     GalgameDocument.do_import(repo, source)
     row = repo.get_document_row()
     assert row is not None
     document = GalgameDocument(repo, row["document_id"])
 
-    await document.set_text(document.get_text().splitlines())
-    output_folder = tmp_path / "out"
-    document.export_preserve_structure(output_folder)
-
-    patched = json.loads((output_folder / "script.json").read_text(encoding="utf-8"))
-    assert patched == {"こんにちは": "こんにちは", "またね": "またね"}
+    with pytest.raises(ValueError, match="shorter than the source unit stream"):
+        await document.set_text(["你好", "再见"])
 
 
 async def test_galgame_export_raises_on_short_translation_stream() -> None:
@@ -821,6 +817,7 @@ async def test_galgame_export_raises_on_short_translation_stream() -> None:
             "sequence_number": 0,
             "relative_path": "script.json",
             "text_content": json.dumps({"こんにちは": "", "またね": ""}, ensure_ascii=False),
+            "mime_type": MToolJsonAdapter.mime_type,
         }
     ]
     document = GalgameDocument(mock_repo, 1)
