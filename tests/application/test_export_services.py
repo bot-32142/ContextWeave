@@ -324,7 +324,7 @@ def test_prepare_export_defaults_subtitle_to_imported_extension(tmp_path: Path) 
         context.close()
 
 
-def test_prepare_export_defaults_galgame_to_single_imported_json_source(tmp_path: Path) -> None:
+def test_prepare_export_requires_galgame_native_preserve_structure(tmp_path: Path) -> None:
     _ensure_qt_app()
     context = _build_configured_context(tmp_path)
     try:
@@ -345,9 +345,12 @@ def test_prepare_export_defaults_galgame_to_single_imported_json_source(tmp_path
         )
 
         assert state.document_labels == ["script.json"]
-        assert [option.format_id for option in state.available_formats] == ["json", "txt"]
-        assert next(option.format_id for option in state.available_formats if option.is_default) == "json"
-        assert Path(state.default_output_path).name == "script.json"
+        assert [option.format_id for option in state.available_formats] == ["native"]
+        assert next(option.format_id for option in state.available_formats if option.is_default) == "native"
+        assert state.requires_preserve_structure is True
+        assert state.supports_preserve_structure is True
+        assert Path(state.default_output_path).suffix == ""
+        assert Path(state.default_output_path).name == "script"
     finally:
         context.close()
 

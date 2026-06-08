@@ -1052,7 +1052,7 @@ class GalgameDocument(Document):
     """Document for offline galgame script/intermediate-file translation."""
 
     document_type = "galgame"
-    supported_export_formats = ("txt", "json")
+    supported_export_formats = ("native",)
     requires_ocr_config = False
     ocr_required_for_translation = False
     supports_preserve_structure = True
@@ -1194,11 +1194,7 @@ class GalgameDocument(Document):
 
     def can_export(self, export_format: str) -> bool:
         normalized = export_format.lower().lstrip(".")
-        if normalized == "txt":
-            return True
-        if normalized == "json":
-            return self._single_source_export_format() == "json"
-        return False
+        return normalized == "native"
 
     @classmethod
     def export_merged(
@@ -1209,37 +1205,11 @@ class GalgameDocument(Document):
         *,
         use_original_images: bool = False,
     ) -> None:
-        _ = use_original_images
-        normalized = export_format.lower().lstrip(".")
-        if len(documents) != 1:
-            raise ValueError("Galgame merged export supports one document at a time.")
-        document = documents[0]
-        if not isinstance(document, GalgameDocument):
-            raise ValueError("All documents must be GalgameDocument instances.")
-
-        if normalized == "json":
-            document._export_single_source_json(output_path)
-            return
-        if normalized != "txt":
-            raise ValueError("Galgame documents only support 'txt' or imported-source JSON merged export formats.")
-
-        output_lines = ["relative_path\tunit_id\tsource\ttranslation"]
-        for _source, _adapter, units, translations in document._source_translation_batches():
-            for unit in units:
-                output_lines.append(
-                    "\t".join(
-                        (
-                            _tsv_escape(unit.relative_path),
-                            _tsv_escape(unit.unit_id),
-                            _tsv_escape(unit.text),
-                            _tsv_escape(translations[unit.unit_id]),
-                        )
-                    )
-                )
-
-        output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text("\n".join(output_lines), encoding="utf-8")
+        _ = (documents, export_format, output_path, use_original_images)
+        raise ValueError(
+            "Galgame documents must be exported with preserve-structure export so each imported source "
+            "is patched with its original adapter."
+        )
 
     def export_preserve_structure(self, output_folder: Path) -> None:
         output_folder = Path(output_folder)
@@ -1299,34 +1269,6 @@ class GalgameDocument(Document):
                 f"for document {self.document_id}."
             )
         return batches
-
-    def _single_source_export_format(self) -> str | None:
-        sources = self._ordered_sources()
-        if len(sources) != 1:
-            return None
-        try:
-            relative_path, _text_content, adapter = _source_adapter(sources[0])
-        except ValueError:
-            return None
-        if adapter.stores_binary_as_base64:
-            return None
-        suffix = PurePosixPath(relative_path).suffix.lower().lstrip(".")
-        return suffix if suffix == "json" else None
-
-    def _export_single_source_json(self, output_path: Path) -> None:
-        if self._single_source_export_format() != "json":
-            raise ValueError("Galgame JSON export requires exactly one imported JSON source.")
-
-        batches = self._source_translation_batches()
-        if len(batches) != 1:
-            raise ValueError("Galgame JSON export requires exactly one imported JSON source.")
-        source, adapter, _units, translations = batches[0]
-        relative_path, text_content, _adapter = _source_adapter(source)
-        patched_text = adapter.apply_translations(relative_path, text_content, translations)
-
-        output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(patched_text, encoding="utf-8")
 
 
 def get_galgame_adapters() -> tuple[GalgameAdapter, ...]:

@@ -342,10 +342,11 @@ def _validate_export_options(
     if not format_id:
         return Decision(allowed=False, reason="Export format is required.")
 
-    if format_id not in set(get_supported_formats_for_type(document_type)):
+    supported_formats = set(get_supported_formats_for_type(document_type))
+    if format_id not in supported_formats:
         return Decision(allowed=False, reason=f"Unsupported export format: {format_id}.")
 
-    preserve_structure = bool(options.get("preserve_structure", False))
+    preserve_structure = document_type == "galgame" or bool(options.get("preserve_structure", False))
     use_original_images = bool(options.get("use_original_images", False))
     epub_force_horizontal_ltr = bool(options.get("epub_force_horizontal_ltr", False))
 
