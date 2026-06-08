@@ -20,6 +20,7 @@ from context_aware_translation.workflow.ops import export_ops
 from context_aware_translation.workflow.session import WorkflowSession
 
 _INTERNAL_DOCUMENT_LABEL_PATHS = frozenset({"__epub_metadata__.json", "__epub_original__.epub"})
+_NATIVE_FORMAT_ID = "native"
 
 
 @dataclass(frozen=True)
@@ -31,6 +32,7 @@ class PreparedExport:
     available_formats: list[ExportOption]
     default_output_path: str
     supports_preserve_structure: bool = False
+    requires_preserve_structure: bool = False
     supports_original_image_export: bool = False
     supports_epub_layout_conversion: bool = False
     incomplete_translation_message: str | None = None
@@ -99,9 +101,10 @@ def prepare_export(
             ApplicationErrorCode.UNSUPPORTED,
             f"No export formats are available for document type '{document_type}'.",
         )
+    requires_preserve_structure = _requires_preserve_structure(document_type)
     default_format = _preferred_default_format(document_type, format_ids, document_labels)
     available_formats = [
-        ExportOption(format_id=fmt, label=fmt.upper(), is_default=(fmt == default_format)) for fmt in format_ids
+        ExportOption(format_id=fmt, label=_format_label(fmt), is_default=(fmt == default_format)) for fmt in format_ids
     ]
 
     incomplete = False
@@ -124,6 +127,7 @@ def prepare_export(
         project_id=project_id,
         document_labels=document_labels,
         default_format=default_format,
+        requires_preserve_structure=requires_preserve_structure,
     )
 
     return PreparedExport(
@@ -134,6 +138,7 @@ def prepare_export(
         available_formats=available_formats,
         default_output_path=default_output_path,
         supports_preserve_structure=supports_preserve_structure_for_type(document_type),
+        requires_preserve_structure=requires_preserve_structure,
         supports_original_image_export=supports_original_image_export_for_type(document_type),
         supports_epub_layout_conversion=document_type == "epub",
         incomplete_translation_message=(
@@ -152,6 +157,7 @@ def to_export_dialog_state(prepared: PreparedExport) -> ExportDialogState:
         available_formats=prepared.available_formats,
         default_output_path=prepared.default_output_path,
         supports_preserve_structure=prepared.supports_preserve_structure,
+        requires_preserve_structure=prepared.requires_preserve_structure,
         supports_original_image_export=prepared.supports_original_image_export,
         supports_epub_layout_conversion=prepared.supports_epub_layout_conversion,
         incomplete_translation_message=prepared.incomplete_translation_message,
@@ -169,7 +175,7 @@ def run_export(
 ) -> DocumentExportResult:
     prepared = prepare_export(runtime, project_id=project_id, document_ids=document_ids)
 
-    preserve_structure = bool(options.get("preserve_structure", False))
+    preserve_structure = prepared.requires_preserve_structure or bool(options.get("preserve_structure", False))
     allow_original_fallback = bool(options.get("allow_original_fallback", False))
     use_original_images = bool(options.get("use_original_images", False))
     epub_force_horizontal_ltr = bool(options.get("epub_force_horizontal_ltr", False))
@@ -264,29 +270,24 @@ def _format_ids_for_export(
     sources_by_doc: dict[int, list[dict]],
 ) -> list[str]:
     format_ids = list(get_supported_formats_for_type(document_type))
-    if document_type != "galgame":
-        return format_ids
-
-    source_format = _single_galgame_source_format(document_ids, sources_by_doc)
-    non_source_formats = [fmt for fmt in format_ids if fmt != "json"]
-    if source_format == "json" and "json" in format_ids:
-        return ["json", *non_source_formats]
-    return non_source_formats
+    _ = (document_ids, sources_by_doc)
+    if document_type == "galgame":
+        return [_NATIVE_FORMAT_ID] if _NATIVE_FORMAT_ID in format_ids else []
+    return format_ids
 
 
-def _single_galgame_source_format(document_ids: list[int], sources_by_doc: dict[int, list[dict]]) -> str | None:
-    if len(document_ids) != 1:
-        return None
-    sources = sources_by_doc.get(int(document_ids[0]), [])
-    if len(sources) != 1:
-        return None
-    relative_path = str(sources[0].get("relative_path") or "").strip()
-    suffix = Path(relative_path).suffix.lower().lstrip(".")
-    return suffix if suffix == "json" else None
+def _requires_preserve_structure(document_type: str) -> bool:
+    return document_type == "galgame"
+
+
+def _format_label(format_id: str) -> str:
+    if format_id == _NATIVE_FORMAT_ID:
+        return "Native"
+    return format_id.upper()
 
 
 def _preferred_default_format(document_type: str, format_ids: list[str], document_labels: list[str]) -> str:
-    if document_type in {"subtitle", "galgame"} and len(document_labels) == 1:
+    if document_type == "subtitle" and len(document_labels) == 1:
         source_extension = Path(document_labels[0]).suffix.lower().lstrip(".")
         if source_extension in format_ids:
             return source_extension
@@ -299,11 +300,14 @@ def _default_output_path(
     project_id: str,
     document_labels: list[str],
     default_format: str,
+    requires_preserve_structure: bool,
 ) -> str:
     export_root = runtime.book_manager.get_book_path(project_id) / "export"
     base_name = "export"
     if len(document_labels) == 1:
         base_name = _slugify(Path(document_labels[0]).stem or document_labels[0]) or "export"
+    if requires_preserve_structure:
+        return str(export_root / base_name)
     return str(export_root / f"{base_name}.{default_format}")
 
 

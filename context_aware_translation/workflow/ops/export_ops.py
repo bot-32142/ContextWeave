@@ -7,6 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from context_aware_translation.core.galgame_document_handler import _fit_translation_to_source_line_count
 from context_aware_translation.core.progress import ProgressCallback, ProgressUpdate, WorkflowStep
 from context_aware_translation.documents.base import Document, supports_original_image_export_for_type
 from context_aware_translation.documents.epub import EPUBDocument
@@ -26,6 +27,12 @@ def get_lines_with_original_fallback(workflow: WorkflowContext, document: Docume
 
     if document.document_type == "manga":
         return [chunk.translation if chunk.is_translated and chunk.translation is not None else "" for chunk in chunks]
+    if document.document_type == "galgame":
+        lines: list[str] = []
+        for chunk in chunks:
+            export_text = chunk.translation if chunk.is_translated and chunk.translation is not None else chunk.text
+            lines.extend(_fit_translation_to_source_line_count(chunk.text, export_text))
+        return lines
 
     merged_chunks = [
         chunk.translation if chunk.is_translated and chunk.translation is not None else chunk.text for chunk in chunks
@@ -116,6 +123,11 @@ async def export(
     doc_types = {d.document_type for d in documents}
     if len(doc_types) > 1:
         raise ValueError(f"Cannot export mixed document types: {doc_types}. All documents must be the same type.")
+    if documents[0].document_type == "galgame":
+        raise ValueError(
+            "Galgame documents must be exported with preserve-structure export so each imported source "
+            "is patched with its original adapter."
+        )
 
     if export_format is None:
         ext = file_path.suffix.lower()

@@ -607,7 +607,7 @@ async def test_galgame_export_rejects_placeholder_drift(tmp_path: Path) -> None:
         document.export_preserve_structure(tmp_path / "out")
 
 
-async def test_galgame_export_merged_writes_bilingual_debug_report(tmp_path: Path) -> None:
+async def test_galgame_merged_export_is_rejected(tmp_path: Path) -> None:
     source = tmp_path / "script.json"
     _write_mtool_json(source, {"こんにちは": ""})
     repo = _setup_repo(tmp_path)
@@ -617,18 +617,105 @@ async def test_galgame_export_merged_writes_bilingual_debug_report(tmp_path: Pat
     document = GalgameDocument(repo, row["document_id"])
     await document.set_text(["你好"])
 
-    output_path = tmp_path / "review.txt"
-    GalgameDocument.export_merged([document], "txt", output_path)
+    assert document.can_export("native") is True
+    assert document.can_export("json") is False
+    assert document.can_export("txt") is False
+    with pytest.raises(ValueError, match="preserve-structure export"):
+        GalgameDocument.export_merged([document], "native", tmp_path / "out")
 
-    assert output_path.read_text(encoding="utf-8").splitlines() == [
-        "relative_path\tunit_id\tsource\ttranslation",
-        "script.json\t0\tこんにちは\t你好",
+
+async def test_galgame_preserve_export_writes_single_imported_json_source(tmp_path: Path) -> None:
+    source = tmp_path / "script.json"
+    _write_mtool_json(source, {"こんにちは": ""})
+    repo = _setup_repo(tmp_path)
+    GalgameDocument.do_import(repo, source)
+    row = repo.get_document_row()
+    assert row is not None
+    document = GalgameDocument(repo, row["document_id"])
+    await document.set_text(["你好"])
+
+    output_folder = tmp_path / "out"
+    document.export_preserve_structure(output_folder)
+
+    assert json.loads((output_folder / "script.json").read_text(encoding="utf-8")) == {"こんにちは": "你好"}
+
+
+async def test_galgame_preserve_export_preserves_imported_json_adapter_shape(tmp_path: Path) -> None:
+    cases = [
+        (
+            "vntext.json",
+            [{"name": "Alice", "message": "こんにちは"}],
+            VnTextJsonAdapter.mime_type,
+            lambda patched: patched == [{"name": "Alice", "message": "你好"}],
+        ),
+        (
+            "paratranz.json",
+            [{"key": "line1", "original": "こんにちは", "translation": ""}],
+            ParaTranzJsonAdapter.mime_type,
+            lambda patched: patched == [{"key": "line1", "original": "こんにちは", "translation": "你好"}],
+        ),
+        (
+            "Map001.json",
+            {"events": [None, {"pages": [{"list": [{"code": 401, "parameters": ["こんにちは"]}]}]}]},
+            RpgMakerMvMzJsonAdapter.mime_type,
+            lambda patched: patched["events"][1]["pages"][0]["list"][0]["parameters"] == ["你好"],
+        ),
     ]
 
+    for filename, payload, expected_mime_type, assert_patched in cases:
+        case_dir = tmp_path / Path(filename).stem
+        source = case_dir / filename
+        _write_json(source, payload)
+        repo = _setup_repo(case_dir)
+        GalgameDocument.do_import(repo, source)
+        row = repo.get_document_row()
+        assert row is not None
+        sources = repo.get_document_sources(row["document_id"])
+        assert sources[0]["mime_type"] == expected_mime_type
+        document = GalgameDocument(repo, row["document_id"])
+        await document.set_text(["你好"])
 
-async def test_galgame_export_merged_writes_single_imported_json_source(tmp_path: Path) -> None:
-    source = tmp_path / "script.json"
-    _write_mtool_json(source, {"こんにちは": ""})
+        output_folder = case_dir / "out"
+        document.export_preserve_structure(output_folder)
+
+        assert assert_patched(json.loads((output_folder / filename).read_text(encoding="utf-8")))
+
+
+async def test_galgame_preserve_export_writes_imported_trans_source(tmp_path: Path) -> None:
+    source = tmp_path / "project.trans"
+    _write_json(
+        source,
+        {
+            "project": {
+                "files": {
+                    "script.ks": {
+                        "data": [
+                            ["こんにちは", ""],
+                            {"original": "またね", "translation": "old"},
+                        ]
+                    }
+                }
+            }
+        },
+    )
+    repo = _setup_repo(tmp_path)
+    GalgameDocument.do_import(repo, source)
+    row = repo.get_document_row()
+    assert row is not None
+    document = GalgameDocument(repo, row["document_id"])
+    await document.set_text(["你好", "再见"])
+
+    output_folder = tmp_path / "out"
+    document.export_preserve_structure(output_folder)
+
+    rows = json.loads((output_folder / "project.trans").read_text(encoding="utf-8"))["project"]["files"]["script.ks"]["data"]
+    assert rows[0][1] == "你好"
+    assert rows[1]["translation"] == "再见"
+
+
+async def test_galgame_preserve_export_writes_imported_renpy_source(tmp_path: Path) -> None:
+    source = tmp_path / "script.rpy"
+    source.write_text('label start:\n    e "こんにちは"\n', encoding="utf-8")
     repo = _setup_repo(tmp_path)
     GalgameDocument.do_import(repo, source)
     row = repo.get_document_row()
@@ -636,10 +723,10 @@ async def test_galgame_export_merged_writes_single_imported_json_source(tmp_path
     document = GalgameDocument(repo, row["document_id"])
     await document.set_text(["你好"])
 
-    output_path = tmp_path / "script.zh.json"
-    GalgameDocument.export_merged([document], "json", output_path)
+    output_folder = tmp_path / "out"
+    document.export_preserve_structure(output_folder)
 
-    assert json.loads(output_path.read_text(encoding="utf-8")) == {"こんにちは": "你好"}
+    assert (output_folder / "script.rpy").read_text(encoding="utf-8") == 'label start:\n    e "你好"\n'
 
 
 async def test_galgame_document_import_get_text_and_preserve_export(tmp_path: Path) -> None:

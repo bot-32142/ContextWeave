@@ -191,7 +191,9 @@ class TranslateAndExportTaskWorker(BaseWorker):
                     progress_callback=self._on_progress,
                 )
 
-        preserve_structure = bool(self._options.get("preserve_structure", False))
+        export_documents = bootstrap_ops.load_documents(workflow, [self._document_id])
+        requires_preserve_structure = any(document.document_type == "galgame" for document in export_documents)
+        preserve_structure = requires_preserve_structure or bool(self._options.get("preserve_structure", False))
         if preserve_structure:
             await export_ops.export_preserve_structure(
                 workflow,
