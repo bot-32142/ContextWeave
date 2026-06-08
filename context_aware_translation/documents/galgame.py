@@ -1052,7 +1052,7 @@ class GalgameDocument(Document):
     """Document for offline galgame script/intermediate-file translation."""
 
     document_type = "galgame"
-    supported_export_formats = ("txt",)
+    supported_export_formats = ("txt", "json")
     requires_ocr_config = False
     ocr_required_for_translation = False
     supports_preserve_structure = True
@@ -1193,7 +1193,12 @@ class GalgameDocument(Document):
         return 0
 
     def can_export(self, export_format: str) -> bool:
-        return export_format.lower().lstrip(".") in self.supported_export_formats
+        normalized = export_format.lower().lstrip(".")
+        if normalized == "txt":
+            return True
+        if normalized == "json":
+            return self._single_source_export_format() == "json"
+        return False
 
     @classmethod
     def export_merged(
@@ -1205,13 +1210,18 @@ class GalgameDocument(Document):
         use_original_images: bool = False,
     ) -> None:
         _ = use_original_images
-        if export_format.lower().lstrip(".") != "txt":
-            raise ValueError("Galgame documents only support 'txt' merged export format.")
+        normalized = export_format.lower().lstrip(".")
         if len(documents) != 1:
             raise ValueError("Galgame merged export supports one document at a time.")
         document = documents[0]
         if not isinstance(document, GalgameDocument):
             raise ValueError("All documents must be GalgameDocument instances.")
+
+        if normalized == "json":
+            document._export_single_source_json(output_path)
+            return
+        if normalized != "txt":
+            raise ValueError("Galgame documents only support 'txt' or imported-source JSON merged export formats.")
 
         output_lines = ["relative_path\tunit_id\tsource\ttranslation"]
         for _source, _adapter, units, translations in document._source_translation_batches():
@@ -1289,6 +1299,34 @@ class GalgameDocument(Document):
                 f"for document {self.document_id}."
             )
         return batches
+
+    def _single_source_export_format(self) -> str | None:
+        sources = self._ordered_sources()
+        if len(sources) != 1:
+            return None
+        try:
+            relative_path, _text_content, adapter = _source_adapter(sources[0])
+        except ValueError:
+            return None
+        if adapter.stores_binary_as_base64:
+            return None
+        suffix = PurePosixPath(relative_path).suffix.lower().lstrip(".")
+        return suffix if suffix == "json" else None
+
+    def _export_single_source_json(self, output_path: Path) -> None:
+        if self._single_source_export_format() != "json":
+            raise ValueError("Galgame JSON export requires exactly one imported JSON source.")
+
+        batches = self._source_translation_batches()
+        if len(batches) != 1:
+            raise ValueError("Galgame JSON export requires exactly one imported JSON source.")
+        source, adapter, _units, translations = batches[0]
+        relative_path, text_content, _adapter = _source_adapter(source)
+        patched_text = adapter.apply_translations(relative_path, text_content, translations)
+
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(patched_text, encoding="utf-8")
 
 
 def get_galgame_adapters() -> tuple[GalgameAdapter, ...]:
@@ -1627,6 +1665,21 @@ def _safe_output_path(output_folder: Path, relative_path: str) -> Path:
 
 
 def _expand_galgame_export_lines(lines: list[str], units: list[TranslationUnit]) -> list[str]:
+    if len(lines) == len(units):
+        return [_coerce_export_line_to_translation(line) for line in lines]
+
+    source_line_counts = [_galgame_unit_line_count(unit.text) for unit in units]
+    if len(lines) == sum(source_line_counts):
+        source_aligned_lines: list[str] = []
+        cursor = 0
+        for source_line_count in source_line_counts:
+            next_cursor = cursor + source_line_count
+            source_aligned_lines.append(
+                "\n".join(_coerce_export_line_to_translation(line) for line in lines[cursor:next_cursor])
+            )
+            cursor = next_cursor
+        return source_aligned_lines
+
     translated_lines: list[str] = []
     for line in lines:
         translated_lines.extend(_split_galgame_chunk_translation(_coerce_export_line_to_translation(line)))

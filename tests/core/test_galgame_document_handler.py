@@ -1,13 +1,24 @@
 from __future__ import annotations
 
 from context_aware_translation.core.galgame_document_handler import GalgameDocumentHandler
+from context_aware_translation.storage.schema.book_db import TranslationChunkRecord
+
+
+class DummyTermRepo:
+    def __init__(self, chunks: list[TranslationChunkRecord]) -> None:
+        self._chunks = chunks
+
+    def list_chunks(self, document_id: int | None = None) -> list[TranslationChunkRecord]:
+        if document_id is None:
+            return list(self._chunks)
+        return [chunk for chunk in self._chunks if chunk.document_id == document_id]
 
 
 class DummyManager:
-    def __init__(self) -> None:
+    def __init__(self, chunks: list[TranslationChunkRecord] | None = None) -> None:
         self.add_text_calls: list[tuple[str, int, int]] = []
         self.translate_calls: list[dict[str, object]] = []
-        self.translated_lines = ["你好", "再见"]
+        self.term_repo = DummyTermRepo(chunks or [])
 
     def add_text(self, text: str, max_token_size_per_chunk: int, document_id: int) -> int:
         self.add_text_calls.append((text, max_token_size_per_chunk, document_id))
@@ -15,10 +26,6 @@ class DummyManager:
 
     async def translate_chunks(self, **kwargs):  # noqa: ANN003
         self.translate_calls.append(kwargs)
-
-    def get_translated_lines(self, document_id: int) -> list[str]:
-        assert document_id == 7
-        return self.translated_lines
 
 
 def test_galgame_handler_delegates_add_text_to_generic_pipeline() -> None:
@@ -31,11 +38,21 @@ def test_galgame_handler_delegates_add_text_to_generic_pipeline() -> None:
     assert manager.add_text_calls == [("こんにちは\nまたね", 500, 7)]
 
 
-def test_galgame_handler_delegates_get_translated_lines_to_generic_pipeline() -> None:
-    manager = DummyManager()
+def test_galgame_handler_preserves_embedded_newlines_in_translated_units() -> None:
+    chunks = [
+        TranslationChunkRecord(
+            chunk_id=1,
+            hash="hash-1",
+            text="こんにちは\nまたね",
+            document_id=7,
+            is_translated=True,
+            translation="你好\n补一句\n再见",
+        )
+    ]
+    manager = DummyManager(chunks)
     handler = GalgameDocumentHandler()
 
-    assert handler.get_translated_lines(7, manager) == ["你好", "再见"]
+    assert handler.get_translated_lines(7, manager) == ["你好\n补一句", "再见"]
 
 
 async def test_galgame_handler_delegates_translation_with_configured_batching() -> None:

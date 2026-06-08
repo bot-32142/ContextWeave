@@ -626,6 +626,22 @@ async def test_galgame_export_merged_writes_bilingual_debug_report(tmp_path: Pat
     ]
 
 
+async def test_galgame_export_merged_writes_single_imported_json_source(tmp_path: Path) -> None:
+    source = tmp_path / "script.json"
+    _write_mtool_json(source, {"こんにちは": ""})
+    repo = _setup_repo(tmp_path)
+    GalgameDocument.do_import(repo, source)
+    row = repo.get_document_row()
+    assert row is not None
+    document = GalgameDocument(repo, row["document_id"])
+    await document.set_text(["你好"])
+
+    output_path = tmp_path / "script.zh.json"
+    GalgameDocument.export_merged([document], "json", output_path)
+
+    assert json.loads(output_path.read_text(encoding="utf-8")) == {"こんにちは": "你好"}
+
+
 async def test_galgame_document_import_get_text_and_preserve_export(tmp_path: Path) -> None:
     source = tmp_path / "game" / "data" / "script.json"
     _write_mtool_json(source, {"こんにちは": "", "またね": ""})
@@ -666,6 +682,23 @@ async def test_galgame_document_splits_grouped_chunk_translation_by_original_uni
 
     patched = json.loads((output_folder / "script.json").read_text(encoding="utf-8"))
     assert patched == {"こんにちは": "你好", "またね": "再见"}
+
+
+async def test_galgame_document_preserves_unit_aligned_multiline_translation(tmp_path: Path) -> None:
+    source = tmp_path / "script.json"
+    _write_mtool_json(source, {"こんにちは": "", "またね": ""})
+    repo = _setup_repo(tmp_path)
+    GalgameDocument.do_import(repo, source)
+    row = repo.get_document_row()
+    assert row is not None
+    document = GalgameDocument(repo, row["document_id"])
+
+    await document.set_text(["你好\n补一句", "再见"])
+    output_folder = tmp_path / "out"
+    document.export_preserve_structure(output_folder)
+
+    patched = json.loads((output_folder / "script.json").read_text(encoding="utf-8"))
+    assert patched == {"こんにちは": "你好\n补一句", "またね": "再见"}
 
 
 async def test_galgame_document_splits_multiline_units_by_original_line_counts(tmp_path: Path) -> None:

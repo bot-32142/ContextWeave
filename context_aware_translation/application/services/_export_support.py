@@ -89,7 +89,11 @@ def prepare_export(
     document_labels = [
         _document_label(int(doc["document_id"]), sources_by_doc.get(int(doc["document_id"]), [])) for doc in docs
     ]
-    format_ids = list(get_supported_formats_for_type(document_type))
+    format_ids = _format_ids_for_export(
+        document_type=document_type,
+        document_ids=document_ids,
+        sources_by_doc=sources_by_doc,
+    )
     if not format_ids:
         raise_application_error(
             ApplicationErrorCode.UNSUPPORTED,
@@ -253,8 +257,36 @@ def _document_label(document_id: int, sources: list[dict]) -> str:
     return f"Document {document_id}"
 
 
+def _format_ids_for_export(
+    *,
+    document_type: str,
+    document_ids: list[int],
+    sources_by_doc: dict[int, list[dict]],
+) -> list[str]:
+    format_ids = list(get_supported_formats_for_type(document_type))
+    if document_type != "galgame":
+        return format_ids
+
+    source_format = _single_galgame_source_format(document_ids, sources_by_doc)
+    non_source_formats = [fmt for fmt in format_ids if fmt != "json"]
+    if source_format == "json" and "json" in format_ids:
+        return ["json", *non_source_formats]
+    return non_source_formats
+
+
+def _single_galgame_source_format(document_ids: list[int], sources_by_doc: dict[int, list[dict]]) -> str | None:
+    if len(document_ids) != 1:
+        return None
+    sources = sources_by_doc.get(int(document_ids[0]), [])
+    if len(sources) != 1:
+        return None
+    relative_path = str(sources[0].get("relative_path") or "").strip()
+    suffix = Path(relative_path).suffix.lower().lstrip(".")
+    return suffix if suffix == "json" else None
+
+
 def _preferred_default_format(document_type: str, format_ids: list[str], document_labels: list[str]) -> str:
-    if document_type == "subtitle" and len(document_labels) == 1:
+    if document_type in {"subtitle", "galgame"} and len(document_labels) == 1:
         source_extension = Path(document_labels[0]).suffix.lower().lstrip(".")
         if source_extension in format_ids:
             return source_extension

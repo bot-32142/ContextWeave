@@ -61,5 +61,41 @@ class GalgameDocumentHandler:
         document_id: int,
         manager: TranslationContextManager,
     ) -> list[str]:
-        """Use the normal chunk concatenation and newline split behavior."""
-        return manager.get_translated_lines(document_id)
+        """Return translated chunk text without global newline re-splitting.
+
+        Galgame export is unit-aligned. A translated unit may legitimately
+        contain an embedded newline, so the generic text export path would turn
+        that one unit into multiple exported units and fail during patching.
+        """
+        chunks = manager.term_repo.list_chunks(document_id=document_id)
+        if not chunks:
+            raise ValueError("No chunks found in the database")
+
+        sorted_chunks = sorted(chunks, key=lambda chunk: chunk.chunk_id)
+        untranslated = [chunk for chunk in sorted_chunks if not chunk.is_translated or chunk.translation is None]
+        if untranslated:
+            untranslated_ids = [chunk.chunk_id for chunk in untranslated]
+            raise ValueError(f"Cannot export: chunks {untranslated_ids} are not translated yet")
+
+        lines: list[str] = []
+        for chunk in sorted_chunks:
+            if chunk.translation is None:
+                continue
+            lines.extend(_fit_translation_to_source_line_count(chunk.text, chunk.translation))
+        return lines
+
+
+def _fit_translation_to_source_line_count(source_text: str, translation: str) -> list[str]:
+    source_line_count = len(_split_normalized_lines(source_text))
+    translation_lines = _split_normalized_lines(translation)
+    if source_line_count <= 1:
+        return [translation.replace("\r\n", "\n").replace("\r", "\n")]
+    if len(translation_lines) <= source_line_count:
+        return translation_lines
+
+    overflow_line_count = len(translation_lines) - source_line_count + 1
+    return ["\n".join(translation_lines[:overflow_line_count]), *translation_lines[overflow_line_count:]]
+
+
+def _split_normalized_lines(text: str) -> list[str]:
+    return text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
