@@ -372,9 +372,13 @@ def _extract_id_based_translation_blocks(
         if not isinstance(text, str):
             raise ValueError(f"{label}: item {idx} in '翻译文本' must have string '文本'")
 
-        translated_blocks.append(text)
+        translated_blocks.append(_normalize_translated_block_text(text))
 
     return translated_blocks
+
+
+def _normalize_translated_block_text(text: str) -> str:
+    return re.sub(r"\s*[\r\n]+\s*", " ", text).strip()
 
 
 def _build_retry_correction_message(exc: Exception) -> str:

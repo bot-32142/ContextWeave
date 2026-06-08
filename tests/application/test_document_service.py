@@ -10,7 +10,12 @@ from PySide6.QtWidgets import QApplication
 
 from context_aware_translation.application.composition import build_application_context
 from context_aware_translation.application.contracts.app_setup import ConnectionDraft, SetupWizardRequest
-from context_aware_translation.application.contracts.common import ProviderKind, SurfaceStatus
+from context_aware_translation.application.contracts.common import (
+    DocumentRowActionKind,
+    NavigationTargetKind,
+    ProviderKind,
+    SurfaceStatus,
+)
 from context_aware_translation.application.contracts.document import (
     ImageAssetState,
     OCRTextElement,
@@ -1211,6 +1216,60 @@ def test_document_service_get_images_hides_unsupported_document_type_blocker(tmp
         assert not state.toolbar.can_force_all
         assert state.toolbar.run_pending_blocker is None
         assert state.toolbar.force_all_blocker is None
+    finally:
+        context.close()
+
+
+def test_workboard_export_action_targets_document_export_tab(tmp_path: Path) -> None:
+    _ensure_qt_app()
+    context = _build_configured_context(tmp_path)
+    try:
+        project = context.services.projects.create_project(
+            CreateProjectRequest(name="Completed Text", target_language="English")
+        )
+        project_id = project.project.project_id
+
+        db, repo = _open_repo(context, project_id)
+        try:
+            document_id = repo.insert_document("text")
+            repo.insert_document_source(
+                document_id,
+                0,
+                "text",
+                relative_path="chapter.txt",
+                text_content="hello",
+                is_text_added=True,
+                is_ocr_completed=True,
+            )
+            db.upsert_chunks(
+                [
+                    TranslationChunkRecord(
+                        chunk_id=1,
+                        hash="chunk-1",
+                        text="hello",
+                        translation="world",
+                        document_id=document_id,
+                        is_extracted=True,
+                        is_summarized=True,
+                        is_occurrence_mapped=True,
+                        is_translated=True,
+                    )
+                ]
+            )
+            db.commit()
+        finally:
+            db.close()
+
+        workboard = context.services.work.get_workboard(project_id)
+
+        assert len(workboard.rows) == 1
+        assert workboard.rows[0].status == SurfaceStatus.DONE
+        action = workboard.rows[0].primary_action
+        assert action.kind == DocumentRowActionKind.EXPORT
+        assert action.target is not None
+        assert action.target.kind == NavigationTargetKind.DOCUMENT_EXPORT
+        assert action.target.project_id == project_id
+        assert action.target.document_id == document_id
     finally:
         context.close()
 

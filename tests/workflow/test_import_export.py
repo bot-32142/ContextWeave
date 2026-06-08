@@ -642,14 +642,17 @@ Yes.
                 chunks = translator.manager.term_repo.list_chunks(document_id=doc_id)
                 assert [chunk.text for chunk in chunks] == ["こんにちは\nまたね"]
                 chunks[0].is_translated = True
-                chunks[0].translation = "你好\n再见"
+                chunks[0].translation = "你好 补一句\n再见"
                 translator.manager.term_repo.apply_batch(BatchUpdate(keyed_context=[], chunk_records=chunks))
 
                 await _export_preserve_structure(translator, output_folder)
 
                 output_file = output_folder / str(doc_id) / "script.json"
                 assert output_file.exists()
-                assert json.loads(output_file.read_text(encoding="utf-8")) == {"こんにちは": "你好", "またね": "再见"}
+                assert json.loads(output_file.read_text(encoding="utf-8")) == {
+                    "こんにちは": "你好 补一句",
+                    "またね": "再见",
+                }
 
     async def test_export_image_file_copied(self, import_test_config: Config):
         """Scanned books do not support structure-preserving export."""

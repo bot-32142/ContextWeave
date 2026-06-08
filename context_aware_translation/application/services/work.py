@@ -208,7 +208,15 @@ class DefaultWorkService:
             elif total_chunks > 0 and translated_chunks == total_chunks:
                 status = SurfaceStatus.DONE
                 summary = "Ready to export"
-                action = DocumentRowAction(kind=DocumentRowActionKind.EXPORT, label="Export")
+                action = DocumentRowAction(
+                    kind=DocumentRowActionKind.EXPORT,
+                    label="Export",
+                    target=NavigationTarget(
+                        kind=NavigationTargetKind.DOCUMENT_EXPORT,
+                        project_id=project_id,
+                        document_id=document_id,
+                    ),
+                )
                 frontier_last_ready = ref
             else:
                 status = SurfaceStatus.READY

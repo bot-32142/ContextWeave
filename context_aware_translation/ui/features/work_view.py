@@ -28,7 +28,6 @@ from context_aware_translation.application.contracts.work import (
     DeleteDocumentStackRequest,
     ImportDocumentsRequest,
     InspectImportPathsRequest,
-    PrepareExportRequest,
     ResetDocumentStackRequest,
     WorkboardState,
     WorkDocumentRow,
@@ -46,7 +45,6 @@ from context_aware_translation.ui.chrome_sizing import sync_qml_host_height
 from context_aware_translation.ui.features.document_workspace_view import (
     DocumentWorkspaceView,
     TranslateAndExportDialog,
-    WorkExportDialog,
 )
 from context_aware_translation.ui.i18n import translate_backend_text
 from context_aware_translation.ui.shell_hosts.hybrid import QmlChromeHost
@@ -591,9 +589,6 @@ class WorkView(QWidget):
         action = row_state.primary_action
         if action.kind is DocumentRowActionKind.BLOCKED:
             return
-        if action.kind is DocumentRowActionKind.EXPORT:
-            self._open_export_dialog(row_state.document.document_id)
-            return
         if action.target is None:
             return
         self.open_navigation_target(action.target)
@@ -642,17 +637,6 @@ class WorkView(QWidget):
 
     def _section_for_target(self, target: NavigationTarget) -> DocumentSection | None:
         return _TARGET_TO_SECTION.get(target.kind)
-
-    def _open_export_dialog(self, document_id: int) -> None:
-        try:
-            state = self._work_service.prepare_export(
-                PrepareExportRequest(project_id=self._project_id, document_ids=[document_id])
-            )
-        except ApplicationError as exc:
-            QMessageBox.warning(self, self.tr("Export"), translate_backend_text(exc.payload.message))
-            return
-        dialog = WorkExportDialog(self._work_service, state, parent=self)
-        dialog.exec()
 
     def _open_selected_translate_and_export_dialog(self) -> None:
         selected = self._selected_row_state()
