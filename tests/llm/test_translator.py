@@ -10,6 +10,7 @@ from context_aware_translation.llm.client import LLMClient
 from context_aware_translation.llm.translator import (
     postprocess_translated_blocks,
     preprocess_chunk_text,
+    reconstruct_chunk_translations,
     translate_chunk,
 )
 from context_aware_translation.utils.compression_marker import COMPRESSED_LINE_SENTINEL
@@ -42,6 +43,19 @@ def test_preprocess_and_postprocess_preserve_special_lines():
     reconstructed = postprocess_translated_blocks(translated_blocks, separators)
 
     assert reconstructed == "T1\nT2\n\n---\n\nT3\n***\n\nT4"
+
+
+def test_reconstruct_chunk_translations_reports_longer_chunk():
+    with pytest.raises(
+        ValueError,
+        match=r"Translated chunk 2 is longer than the original chunk: source has 1 line\(s\), translation has 2 line\(s\)",
+    ):
+        reconstruct_chunk_translations(
+            chunks=["A\nB", "C"],
+            translated_blocks=["甲", "乙", "丙\n额外"],
+            chunk_boundaries=[0, 2, 3],
+            chunk_separators=[[[], [], []], [[], []]],
+        )
 
 
 def test_preprocess_treats_cjk_punctuation_lines_as_content():

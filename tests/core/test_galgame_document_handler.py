@@ -71,7 +71,10 @@ def test_galgame_handler_rejects_translated_line_count_mismatch() -> None:
     manager = DummyManager(chunks)
     handler = GalgameDocumentHandler()
 
-    with pytest.raises(ValueError, match="chunk 1 line count mismatch: expected 2, got 3"):
+    with pytest.raises(
+        ValueError,
+        match=r"chunk 1 is longer than the original chunk: source has 2 line\(s\), translation has 3 line\(s\)",
+    ):
         handler.get_translated_lines(7, manager)
 
 

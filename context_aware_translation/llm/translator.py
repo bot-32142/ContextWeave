@@ -333,13 +333,38 @@ def reconstruct_chunk_translations(
     results: list[str] = []
     for i in range(len(chunks)):
         start, end = chunk_boundaries[i], chunk_boundaries[i + 1]
-        results.append(
-            postprocess_translated_blocks(
-                translated_blocks[start:end],
-                chunk_separators[i],
-            )
+        translated_chunk = postprocess_translated_blocks(
+            translated_blocks[start:end],
+            chunk_separators[i],
         )
+        _raise_if_translated_chunk_is_longer(
+            source_chunk=chunks[i],
+            translated_chunk=translated_chunk,
+            chunk_number=i + 1,
+        )
+        results.append(translated_chunk)
     return results
+
+
+def _raise_if_translated_chunk_is_longer(
+    *,
+    source_chunk: str,
+    translated_chunk: str,
+    chunk_number: int,
+) -> None:
+    source_line_count = len(_split_physical_lines(source_chunk))
+    translated_line_count = len(_split_physical_lines(translated_chunk))
+    if translated_line_count <= source_line_count:
+        return
+
+    raise ValueError(
+        f"Translated chunk {chunk_number} is longer than the original chunk: "
+        f"source has {source_line_count} line(s), translation has {translated_line_count} line(s)"
+    )
+
+
+def _split_physical_lines(text: str) -> list[str]:
+    return text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
 
 
 def _extract_id_based_translation_blocks(

@@ -101,6 +101,11 @@ def _fit_translation_to_source_line_count(
     translation_lines = _split_normalized_lines(translation)
     if len(translation_lines) != source_line_count:
         chunk_label = f" chunk {chunk_id}" if chunk_id is not None else ""
+        if len(translation_lines) > source_line_count:
+            raise ValueError(
+                f"Translated galgame{chunk_label} is longer than the original chunk: "
+                f"source has {source_line_count} line(s), translation has {len(translation_lines)} line(s)"
+            )
         raise ValueError(
             f"Translated galgame{chunk_label} line count mismatch: "
             f"expected {source_line_count}, got {len(translation_lines)}"
