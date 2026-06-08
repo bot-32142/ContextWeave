@@ -78,16 +78,24 @@ class GalgameDocumentHandler:
             raise ValueError(f"Cannot export: chunks {untranslated_ids} are not translated yet")
 
         lines: list[str] = []
+        previous_source_text: str | None = None
         for chunk in sorted_chunks:
             if chunk.translation is None:
                 continue
-            lines.extend(
-                _fit_translation_to_source_line_count(
-                    chunk.text,
-                    chunk.translation,
-                    chunk_id=chunk.chunk_id,
-                )
+            chunk_lines = _fit_translation_to_source_line_count(
+                chunk.text,
+                chunk.translation,
+                chunk_id=chunk.chunk_id,
             )
+            if previous_source_text is not None and _continues_previous_source_line(previous_source_text, chunk.text):
+                if lines and chunk_lines:
+                    lines[-1] += chunk_lines[0]
+                    lines.extend(chunk_lines[1:])
+                else:
+                    lines.extend(chunk_lines)
+            else:
+                lines.extend(chunk_lines)
+            previous_source_text = chunk.text
         return lines
 
 
@@ -97,7 +105,7 @@ def _fit_translation_to_source_line_count(
     *,
     chunk_id: int | None = None,
 ) -> list[str]:
-    source_line_count = len(_split_normalized_lines(source_text))
+    source_line_count = len(_split_normalized_source_lines(source_text))
     translation_lines = _split_normalized_lines(translation)
     if len(translation_lines) != source_line_count:
         chunk_label = f" chunk {chunk_id}" if chunk_id is not None else ""
@@ -115,3 +123,14 @@ def _fit_translation_to_source_line_count(
 
 def _split_normalized_lines(text: str) -> list[str]:
     return text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+
+
+def _split_normalized_source_lines(text: str) -> list[str]:
+    lines = text.replace("\r\n", "\n").replace("\r", "\n").splitlines()
+    return lines or [""]
+
+
+def _continues_previous_source_line(previous_source_text: str, source_text: str) -> bool:
+    previous = previous_source_text.replace("\r\n", "\n").replace("\r", "\n")
+    current = source_text.replace("\r\n", "\n").replace("\r", "\n")
+    return bool(previous) and bool(current) and not previous.endswith("\n") and not current.startswith("\n")

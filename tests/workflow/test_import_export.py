@@ -654,6 +654,57 @@ Yes.
                     "またね": "再见",
                 }
 
+    async def test_export_galgame_merges_translated_chunks_split_inside_source_line(
+        self, import_test_config: Config
+    ):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            input_file = Path(tmpdir) / "script.json"
+            output_folder = Path(tmpdir) / "output"
+            input_file.write_text(json.dumps({"こんにちは": "", "またね": ""}, ensure_ascii=False), encoding="utf-8")
+
+            with WorkflowSession(import_test_config) as translator:
+                _import_path(translator, input_file)
+
+                db = translator.document_repo
+                doc = db.get_document_row()
+                doc_id = doc["document_id"]
+                from context_aware_translation.storage.repositories.term_repository import BatchUpdate
+                from context_aware_translation.storage.schema.book_db import TranslationChunkRecord
+
+                db.update_all_sources_text_added(doc_id)
+                translator.manager.term_repo.apply_batch(
+                    BatchUpdate(
+                        keyed_context=[],
+                        chunk_records=[
+                            TranslationChunkRecord(
+                                chunk_id=1,
+                                hash="chunk-1",
+                                text="こん",
+                                translation="你",
+                                document_id=doc_id,
+                                is_translated=True,
+                            ),
+                            TranslationChunkRecord(
+                                chunk_id=2,
+                                hash="chunk-2",
+                                text="にちは\nまたね",
+                                translation="好\n再见",
+                                document_id=doc_id,
+                                is_translated=True,
+                            ),
+                        ],
+                    )
+                )
+
+                await _export_preserve_structure(translator, output_folder)
+
+                output_file = output_folder / str(doc_id) / "script.json"
+                assert output_file.exists()
+                assert json.loads(output_file.read_text(encoding="utf-8")) == {
+                    "こんにちは": "你好",
+                    "またね": "再见",
+                }
+
     async def test_export_image_file_copied(self, import_test_config: Config):
         """Scanned books do not support structure-preserving export."""
         with tempfile.TemporaryDirectory() as tmpdir:
