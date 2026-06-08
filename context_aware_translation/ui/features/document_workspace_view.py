@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QFrame,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
@@ -80,6 +81,7 @@ class _ExportControls(QWidget):
         self._show_translation_completion_controls = show_translation_completion_controls
         self._show_original_image_option = show_original_image_option
         self._default_epub_force_horizontal_ltr = default_epub_force_horizontal_ltr
+        self._requires_preserve_structure = False
         self._init_ui()
 
     def _init_ui(self) -> None:
@@ -93,10 +95,11 @@ class _ExportControls(QWidget):
         layout.addWidget(self.warning_label)
 
         form = QFormLayout()
+        self.format_label = QLabel(self.tr("Format"))
         self.format_combo = QComboBox()
         self.format_combo.currentIndexChanged.connect(self._sync_output_path)
         self.format_combo.currentIndexChanged.connect(lambda *_args: self.changed.emit())
-        form.addRow(self.tr("Format"), self.format_combo)
+        form.addRow(self.format_label, self.format_combo)
 
         output_row = QHBoxLayout()
         self.output_path_edit = QLineEdit()
@@ -141,6 +144,7 @@ class _ExportControls(QWidget):
 
     def apply_state(self, state: object) -> None:
         incomplete_message = getattr(state, "incomplete_translation_message", None)
+        self._requires_preserve_structure = bool(getattr(state, "requires_preserve_structure", False))
         self._default_output_path = state.default_output_path or ""
         self._supports_original_image_export = state.supports_original_image_export
         self._supports_epub_layout_conversion = state.supports_epub_layout_conversion
@@ -159,10 +163,15 @@ class _ExportControls(QWidget):
         if state.available_formats:
             self.format_combo.setCurrentIndex(default_index)
         self.format_combo.blockSignals(False)
+        self.format_label.setVisible(not self._requires_preserve_structure)
+        self.format_combo.setVisible(not self._requires_preserve_structure)
 
-        self.preserve_structure_cb.setVisible(True)
-        self.preserve_structure_cb.setEnabled(state.supports_preserve_structure)
-        if not state.supports_preserve_structure:
+        self.preserve_structure_cb.setVisible(not self._requires_preserve_structure)
+        self.preserve_structure_cb.setEnabled(state.supports_preserve_structure and not self._requires_preserve_structure)
+        if self._requires_preserve_structure:
+            self.preserve_structure_cb.setChecked(True)
+            self.preserve_structure_cb.setToolTip("")
+        elif not state.supports_preserve_structure:
             self.preserve_structure_cb.setChecked(False)
             self.preserve_structure_cb.setToolTip(
                 self.tr("Preserve folder structure is not supported for this export.")
@@ -246,7 +255,8 @@ class _ExportControls(QWidget):
             return
         self._sync_epub_layout_controls()
         if self.preserve_structure_cb.isChecked():
-            self.output_path_edit.setText(str(Path(self._default_output_path).parent))
+            output_path = self._default_output_path if self._requires_preserve_structure else str(Path(self._default_output_path).parent)
+            self.output_path_edit.setText(output_path)
             return
         format_id = self.format_id()
         if not format_id:
