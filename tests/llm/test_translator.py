@@ -10,6 +10,7 @@ from context_aware_translation.llm.client import LLMClient
 from context_aware_translation.llm.translator import (
     postprocess_translated_blocks,
     preprocess_chunk_text,
+    reconstruct_chunk_translations,
     translate_chunk,
 )
 from context_aware_translation.utils.compression_marker import COMPRESSED_LINE_SENTINEL
@@ -42,6 +43,19 @@ def test_preprocess_and_postprocess_preserve_special_lines():
     reconstructed = postprocess_translated_blocks(translated_blocks, separators)
 
     assert reconstructed == "T1\nT2\n\n---\n\nT3\n***\n\nT4"
+
+
+def test_reconstruct_chunk_translations_reports_longer_chunk():
+    with pytest.raises(
+        ValueError,
+        match=r"Translated chunk 2 is longer than the original chunk: source has 1 line\(s\), translation has 2 line\(s\)",
+    ):
+        reconstruct_chunk_translations(
+            chunks=["A\nB", "C"],
+            translated_blocks=["甲", "乙", "丙\n额外"],
+            chunk_boundaries=[0, 2, 3],
+            chunk_separators=[[[], [], []], [[], []]],
+        )
 
 
 def test_preprocess_treats_cjk_punctuation_lines_as_content():
@@ -114,6 +128,26 @@ async def test_translate_chunk_uses_block_lists_and_reconstructs(temp_config: Co
     ]
     assert isinstance(user_payload["原文"], list)
     assert translate_call[1]["response_format"] == {"type": "json_object"}
+
+
+@pytest.mark.asyncio
+async def test_translate_chunk_removes_newlines_inside_json_elements(temp_config: Config):
+    chunks = ["こんにちは\nまたね"]
+    terms = [_make_term()]
+
+    llm_client = MagicMock(spec=LLMClient)
+    llm_client.chat = AsyncMock(return_value=_translation_response(["你好\n补一句", "再见"]))
+
+    result = await translate_chunk(
+        chunks=chunks,
+        terms=terms,
+        llm_client=llm_client,
+        translator_config=temp_config.translator_config,
+        source_language="日语",
+        target_language=temp_config.translation_target_language,
+    )
+
+    assert result == ["你好 补一句\n再见"]
 
 
 @pytest.mark.asyncio

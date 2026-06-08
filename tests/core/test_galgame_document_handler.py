@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from context_aware_translation.core.galgame_document_handler import GalgameDocumentHandler
 from context_aware_translation.storage.schema.book_db import TranslationChunkRecord
 
@@ -38,7 +40,24 @@ def test_galgame_handler_delegates_add_text_to_generic_pipeline() -> None:
     assert manager.add_text_calls == [("こんにちは\nまたね", 500, 7)]
 
 
-def test_galgame_handler_preserves_embedded_newlines_in_translated_units() -> None:
+def test_galgame_handler_returns_source_line_aligned_translations() -> None:
+    chunks = [
+        TranslationChunkRecord(
+            chunk_id=1,
+            hash="hash-1",
+            text="こんにちは\nまたね",
+            document_id=7,
+            is_translated=True,
+            translation="你好 补一句\n再见",
+        )
+    ]
+    manager = DummyManager(chunks)
+    handler = GalgameDocumentHandler()
+
+    assert handler.get_translated_lines(7, manager) == ["你好 补一句", "再见"]
+
+
+def test_galgame_handler_rejects_translated_line_count_mismatch() -> None:
     chunks = [
         TranslationChunkRecord(
             chunk_id=1,
@@ -52,7 +71,11 @@ def test_galgame_handler_preserves_embedded_newlines_in_translated_units() -> No
     manager = DummyManager(chunks)
     handler = GalgameDocumentHandler()
 
-    assert handler.get_translated_lines(7, manager) == ["你好\n补一句", "再见"]
+    with pytest.raises(
+        ValueError,
+        match=r"chunk 1 is longer than the original chunk: source has 2 line\(s\), translation has 3 line\(s\)",
+    ):
+        handler.get_translated_lines(7, manager)
 
 
 async def test_galgame_handler_delegates_translation_with_configured_batching() -> None:

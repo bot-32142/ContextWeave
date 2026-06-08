@@ -63,9 +63,9 @@ class GalgameDocumentHandler:
     ) -> list[str]:
         """Return translated chunk text without global newline re-splitting.
 
-        Galgame export is unit-aligned. A translated unit may legitimately
-        contain an embedded newline, so the generic text export path would turn
-        that one unit into multiple exported units and fail during patching.
+        Galgame export is source-line-aligned before it is remapped to native
+        adapter units. Each translated chunk must preserve the source chunk's
+        physical line count.
         """
         chunks = manager.term_repo.list_chunks(document_id=document_id)
         if not chunks:
@@ -81,20 +81,36 @@ class GalgameDocumentHandler:
         for chunk in sorted_chunks:
             if chunk.translation is None:
                 continue
-            lines.extend(_fit_translation_to_source_line_count(chunk.text, chunk.translation))
+            lines.extend(
+                _fit_translation_to_source_line_count(
+                    chunk.text,
+                    chunk.translation,
+                    chunk_id=chunk.chunk_id,
+                )
+            )
         return lines
 
 
-def _fit_translation_to_source_line_count(source_text: str, translation: str) -> list[str]:
+def _fit_translation_to_source_line_count(
+    source_text: str,
+    translation: str,
+    *,
+    chunk_id: int | None = None,
+) -> list[str]:
     source_line_count = len(_split_normalized_lines(source_text))
     translation_lines = _split_normalized_lines(translation)
-    if source_line_count <= 1:
-        return [translation.replace("\r\n", "\n").replace("\r", "\n")]
-    if len(translation_lines) <= source_line_count:
-        return translation_lines
-
-    overflow_line_count = len(translation_lines) - source_line_count + 1
-    return ["\n".join(translation_lines[:overflow_line_count]), *translation_lines[overflow_line_count:]]
+    if len(translation_lines) != source_line_count:
+        chunk_label = f" chunk {chunk_id}" if chunk_id is not None else ""
+        if len(translation_lines) > source_line_count:
+            raise ValueError(
+                f"Translated galgame{chunk_label} is longer than the original chunk: "
+                f"source has {source_line_count} line(s), translation has {len(translation_lines)} line(s)"
+            )
+        raise ValueError(
+            f"Translated galgame{chunk_label} line count mismatch: "
+            f"expected {source_line_count}, got {len(translation_lines)}"
+        )
+    return translation_lines
 
 
 def _split_normalized_lines(text: str) -> list[str]:

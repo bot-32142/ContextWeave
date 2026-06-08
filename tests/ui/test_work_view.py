@@ -377,26 +377,21 @@ def test_work_view_refreshes_on_invalidation():
         view.cleanup()
 
 
-def test_work_view_export_action_prepares_dialog():
-    action = DocumentRowAction(kind=DocumentRowActionKind.EXPORT, label="Export")
+def test_work_view_export_action_opens_document_export_tab():
+    action = DocumentRowAction(
+        kind=DocumentRowActionKind.EXPORT,
+        label="Export",
+        target=NavigationTarget(kind=NavigationTargetKind.DOCUMENT_EXPORT, project_id="proj-1", document_id=4),
+    )
     view, _bus, work_service, _document_service, _terms_service = _make_view(
         work_state=_make_workboard(action=action, summary="Ready to export")
     )
-    work_service.export_state = ExportDialogState(
-        project_id="proj-1",
-        document_ids=[4],
-        document_labels=["04.png"],
-        available_formats=[ExportOption(format_id="epub", label="EPUB", is_default=True)],
-        default_output_path="/tmp/out.epub",
-    )
-    work_service.export_result = ExportResult(
-        output_path="/tmp/out.epub",
-        message=UserMessage(severity=UserMessageSeverity.SUCCESS, text="Export complete."),
-    )
     try:
-        with patch.object(view, "_open_export_dialog") as mock_open_export_dialog:
-            view._on_cell_double_clicked(0, 0)
-        mock_open_export_dialog.assert_called_once_with(4)
+        view._on_cell_double_clicked(0, 0)
+
+        assert view._document_view is not None
+        assert view._document_view.current_section() is DocumentSection.EXPORT
+        assert work_service.calls == [("get_workboard", "proj-1")]
     finally:
         view.cleanup()
 

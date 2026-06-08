@@ -333,13 +333,38 @@ def reconstruct_chunk_translations(
     results: list[str] = []
     for i in range(len(chunks)):
         start, end = chunk_boundaries[i], chunk_boundaries[i + 1]
-        results.append(
-            postprocess_translated_blocks(
-                translated_blocks[start:end],
-                chunk_separators[i],
-            )
+        translated_chunk = postprocess_translated_blocks(
+            translated_blocks[start:end],
+            chunk_separators[i],
         )
+        _raise_if_translated_chunk_is_longer(
+            source_chunk=chunks[i],
+            translated_chunk=translated_chunk,
+            chunk_number=i + 1,
+        )
+        results.append(translated_chunk)
     return results
+
+
+def _raise_if_translated_chunk_is_longer(
+    *,
+    source_chunk: str,
+    translated_chunk: str,
+    chunk_number: int,
+) -> None:
+    source_line_count = len(_split_physical_lines(source_chunk))
+    translated_line_count = len(_split_physical_lines(translated_chunk))
+    if translated_line_count <= source_line_count:
+        return
+
+    raise ValueError(
+        f"Translated chunk {chunk_number} is longer than the original chunk: "
+        f"source has {source_line_count} line(s), translation has {translated_line_count} line(s)"
+    )
+
+
+def _split_physical_lines(text: str) -> list[str]:
+    return text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
 
 
 def _extract_id_based_translation_blocks(
@@ -372,9 +397,13 @@ def _extract_id_based_translation_blocks(
         if not isinstance(text, str):
             raise ValueError(f"{label}: item {idx} in '翻译文本' must have string '文本'")
 
-        translated_blocks.append(text)
+        translated_blocks.append(_normalize_translated_block_text(text))
 
     return translated_blocks
+
+
+def _normalize_translated_block_text(text: str) -> str:
+    return re.sub(r"\s*[\r\n]+\s*", " ", text).strip()
 
 
 def _build_retry_correction_message(exc: Exception) -> str:
