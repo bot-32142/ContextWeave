@@ -1607,46 +1607,27 @@ def _safe_output_path(output_folder: Path, relative_path: str) -> Path:
 
 
 def _expand_galgame_export_lines(lines: list[str], units: list[TranslationUnit]) -> list[str]:
-    if len(lines) == len(units):
-        return [_coerce_export_line_to_translation(line) for line in lines]
+    line_stream = [_coerce_export_line_to_translation(line) for line in lines]
+    if any("\n" in line or "\r" in line for line in line_stream):
+        raise ValueError("Translated galgame line stream entries cannot contain newline characters.")
+
+    if len(line_stream) == len(units):
+        return line_stream
 
     source_line_counts = [_galgame_unit_line_count(unit.text) for unit in units]
-    if len(lines) == sum(source_line_counts):
+    if len(line_stream) == sum(source_line_counts):
         source_aligned_lines: list[str] = []
         cursor = 0
         for source_line_count in source_line_counts:
             next_cursor = cursor + source_line_count
-            source_aligned_lines.append(
-                "\n".join(_coerce_export_line_to_translation(line) for line in lines[cursor:next_cursor])
-            )
+            source_aligned_lines.append("\n".join(line_stream[cursor:next_cursor]))
             cursor = next_cursor
         return source_aligned_lines
 
-    translated_lines: list[str] = []
-    for line in lines:
-        translated_lines.extend(_split_galgame_chunk_translation(_coerce_export_line_to_translation(line)))
-
-    expanded: list[str] = []
-    unit_index = 0
-    line_index = 0
-    while unit_index < len(units):
-        source_line_count = _galgame_unit_line_count(units[unit_index].text)
-        next_line_index = line_index + source_line_count
-        if next_line_index > len(translated_lines):
-            raise ValueError("Translated galgame line stream is shorter than the source unit stream.")
-        expanded.append("\n".join(translated_lines[line_index:next_line_index]))
-        unit_index += 1
-        line_index = next_line_index
-
-    extra_lines = [line for line in translated_lines[line_index:] if line]
-    if extra_lines:
-        raise ValueError("Translated galgame line stream is longer than the source unit stream.")
-    return expanded
-
-
-def _split_galgame_chunk_translation(text: str) -> list[str]:
-    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
-    return [decode_compressed_line(line) for line in normalized.split("\n")]
+    expected_line_count = sum(source_line_counts)
+    if len(line_stream) < expected_line_count:
+        raise ValueError("Translated galgame line stream is shorter than the source unit stream.")
+    raise ValueError("Translated galgame line stream is longer than the source unit stream.")
 
 
 def _galgame_unit_line_count(text: str) -> int:
