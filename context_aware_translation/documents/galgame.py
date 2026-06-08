@@ -5,7 +5,6 @@ import binascii
 import json
 import re
 import shutil
-from collections import Counter
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from io import BytesIO
@@ -30,7 +29,6 @@ if TYPE_CHECKING:
 _SIMPLE_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.:-]{0,40}$")
 _KAG_TAG_RE = re.compile(r"\[[^\]]*\]")
 _RPG_MAKER_MAP_FILE_RE = re.compile(r"^Map\d+\.json$", re.IGNORECASE)
-_PROTECTED_TOKEN_RE = re.compile(r"(\\(?:[A-Za-z]+(?:\[[^\]]*\])?|[.!|><^$])|\{/?[A-Za-z][^{}]*\}|\[[A-Za-z][^\]]*\])")
 _LINE_CONSTRAINED_ADAPTERS = frozenset({"renpy_rpy", "kag_ks", "rpg_maker_mv_mz_json"})
 _RENPY_CHARACTER_DEF_RE = re.compile(r"^\s*(?:define\s+)?(?P<symbol>[A-Za-z_]\w*)\s*=\s*(?:renpy\.)?Character\s*\(")
 _EXTERNAL_ARCHIVE_EXTENSIONS = frozenset({".rpa", ".rpyc", ".xp3", ".assets", ".unity3d", ".bundle", ".rvdata2", ".rxdata"})
@@ -339,7 +337,7 @@ class MToolJsonAdapter:
 
         patched: dict[str, str] = {}
         for index, (source_text, existing_translation) in enumerate(mapping.items()):
-            patched[source_text] = translations.get(str(index), existing_translation)
+            patched[source_text] = _decode_compressed_line_stream(translations.get(str(index), existing_translation))
         return json.dumps(patched, ensure_ascii=False, indent=2) + "\n"
 
     @staticmethod
@@ -425,7 +423,7 @@ class TranslatorPlusPlusTransAdapter:
                     continue
                 translation = translations.get(str(unit_index))
                 if translation is not None:
-                    self._patch_row_translation(row, translation)
+                    self._patch_row_translation(row, _decode_compressed_line_stream(translation))
                 unit_index += 1
         return json.dumps(root, ensure_ascii=False, indent=2) + "\n"
 
@@ -561,7 +559,7 @@ class VnTextJsonAdapter:
                 continue
             translation = translations.get(str(unit_index))
             if translation is not None:
-                entry["message"] = translation
+                entry["message"] = _decode_compressed_line_stream(translation)
             unit_index += 1
         return json.dumps(loaded, ensure_ascii=False, indent=2) + "\n"
 
@@ -655,7 +653,7 @@ class ParaTranzJsonAdapter:
                 continue
             translation = translations.get(str(unit_index))
             if translation is not None:
-                entry[self._translation_key(entry)] = translation
+                entry[self._translation_key(entry)] = _decode_compressed_line_stream(translation)
             unit_index += 1
         return json.dumps(loaded, ensure_ascii=False, indent=2) + "\n"
 
@@ -747,6 +745,7 @@ class RenPyScriptAdapter:
             translation = translations.get(unit.unit_id)
             if translation is None:
                 continue
+            translation = _decode_compressed_line_stream(translation)
             target_line = _metadata_int(unit.metadata, "target_line")
             if target_line is None or target_line < 1 or target_line > len(lines):
                 raise ValueError(f"Invalid Ren'Py target line for unit {unit.unit_id} in {relative_path}")
@@ -801,6 +800,7 @@ class KagKsScriptAdapter:
             translation = translations.get(unit.unit_id)
             if translation is None:
                 continue
+            translation = _decode_compressed_line_stream(translation)
             line_number = _metadata_int(unit.metadata, "line")
             if line_number is None or line_number < 1 or line_number > len(lines):
                 raise ValueError(f"Invalid KAG target line for unit {unit.unit_id} in {relative_path}")
@@ -860,7 +860,7 @@ class RpgMakerMvMzJsonAdapter:
             translation = translations.get(str(slot_index))
             if translation is None:
                 continue
-            _patch_rpg_maker_slot(slot, translation)
+            _patch_rpg_maker_slot(slot, _decode_compressed_line_stream(translation))
         return json.dumps(root, ensure_ascii=False, indent=2) + "\n"
 
     @staticmethod
@@ -941,7 +941,9 @@ class _SpreadsheetXlsxAdapter:
                     continue
                 translation = translations.get(str(unit_index))
                 if translation is not None:
-                    sheet.cell(row=row_number, column=translation_column).value = translation
+                    sheet.cell(row=row_number, column=translation_column).value = _decode_compressed_line_stream(
+                        translation
+                    )
                 unit_index += 1
 
         output = BytesIO()
@@ -1553,7 +1555,7 @@ def _safe_output_path(output_folder: Path, relative_path: str) -> Path:
 
 
 def _expand_galgame_export_lines(lines: list[str], units: list[TranslationUnit]) -> list[str]:
-    line_stream = [decode_compressed_line(line) for line in lines]
+    line_stream = list(lines)
     if any("\n" in line or "\r" in line for line in line_stream):
         raise ValueError("Translated galgame line stream entries cannot contain newline characters.")
 
@@ -1584,15 +1586,11 @@ def _translation_validation_message(unit: TranslationUnit, translation: str) -> 
     adapter_name = str(unit.metadata.get("adapter") or "")
     if adapter_name in _LINE_CONSTRAINED_ADAPTERS and any(character in translation for character in "\r\n"):
         return "line-constrained script translations cannot contain newline characters"
-    source_tokens = _protected_token_counts(unit.text)
-    translation_tokens = _protected_token_counts(translation)
-    if source_tokens != translation_tokens:
-        return "protected control codes or placeholders changed"
     return None
 
 
-def _protected_token_counts(text: str) -> Counter[str]:
-    return Counter(match.group(0) for match in _PROTECTED_TOKEN_RE.finditer(text))
+def _decode_compressed_line_stream(text: str) -> str:
+    return "\n".join(decode_compressed_line(line) for line in text.split("\n"))
 
 
 def _tsv_escape(text: str) -> str:
