@@ -754,7 +754,7 @@ async def test_galgame_document_import_get_text_and_preserve_export(tmp_path: Pa
     assert patched == {"こんにちは": "你好", "またね": "再见"}
 
 
-async def test_galgame_document_splits_grouped_chunk_translation_by_original_unit_lines(tmp_path: Path) -> None:
+async def test_galgame_document_rejects_grouped_chunk_translation_lines(tmp_path: Path) -> None:
     source = tmp_path / "script.json"
     _write_mtool_json(source, {"こんにちは": "", "またね": ""})
     repo = _setup_repo(tmp_path)
@@ -763,15 +763,11 @@ async def test_galgame_document_splits_grouped_chunk_translation_by_original_uni
     assert row is not None
     document = GalgameDocument(repo, row["document_id"])
 
-    await document.set_text(["你好\n再见"])
-    output_folder = tmp_path / "out"
-    document.export_preserve_structure(output_folder)
-
-    patched = json.loads((output_folder / "script.json").read_text(encoding="utf-8"))
-    assert patched == {"こんにちは": "你好", "またね": "再见"}
+    with pytest.raises(ValueError, match="line stream entries cannot contain newline"):
+        await document.set_text(["你好\n再见"])
 
 
-async def test_galgame_document_preserves_unit_aligned_multiline_translation(tmp_path: Path) -> None:
+async def test_galgame_document_rejects_unit_aligned_embedded_newline_translation(tmp_path: Path) -> None:
     source = tmp_path / "script.json"
     _write_mtool_json(source, {"こんにちは": "", "またね": ""})
     repo = _setup_repo(tmp_path)
@@ -780,12 +776,8 @@ async def test_galgame_document_preserves_unit_aligned_multiline_translation(tmp
     assert row is not None
     document = GalgameDocument(repo, row["document_id"])
 
-    await document.set_text(["你好\n补一句", "再见"])
-    output_folder = tmp_path / "out"
-    document.export_preserve_structure(output_folder)
-
-    patched = json.loads((output_folder / "script.json").read_text(encoding="utf-8"))
-    assert patched == {"こんにちは": "你好\n补一句", "またね": "再见"}
+    with pytest.raises(ValueError, match="line stream entries cannot contain newline"):
+        await document.set_text(["你好\n补一句", "再见"])
 
 
 async def test_galgame_document_splits_multiline_units_by_original_line_counts(tmp_path: Path) -> None:
@@ -797,7 +789,7 @@ async def test_galgame_document_splits_multiline_units_by_original_line_counts(t
     assert row is not None
     document = GalgameDocument(repo, row["document_id"])
 
-    await document.set_text(["你好\n世界\n再见"])
+    await document.set_text(["你好", "世界", "再见"])
     output_folder = tmp_path / "out"
     document.export_preserve_structure(output_folder)
 

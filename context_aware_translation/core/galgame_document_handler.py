@@ -77,18 +77,20 @@ class GalgameDocumentHandler:
             untranslated_ids = [chunk.chunk_id for chunk in untranslated]
             raise ValueError(f"Cannot export: chunks {untranslated_ids} are not translated yet")
 
-        lines: list[str] = []
+        source_text = ""
+        translated_text = ""
         for chunk in sorted_chunks:
             if chunk.translation is None:
                 continue
-            lines.extend(
-                _fit_translation_to_source_line_count(
-                    chunk.text,
-                    chunk.translation,
-                    chunk_id=chunk.chunk_id,
-                )
+            _fit_translation_to_source_line_count(
+                chunk.text,
+                chunk.translation,
+                chunk_id=chunk.chunk_id,
             )
-        return lines
+            source_text += chunk.text
+            translated_text += chunk.translation
+
+        return _fit_translation_to_source_line_count(source_text, translated_text)
 
 
 def _fit_translation_to_source_line_count(
@@ -114,4 +116,5 @@ def _fit_translation_to_source_line_count(
 
 
 def _split_normalized_lines(text: str) -> list[str]:
-    return text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    lines = text.replace("\r\n", "\n").replace("\r", "\n").splitlines()
+    return lines or [""]
