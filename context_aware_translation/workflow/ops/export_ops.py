@@ -28,11 +28,14 @@ def get_lines_with_original_fallback(workflow: WorkflowContext, document: Docume
     if document.document_type == "manga":
         return [chunk.translation if chunk.is_translated and chunk.translation is not None else "" for chunk in chunks]
     if document.document_type == "galgame":
-        lines: list[str] = []
+        source_text = ""
+        translated_text = ""
         for chunk in chunks:
             export_text = chunk.translation if chunk.is_translated and chunk.translation is not None else chunk.text
-            lines.extend(_fit_translation_to_source_line_count(chunk.text, export_text))
-        return lines
+            _fit_translation_to_source_line_count(chunk.text, export_text, chunk_id=chunk.chunk_id)
+            source_text += chunk.text
+            translated_text += export_text
+        return _fit_translation_to_source_line_count(source_text, translated_text)
 
     merged_chunks = [
         chunk.translation if chunk.is_translated and chunk.translation is not None else chunk.text for chunk in chunks

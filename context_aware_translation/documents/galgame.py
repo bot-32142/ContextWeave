@@ -27,7 +27,6 @@ if TYPE_CHECKING:
     from context_aware_translation.storage.repositories.document_repository import DocumentRepository
 
 
-GALGAME_UNIT_RECORD_TYPE = "galgame_unit"
 _SIMPLE_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.:-]{0,40}$")
 _KAG_TAG_RE = re.compile(r"\[[^\]]*\]")
 _RPG_MAKER_MAP_FILE_RE = re.compile(r"^Map\d+\.json$", re.IGNORECASE)
@@ -78,40 +77,6 @@ class TranslationUnit:
     speaker: str | None = None
     context: str | None = None
     metadata: Mapping[str, object] = field(default_factory=dict)
-
-    def to_payload(self) -> dict[str, object]:
-        payload: dict[str, object] = {
-            "type": GALGAME_UNIT_RECORD_TYPE,
-            "relative_path": self.relative_path,
-            "unit_id": self.unit_id,
-            "text": self.text,
-            "metadata": dict(self.metadata),
-        }
-        if self.speaker is not None:
-            payload["speaker"] = self.speaker
-        if self.context is not None:
-            payload["context"] = self.context
-        return payload
-
-    @classmethod
-    def from_payload(cls, payload: Mapping[str, object]) -> TranslationUnit:
-        if payload.get("type") != GALGAME_UNIT_RECORD_TYPE:
-            raise ValueError("Not a galgame translation unit record.")
-        metadata = payload.get("metadata")
-        if metadata is None:
-            metadata = {}
-        if not isinstance(metadata, Mapping):
-            raise ValueError("Galgame translation unit metadata must be an object.")
-        speaker = _optional_str(payload, "speaker")
-        context = _optional_str(payload, "context")
-        return cls(
-            relative_path=_required_str(payload, "relative_path"),
-            unit_id=_required_str(payload, "unit_id"),
-            text=_required_str(payload, "text"),
-            speaker=speaker,
-            context=context,
-            metadata=dict(metadata),
-        )
 
 
 @dataclass(frozen=True)
@@ -1411,10 +1376,6 @@ def validate_galgame_translations(
     return issues
 
 
-def serialize_translation_units(units: Iterable[TranslationUnit]) -> str:
-    return "\n".join(json.dumps(unit.to_payload(), ensure_ascii=False, separators=(",", ":")) for unit in units)
-
-
 def _encode_binary_source(content: bytes) -> str:
     return base64.b64encode(content).decode("ascii")
 
@@ -1510,21 +1471,6 @@ def _external_helper_argv(
     return (executable, source, output)
 
 
-def deserialize_translation_unit_stream(text: str) -> list[TranslationUnit]:
-    units: list[TranslationUnit] = []
-    for line in text.splitlines():
-        if not line.strip():
-            continue
-        try:
-            payload = json.loads(line)
-        except json.JSONDecodeError as exc:
-            raise ValueError("Invalid galgame translation unit stream.") from exc
-        if not isinstance(payload, dict):
-            raise ValueError("Invalid galgame translation unit record.")
-        units.append(TranslationUnit.from_payload(cast("Mapping[str, object]", payload)))
-    return units
-
-
 def _scan_importable_files(path: Path, adapter_name: str | None = None) -> list[tuple[Path, GalgameAdapter]]:
     candidates = [path] if path.is_file() else sorted(file_path for file_path in path.rglob("*") if file_path.is_file())
     base_path = path.parent if path.is_file() else path
@@ -1574,17 +1520,17 @@ def _source_adapter(source: Mapping[str, object]) -> tuple[str, str, GalgameAdap
         raise ValueError("Galgame source does not have an original relative path.")
     text_content = str(source.get("text_content") or "")
     mime_type = str(source.get("mime_type") or "")
-    adapters = get_galgame_adapters()
-    preferred_adapters = [adapter for adapter in adapters if adapter.mime_type == mime_type]
-    fallback_adapters = [adapter for adapter in adapters if adapter.mime_type != mime_type]
-    for adapter in [*preferred_adapters, *fallback_adapters]:
-        if PurePosixPath(relative_path).suffix.lower() in adapter.supported_extensions:
-            try:
-                if adapter.extract_units(relative_path, text_content):
-                    return relative_path, text_content, adapter
-            except ValueError:
-                continue
-    raise ValueError(f"No galgame adapter can read source: {relative_path}")
+    adapter = next((candidate for candidate in get_galgame_adapters() if candidate.mime_type == mime_type), None)
+    if adapter is None:
+        raise ValueError(f"Unknown galgame adapter MIME type for {relative_path}: {mime_type}")
+    if PurePosixPath(relative_path).suffix.lower() not in adapter.supported_extensions:
+        raise ValueError(f"Galgame adapter {adapter.name} does not support source path: {relative_path}")
+    try:
+        if adapter.extract_units(relative_path, text_content):
+            return relative_path, text_content, adapter
+    except ValueError as exc:
+        raise ValueError(f"Galgame adapter {adapter.name} cannot read source: {relative_path}") from exc
+    raise ValueError(f"Galgame adapter {adapter.name} found no translation units in source: {relative_path}")
 
 
 def _source_sequence_number(source: Mapping[str, object]) -> int:
@@ -1607,12 +1553,9 @@ def _safe_output_path(output_folder: Path, relative_path: str) -> Path:
 
 
 def _expand_galgame_export_lines(lines: list[str], units: list[TranslationUnit]) -> list[str]:
-    line_stream = [_coerce_export_line_to_translation(line) for line in lines]
+    line_stream = [decode_compressed_line(line) for line in lines]
     if any("\n" in line or "\r" in line for line in line_stream):
         raise ValueError("Translated galgame line stream entries cannot contain newline characters.")
-
-    if len(line_stream) == len(units):
-        return line_stream
 
     source_line_counts = [_galgame_unit_line_count(unit.text) for unit in units]
     if len(line_stream) == sum(source_line_counts):
@@ -1633,19 +1576,6 @@ def _expand_galgame_export_lines(lines: list[str], units: list[TranslationUnit])
 def _galgame_unit_line_count(text: str) -> int:
     normalized = text.replace("\r\n", "\n").replace("\r", "\n")
     return max(1, len(normalized.split("\n")))
-
-
-def _coerce_export_line_to_translation(line: str) -> str:
-    decoded_line = decode_compressed_line(line)
-    if not decoded_line.strip().startswith("{"):
-        return decoded_line
-    try:
-        payload = json.loads(decoded_line)
-    except json.JSONDecodeError:
-        return decoded_line
-    if not isinstance(payload, dict) or payload.get("type") != GALGAME_UNIT_RECORD_TYPE:
-        return decoded_line
-    return TranslationUnit.from_payload(cast("Mapping[str, object]", payload)).text
 
 
 def _translation_validation_message(unit: TranslationUnit, translation: str) -> str | None:

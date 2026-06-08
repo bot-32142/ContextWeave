@@ -116,5 +116,4 @@ def _fit_translation_to_source_line_count(
 
 
 def _split_normalized_lines(text: str) -> list[str]:
-    lines = text.replace("\r\n", "\n").replace("\r", "\n").splitlines()
-    return lines or [""]
+    return text.replace("\r\n", "\n").replace("\r", "\n").split("\n")

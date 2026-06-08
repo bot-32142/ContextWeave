@@ -205,7 +205,7 @@ def run_export(
         )
     if not output_path.strip():
         raise_application_error(ApplicationErrorCode.VALIDATION, "Output path is required.", project_id=project_id)
-    if not preserve_structure and format_id not in {option.format_id for option in prepared.available_formats}:
+    if format_id not in {option.format_id for option in prepared.available_formats}:
         raise_application_error(
             ApplicationErrorCode.VALIDATION,
             f"Unsupported export format: {format_id}.",
