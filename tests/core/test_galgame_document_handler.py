@@ -57,6 +57,31 @@ def test_galgame_handler_returns_source_line_aligned_translations() -> None:
     assert handler.get_translated_lines(7, manager) == ["你好 补一句", "再见"]
 
 
+def test_galgame_handler_merges_chunks_that_split_one_source_line() -> None:
+    chunks = [
+        TranslationChunkRecord(
+            chunk_id=1,
+            hash="hash-1",
+            text="こん",
+            document_id=7,
+            is_translated=True,
+            translation="你",
+        ),
+        TranslationChunkRecord(
+            chunk_id=2,
+            hash="hash-2",
+            text="にちは\nまたね",
+            document_id=7,
+            is_translated=True,
+            translation="好\n再见",
+        ),
+    ]
+    manager = DummyManager(chunks)
+    handler = GalgameDocumentHandler()
+
+    assert handler.get_translated_lines(7, manager) == ["你好", "再见"]
+
+
 def test_galgame_handler_rejects_translated_line_count_mismatch() -> None:
     chunks = [
         TranslationChunkRecord(
