@@ -321,6 +321,19 @@ class ContextManager:
 
         return " ".join(value for index, (_key, value) in enumerate(entries) if index in selected_indexes).strip()
 
+    def _latest_raw_description(self, descriptions: dict[str, str], *, query_index: int) -> str:
+        """Return one causal description for a lightweight translation prompt."""
+        entries = self._ordered_description_entries(descriptions, query_index=query_index)
+        numeric_values = [value for key, value in entries if (idx := description_index(key)) is not None and idx >= 0]
+        if numeric_values:
+            description = numeric_values[-1]
+        else:
+            description = next(
+                (value for key, value in entries if description_index(key) == -1),
+                "",
+            )
+        return self._truncate_description(description, self.max_term_description_length)
+
     @staticmethod
     def _term_requires_term_memory(term: Term) -> bool:
         return term.term_type in {"character", "organization"}
@@ -572,7 +585,7 @@ class ContextManager:
     def get_term_description_for_query(self, term: Term, query_index: int) -> str:
         """Return the term description text used for chunk translation prompts."""
         if not self._term_requires_term_memory(term):
-            return self._compact_raw_description(term.descriptions, query_index=query_index)
+            return self._latest_raw_description(term.descriptions, query_index=query_index)
         description = self._best_available_summary(
             term,
             query_index,
