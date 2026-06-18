@@ -14,7 +14,7 @@ from context_aware_translation.application.contracts.app_setup import (
     SetupWizardRequest,
     SetupWizardState,
 )
-from context_aware_translation.application.contracts.common import AcceptedCommand, DocumentSection
+from context_aware_translation.application.contracts.common import AcceptedCommand, DocumentSection, SurfaceStatus
 from context_aware_translation.application.contracts.document import (
     CancelOCRRequest,
     DocumentExportResult,
@@ -32,6 +32,7 @@ from context_aware_translation.application.contracts.document import (
     RunTranslateAndExportRequest,
     SaveOCRPageRequest,
     SaveTranslationRequest,
+    SaveTranslationsRequest,
     TranslateAndExportState,
 )
 from context_aware_translation.application.contracts.project_setup import ProjectSetupState, SaveProjectSetupRequest
@@ -493,6 +494,28 @@ class FakeDocumentService:
         self.calls.append(("save_translation", request))
         if self.translation is None:
             raise NotImplementedError
+        return self.translation
+
+    def save_translations(self, request: SaveTranslationsRequest) -> DocumentTranslationState:
+        self.calls.append(("save_translations", request))
+        if self.translation is None:
+            raise NotImplementedError
+        updates = {update.unit_id: update.translated_text for update in request.updates}
+        self.translation = self.translation.model_copy(
+            update={
+                "units": [
+                    unit.model_copy(
+                        update={
+                            "translated_text": updates[unit.unit_id],
+                            "status": SurfaceStatus.DONE if updates[unit.unit_id].strip() else SurfaceStatus.READY,
+                        }
+                    )
+                    if unit.unit_id in updates
+                    else unit
+                    for unit in self.translation.units
+                ]
+            }
+        )
         return self.translation
 
     def retranslate(self, request: RetranslateRequest) -> AcceptedCommand:

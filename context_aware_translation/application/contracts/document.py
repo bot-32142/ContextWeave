@@ -132,6 +132,17 @@ class SaveTranslationRequest(ContractModel):
     translated_text: str
 
 
+class TranslationUnitUpdate(ContractModel):
+    unit_id: str
+    translated_text: str
+
+
+class SaveTranslationsRequest(ContractModel):
+    project_id: str
+    document_id: int
+    updates: list[TranslationUnitUpdate] = Field(default_factory=list)
+
+
 class RetranslateRequest(ContractModel):
     project_id: str
     document_id: int

@@ -40,10 +40,12 @@ from context_aware_translation.application.contracts.document import (
     RunTranslateAndExportRequest,
     SaveOCRPageRequest,
     SaveTranslationRequest,
+    SaveTranslationsRequest,
     TranslateAndExportState,
     TranslationUnitActionState,
     TranslationUnitKind,
     TranslationUnitState,
+    TranslationUnitUpdate,
 )
 from context_aware_translation.application.contracts.terms import TermsTableState
 from context_aware_translation.application.errors import (
@@ -132,6 +134,8 @@ class DocumentService(Protocol):
     ) -> DocumentTranslationState: ...
 
     def save_translation(self, request: SaveTranslationRequest) -> DocumentTranslationState: ...
+
+    def save_translations(self, request: SaveTranslationsRequest) -> DocumentTranslationState: ...
 
     def retranslate(self, request: RetranslateRequest) -> AcceptedCommand: ...
 
@@ -412,57 +416,76 @@ class DefaultDocumentService:
         )
 
     def save_translation(self, request: SaveTranslationRequest) -> DocumentTranslationState:
+        return self.save_translations(
+            SaveTranslationsRequest(
+                project_id=request.project_id,
+                document_id=request.document_id,
+                updates=[
+                    TranslationUnitUpdate(
+                        unit_id=request.unit_id,
+                        translated_text=request.translated_text,
+                    )
+                ],
+            )
+        )
+
+    def save_translations(self, request: SaveTranslationsRequest) -> DocumentTranslationState:
         with self._runtime.open_book_db(request.project_id) as dbx:
             doc = dbx.document_repo.get_document_by_id(request.document_id)
             if doc is None:
                 raise_application_error(ApplicationErrorCode.NOT_FOUND, f"Document not found: {request.document_id}")
             blocker = self._translation_save_blocker(request.project_id, request.document_id)
             if blocker is not None:
-                self._raise_blocked_blocker(blocker, document_id=request.document_id, unit_id=request.unit_id)
+                if len(request.updates) == 1:
+                    self._raise_blocked_blocker(
+                        blocker,
+                        document_id=request.document_id,
+                        unit_id=request.updates[0].unit_id,
+                    )
+                self._raise_blocked_blocker(blocker, document_id=request.document_id)
 
             document_type = str(doc.get("document_type") or "")
-            if document_type == "manga":
-                chunk = self._resolve_manga_chunk_for_source(
-                    dbx=dbx,
-                    document_id=request.document_id,
-                    source_id=int(request.unit_id),
-                )
-                if chunk is None:
-                    raise_blocked_or_not_found_for_manga_unit(
-                        project_id=request.project_id,
+            updated_chunks: list[Any] = []
+            for update in request.updates:
+                if document_type == "manga":
+                    chunk = self._resolve_manga_chunk_for_source(
+                        dbx=dbx,
                         document_id=request.document_id,
-                        source_id=int(request.unit_id),
+                        source_id=int(update.unit_id),
                     )
-                updated_chunk = replace(
-                    chunk,
-                    is_translated=bool(request.translated_text.strip()),
-                    translation=request.translated_text if request.translated_text.strip() else None,
+                    if chunk is None:
+                        raise_blocked_or_not_found_for_manga_unit(
+                            project_id=request.project_id,
+                            document_id=request.document_id,
+                            source_id=int(update.unit_id),
+                        )
+                else:
+                    chunk = dbx.db.get_chunk_by_id(int(update.unit_id))
+                    if chunk is None or chunk.document_id is None or chunk.document_id != request.document_id:
+                        raise_application_error(
+                            ApplicationErrorCode.NOT_FOUND,
+                            f"Translation unit not found: {update.unit_id}",
+                        )
+                    source_line_count = self._line_count(chunk.text)
+                    translated_line_count = self._line_count(update.translated_text)
+                    if source_line_count > 0 and translated_line_count != source_line_count:
+                        raise_application_error(
+                            ApplicationErrorCode.VALIDATION,
+                            (
+                                f"Cannot save translation with {translated_line_count} lines; "
+                                f"expected {source_line_count} lines."
+                            ),
+                            document_id=request.document_id,
+                            unit_id=update.unit_id,
+                        )
+                updated_chunks.append(
+                    replace(
+                        chunk,
+                        is_translated=bool(update.translated_text.strip()),
+                        translation=update.translated_text if update.translated_text.strip() else None,
+                    )
                 )
-            else:
-                chunk = dbx.db.get_chunk_by_id(int(request.unit_id))
-                if chunk is None or chunk.document_id is None or chunk.document_id != request.document_id:
-                    raise_application_error(
-                        ApplicationErrorCode.NOT_FOUND,
-                        f"Translation unit not found: {request.unit_id}",
-                    )
-                source_line_count = self._line_count(chunk.text)
-                translated_line_count = self._line_count(request.translated_text)
-                if source_line_count > 0 and translated_line_count != source_line_count:
-                    raise_application_error(
-                        ApplicationErrorCode.VALIDATION,
-                        (
-                            f"Cannot save translation with {translated_line_count} lines; "
-                            f"expected {source_line_count} lines."
-                        ),
-                        document_id=request.document_id,
-                        unit_id=request.unit_id,
-                    )
-                updated_chunk = replace(
-                    chunk,
-                    is_translated=bool(request.translated_text.strip()),
-                    translation=request.translated_text if request.translated_text.strip() else None,
-                )
-            dbx.db.upsert_chunks([updated_chunk])
+            dbx.db.upsert_chunks(updated_chunks)
         self._runtime.invalidate_document(
             request.project_id,
             request.document_id,
