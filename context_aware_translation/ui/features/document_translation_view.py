@@ -41,8 +41,10 @@ from context_aware_translation.application.contracts.document import (
     RetranslateRequest,
     RunDocumentTranslationRequest,
     SaveTranslationRequest,
+    SaveTranslationsRequest,
     TranslationUnitKind,
     TranslationUnitState,
+    TranslationUnitUpdate,
 )
 from context_aware_translation.application.errors import ApplicationError, BlockedOperationError
 from context_aware_translation.application.services.document import DocumentService
@@ -943,15 +945,54 @@ class DocumentTranslationView(QWidget):
 
     def _replace_all(self) -> None:
         query = self._build_find_query()
-        if query is None:
+        if query is None or self._state is None:
             return
         self._show_find_panel(show_replace=True)
+
+        replacements: dict[int, str] = {}
         try:
-            replaced_text = query.replace_all(self.translation_text.toPlainText(), self.replace_input.text())
+            for row, unit in enumerate(self._state.units):
+                if not unit.actions.can_save:
+                    continue
+                original_text = self._translation_text_for_row(row)
+                replaced_text = query.replace_all(original_text, self.replace_input.text())
+                if replaced_text != original_text:
+                    replacements[row] = replaced_text
         except ValueError as exc:
             self._set_find_feedback(self.tr("Invalid replacement: %1").replace("%1", str(exc)), is_error=True)
             return
-        self.translation_text.setPlainText(replaced_text)
+
+        if not replacements:
+            self._set_find_feedback(self._search_mode_feedback())
+            self._clear_find_highlight()
+            return
+
+        current_unit_id = self._selected_unit_id()
+        try:
+            state = self._service.save_translations(
+                SaveTranslationsRequest(
+                    project_id=self._project_id,
+                    document_id=self._document_id,
+                    updates=[
+                        TranslationUnitUpdate(
+                            unit_id=self._state.units[row].unit_id,
+                            translated_text=replaced_text,
+                        )
+                        for row, replaced_text in replacements.items()
+                    ],
+                )
+            )
+        except BlockedOperationError as exc:
+            QMessageBox.warning(self, self.tr("Save Unavailable"), translate_backend_text(exc.payload.message))
+            self.refresh()
+            return
+        except ApplicationError as exc:
+            QMessageBox.warning(self, self.tr("Save Failed"), translate_backend_text(exc.payload.message))
+            self.refresh()
+            return
+        self._suppressed_draft_unit_ids.update(self._state.units[row].unit_id for row in replacements)
+        self._apply_state(state, previous_unit_id=current_unit_id)
+        self._set_message(UserMessageSeverity.SUCCESS, self.tr("Translation saved."))
         self._set_find_feedback(self._search_mode_feedback())
         self._clear_find_highlight()
 

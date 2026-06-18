@@ -457,6 +457,61 @@ def test_document_translation_view_regex_find_replace_supports_group_references(
         view.deleteLater()
 
 
+def test_document_translation_view_regex_replace_all_updates_every_editable_unit():
+    from context_aware_translation.ui.features.document_translation_view import DocumentTranslationView
+
+    state = _make_state()
+    state = state.model_copy(
+        update={
+            "units": [
+                state.units[0].model_copy(update={"source_text": "One", "translated_text": "cat-01 stays"}),
+                state.units[1].model_copy(
+                    update={
+                        "status": SurfaceStatus.READY,
+                        "source_text": "Three",
+                        "translated_text": "cat-02 follows",
+                        "blocker": None,
+                        "actions": TranslationUnitActionState(can_save=True, can_retranslate=True),
+                    }
+                ),
+            ]
+        }
+    )
+    service = FakeDocumentService(workspace=state.workspace, translation=state)
+    view = DocumentTranslationView(service, "proj-1", 4)
+    try:
+        view.refresh()
+        view.translation_text.setPlainText("draft cat-10 leads")
+        view.regex_mode_button.click()
+        view.find_input.setText(r"cat-(\d+)")
+        view.replace_input.setText(r"dog-$1")
+
+        view.replace_all_button.click()
+
+        assert view.translation_text.toPlainText() == "draft dog-10 leads"
+        bulk_save_calls = [payload for name, payload in service.calls if name == "save_translations"]
+        assert len(bulk_save_calls) == 1
+        assert {update.unit_id: update.translated_text for update in bulk_save_calls[0].updates} == {
+            "1": "draft dog-10 leads",
+            "2": "dog-02 follows",
+        }
+        view.unit_list.setCurrentRow(1)
+        assert view.translation_text.toPlainText() == "dog-02 follows"
+        view.unit_list.setCurrentRow(0)
+        assert view.translation_text.toPlainText() == "draft dog-10 leads"
+
+        reloaded_view = DocumentTranslationView(service, "proj-1", 4)
+        try:
+            reloaded_view.refresh()
+            assert reloaded_view.translation_text.toPlainText() == "draft dog-10 leads"
+            reloaded_view.unit_list.setCurrentRow(1)
+            assert reloaded_view.translation_text.toPlainText() == "dog-02 follows"
+        finally:
+            reloaded_view.deleteLater()
+    finally:
+        view.deleteLater()
+
+
 def test_document_translation_view_regex_find_next_supports_zero_width_matches():
     from context_aware_translation.ui.features.document_translation_view import DocumentTranslationView
 

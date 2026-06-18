@@ -19,7 +19,9 @@ from context_aware_translation.application.contracts.document import (
     RetranslateRequest,
     RunDocumentTranslationRequest,
     SaveTranslationRequest,
+    SaveTranslationsRequest,
     TranslationUnitKind,
+    TranslationUnitUpdate,
 )
 from context_aware_translation.application.contracts.projects import CreateProjectRequest
 from context_aware_translation.application.contracts.terms import TermsScope, TermsScopeKind, TermsTableState
@@ -247,6 +249,75 @@ def test_save_translation_rejects_line_count_mismatch_for_chunk(tmp_path) -> Non
             assert "expected 2 lines" in exc.payload.message
         else:  # pragma: no cover - defensive
             raise AssertionError("Expected validation error")
+    finally:
+        context.close()
+
+
+def test_save_translations_persists_all_chunk_updates(tmp_path) -> None:
+    _ensure_qt_app()
+    context = _build_configured_context(tmp_path)
+    try:
+        created = context.services.projects.create_project(
+            CreateProjectRequest(name="Text Doc", target_language="English")
+        )
+        project_id = created.project.project_id
+        document_id = _create_text_document(context, project_id)
+
+        service = context.services.document
+        service.get_terms = MagicMock(return_value=_empty_terms(project_id))  # type: ignore[method-assign]
+        context.runtime.task_engine.has_active_claims = MagicMock(return_value=False)
+
+        state = service.save_translations(
+            SaveTranslationsRequest(
+                project_id=project_id,
+                document_id=document_id,
+                updates=[
+                    TranslationUnitUpdate(unit_id="1", translated_text="First line\nSecond line"),
+                    TranslationUnitUpdate(unit_id="2", translated_text="Updated line"),
+                ],
+            )
+        )
+
+        assert [unit.translated_text for unit in state.units] == ["First line\nSecond line", "Updated line"]
+        with context.runtime.open_book_db(project_id) as dbx:
+            assert dbx.db.get_chunk_by_id(1).translation == "First line\nSecond line"
+            assert dbx.db.get_chunk_by_id(2).translation == "Updated line"
+    finally:
+        context.close()
+
+
+def test_save_translations_validates_every_chunk_before_writing(tmp_path) -> None:
+    _ensure_qt_app()
+    context = _build_configured_context(tmp_path)
+    try:
+        created = context.services.projects.create_project(
+            CreateProjectRequest(name="Text Doc", target_language="English")
+        )
+        project_id = created.project.project_id
+        document_id = _create_text_document(context, project_id)
+
+        service = context.services.document
+        context.runtime.task_engine.has_active_claims = MagicMock(return_value=False)
+
+        try:
+            service.save_translations(
+                SaveTranslationsRequest(
+                    project_id=project_id,
+                    document_id=document_id,
+                    updates=[
+                        TranslationUnitUpdate(unit_id="1", translated_text="First line\nSecond line"),
+                        TranslationUnitUpdate(unit_id="2", translated_text="Wrong\nline count"),
+                    ],
+                )
+            )
+        except ApplicationError as exc:
+            assert exc.payload.code is ApplicationErrorCode.VALIDATION
+        else:  # pragma: no cover - defensive
+            raise AssertionError("Expected validation error")
+
+        with context.runtime.open_book_db(project_id) as dbx:
+            assert dbx.db.get_chunk_by_id(1).translation is None
+            assert dbx.db.get_chunk_by_id(2).translation == "Translated line"
     finally:
         context.close()
 
