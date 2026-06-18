@@ -890,11 +890,11 @@ async def test_translate_chunks_other_terms_ignore_context_tree_summary():
 
     assert chunk_strategy.translate.await_count == 1
     sent_terms = chunk_strategy.calls[0]["terms"]
-    assert sent_terms == [("term1", "term1-translation", "Imported glossary description later description")]
+    assert sent_terms == [("term1", "term1-translation", "later description")]
 
 
 @pytest.mark.asyncio
-async def test_translate_chunks_limits_other_term_description_history():
+async def test_translate_chunks_uses_latest_other_term_description():
     tokenizer = DummyTokenizer()
     context_tree = DummyContextTree()
     term = Term(
@@ -936,7 +936,7 @@ async def test_translate_chunks_limits_other_term_description_history():
 
     assert chunk_strategy.translate.await_count == 1
     sent_terms = chunk_strategy.calls[0]["terms"]
-    assert sent_terms == [("term1", "term1-translation", "charlie delta")]
+    assert sent_terms == [("term1", "term1-translation", "delta")]
 
 
 @pytest.mark.asyncio

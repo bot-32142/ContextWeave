@@ -370,7 +370,7 @@ def test_get_term_description_for_query_prefers_longest_summary(mock_context_man
     assert description == "this is the longest summary"
 
 
-def test_get_term_description_for_query_joins_imported_and_numeric_for_other_terms(mock_context_manager):
+def test_get_term_description_for_query_prefers_latest_numeric_for_other_terms(mock_context_manager):
     term = Term(
         key="term_imported_plus_one",
         descriptions={"imported": "Imported glossary description", "5": "later description"},
@@ -382,7 +382,7 @@ def test_get_term_description_for_query_joins_imported_and_numeric_for_other_ter
 
     description = mock_context_manager.get_term_description_for_query(term, 10)
 
-    assert description == "Imported glossary description later description"
+    assert description == "later description"
 
 
 def test_get_term_description_for_query_excludes_future_numeric_descriptions_for_other_terms(mock_context_manager):
@@ -401,11 +401,11 @@ def test_get_term_description_for_query_excludes_future_numeric_descriptions_for
 
     description = mock_context_manager.get_term_description_for_query(term, 10)
 
-    assert description == "Imported glossary description earlier description"
+    assert description == "earlier description"
 
 
-def test_get_term_description_for_query_limits_other_term_history_to_recent_context(mock_context_manager):
-    mock_context_manager.max_term_description_length = 18
+def test_get_term_description_for_query_limits_latest_other_term_description(mock_context_manager):
+    mock_context_manager.max_term_description_length = 4
     term = Term(
         key="term_long_other",
         descriptions={
@@ -422,8 +422,8 @@ def test_get_term_description_for_query_limits_other_term_history_to_recent_cont
 
     description = mock_context_manager.get_term_description_for_query(term, 10)
 
-    assert description == "charlie delta"
-    assert len(description) <= 18
+    assert description == "delt"
+    assert len(description) <= 4
 
 
 def test_build_fully_summarized_descriptions_limits_other_term_history(mock_context_manager):
@@ -788,7 +788,7 @@ def test_get_term_description_for_query_skips_term_memory_for_other_terms(mock_c
 
     description = mock_context_manager.get_term_description_for_query(term, 10)
 
-    assert description == "Imported glossary description later description"
+    assert description == "later description"
 
 
 def test_build_fully_summarized_descriptions_exports_raw_description_for_other_terms(mock_context_manager):
