@@ -10,6 +10,10 @@ from typing import TYPE_CHECKING, Any, Protocol, TypeVar
 import yaml
 
 from context_aware_translation import configure_logging
+from context_aware_translation.languages import (
+    require_storage_target_language_name,
+    storage_target_language_name,
+)
 from context_aware_translation.llm.image_generator import ImageBackend
 
 if TYPE_CHECKING:
@@ -980,6 +984,7 @@ class Config:
         )
 
     def __post_init__(self) -> None:
+        self.translation_target_language = require_storage_target_language_name(self.translation_target_language)
         self.output_dir = Path(self.output_dir)
         if self.working_dir is None:
             self.working_dir = self.output_dir / DEFAULT_WORKING_SUBDIR
@@ -1148,6 +1153,8 @@ def validate_persisted_config_payload(
     target_language = config.get("translation_target_language")
     if not isinstance(target_language, str) or target_language.strip() == "":
         errors.append("translation_target_language is required")
+    elif storage_target_language_name(target_language) is None:
+        errors.append("translation_target_language must be one of the supported language presets")
 
     endpoint_profiles = config.get("endpoint_profiles", {})
     if endpoint_profiles is None:

@@ -57,7 +57,7 @@ def _projects_service() -> FakeProjectsService:
             WorkflowProfileOption(
                 profile_id="profile-ja",
                 name="Japanese Profile",
-                target_language="Japanese",
+                target_language="日本語",
             ),
         ],
     )
@@ -101,7 +101,7 @@ def test_library_view_runs_create_edit_and_delete_through_service() -> None:
 
             @property
             def target_language(self) -> str:
-                return "Chinese"
+                return "中文（简体）"
 
             @property
             def workflow_profile_id(self) -> str:
@@ -116,7 +116,7 @@ def test_library_view_runs_create_edit_and_delete_through_service() -> None:
             and payload
             == CreateProjectRequest(
                 name="New Project",
-                target_language="Chinese",
+                target_language="中文（简体）",
                 workflow_profile_id="profile-ja",
             )
             for name, payload in service.calls
@@ -139,14 +139,13 @@ def test_library_view_runs_create_edit_and_delete_through_service() -> None:
 
             @property
             def target_language(self) -> str:
-                return "Japanese"
+                return "日本語"
 
         with patch("context_aware_translation.ui.features.library_view._ProjectDialog", _FakeEditDialog):
             view._on_edit_project()
         assert any(
             name == "update_project"
-            and payload
-            == UpdateProjectRequest(project_id="project-1", name="Edited Project", target_language="Japanese")
+            and payload == UpdateProjectRequest(project_id="project-1", name="Edited Project", target_language="日本語")
             for name, payload in service.calls
         )
 
@@ -226,7 +225,7 @@ def test_project_dialog_exposes_workflow_profile_selection() -> None:
             WorkflowProfileOption(
                 profile_id="profile-ja",
                 name="Japanese Profile",
-                target_language="Japanese",
+                target_language="日本語",
             ),
         ],
     )
@@ -239,7 +238,7 @@ def test_project_dialog_exposes_workflow_profile_selection() -> None:
         dialog.workflow_profile_combo.setCurrentIndex(1)
 
         assert dialog.workflow_profile_id == "profile-ja"
-        assert dialog.target_language == "Japanese"
+        assert dialog.target_language == "日本語"
     finally:
         dialog.close()
         dialog.deleteLater()

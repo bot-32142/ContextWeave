@@ -1188,7 +1188,7 @@ class WorkflowProfileEditorDialog(QDialog):
         self.name_edit = QLineEdit(self._original_profile.name)
         self.name_edit.setEnabled(self._allow_name_edit)
         self.target_language_combo = QSearchableComboBox()
-        self.target_language_combo.setEditable(True)
+        self.target_language_combo.setEditable(False)
         seen_languages: set[str] = set()
         for display_name, _code in LANGUAGES:
             if display_name in seen_languages:
@@ -1200,7 +1200,7 @@ class WorkflowProfileEditorDialog(QDialog):
         if index >= 0:
             self.target_language_combo.setCurrentIndex(index)
         else:
-            self.target_language_combo.setEditText(display_target_language or self._original_profile.target_language)
+            self.target_language_combo.setCurrentIndex(0)
 
         basics_layout.addRow(self.tr("Profile name"), self.name_edit)
         basics_layout.addRow(self.tr("Target language"), self.target_language_combo)

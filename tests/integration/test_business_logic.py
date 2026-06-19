@@ -84,7 +84,7 @@ class TestConfigSerialization:
             name="Test Profile",
             created_at=now,
             updated_at=now,
-            config={"translation_target_language": "Chinese"},
+            config={"translation_target_language": "简体中文"},
             description="A test profile",
             is_default=True,
         )

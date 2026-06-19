@@ -35,7 +35,7 @@ class TestFromSnapshot:
 
     def test_from_snapshot_accepts_legacy_raw_config_dict(self):
         """from_snapshot() should accept a raw config dict without version envelope."""
-        config_dict = {"translation_target_language": "Japanese", "some_extra_key": 1}
+        config_dict = {"translation_target_language": "日语", "some_extra_key": 1}
         snapshot_json = json.dumps(config_dict)
         mock_config = MagicMock()
 

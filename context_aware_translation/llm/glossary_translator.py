@@ -8,6 +8,7 @@ from collections.abc import Callable
 from context_aware_translation.config import GlossaryTranslationConfig
 from context_aware_translation.core.cancellation import OperationCancelledError, raise_if_cancelled
 from context_aware_translation.llm.client import LLMClient
+from context_aware_translation.llm.language_pair_prompts import apply_language_pair_prompt_policy
 from context_aware_translation.llm.session_trace import llm_session_scope
 from context_aware_translation.llm.translator import TranslationValidationError
 from context_aware_translation.utils.cjk_normalize import build_normalized_key_mapping
@@ -20,7 +21,7 @@ def _build_batch_system_prompt(source_language: str, target_language: str) -> st
     """
     Build system prompt for batch translation of similar terms.
     """
-    return (
+    prompt = (
         "---角色---\n"
         f"你负责翻译{source_language}名称。\n\n"
         "---指令---\n"
@@ -67,6 +68,13 @@ def _build_batch_system_prompt(source_language: str, target_language: str) -> st
         "{\n"
         '  "新翻译": {"HP": "HP"}\n'
         "}\n\n"
+    )
+    return apply_language_pair_prompt_policy(
+        prompt,
+        source_language=source_language,
+        target_language=target_language,
+        prompt_kind="name_translation",
+        before_marker="---示例---\n",
     )
 
 

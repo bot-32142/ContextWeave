@@ -118,13 +118,25 @@ def test_projects_service_persists_internal_language_names_but_displays_english(
         context.close()
 
 
+def test_projects_service_rejects_unsupported_target_language(tmp_path: Path) -> None:
+    _ensure_qt_app()
+    context = _build_configured_context(tmp_path)
+    try:
+        with pytest.raises(ApplicationError, match="supported language presets"):
+            context.services.projects.create_project(
+                CreateProjectRequest(name="Unsupported Language", target_language="Klingon")
+            )
+    finally:
+        context.close()
+
+
 def test_projects_service_creates_project_with_selected_workflow_profile(tmp_path: Path) -> None:
     _ensure_qt_app()
     context = _build_configured_context(tmp_path)
     try:
         default_profile = context.runtime.book_manager.list_profiles()[0]
         alternate_config = dict(default_profile.config)
-        alternate_config["translation_target_language"] = "Japanese"
+        alternate_config["translation_target_language"] = "日语"
         alternate_profile = context.runtime.book_manager.create_profile(
             name="Japanese Profile",
             config=alternate_config,
@@ -138,7 +150,7 @@ def test_projects_service_creates_project_with_selected_workflow_profile(tmp_pat
         project_setup = context.services.project_setup.get_state(project_id)
 
         assert book.profile_id == alternate_profile.profile_id
-        assert created.target_language == "Japanese"
+        assert created.target_language == "日本語"
         assert project_setup.selected_shared_profile_id == alternate_profile.profile_id
     finally:
         context.close()
@@ -154,7 +166,7 @@ def test_projects_service_preserves_selected_profile_when_overriding_target_lang
             CreateProjectRequest(
                 name="Profile Override",
                 workflow_profile_id=shared_profile.profile_id,
-                target_language="Chinese",
+                target_language="中文（简体）",
             )
         )
         project_id = created.project.project_id
@@ -163,7 +175,7 @@ def test_projects_service_preserves_selected_profile_when_overriding_target_lang
         project_setup = context.services.project_setup.get_state(project_id)
 
         assert book.profile_id is None
-        assert config["translation_target_language"] == "Chinese"
+        assert config["translation_target_language"] == "简体中文"
         assert config["_ui_source_profile_id"] == shared_profile.profile_id
         assert project_setup.selected_shared_profile_id == shared_profile.profile_id
     finally:
@@ -199,7 +211,9 @@ def test_projects_service_preserves_source_profile_when_editing_target_language(
         created = context.services.projects.create_project(CreateProjectRequest(name="Edit Target"))
         project_id = created.project.project_id
 
-        context.services.projects.update_project(UpdateProjectRequest(project_id=project_id, target_language="Chinese"))
+        context.services.projects.update_project(
+            UpdateProjectRequest(project_id=project_id, target_language="中文（简体）")
+        )
 
         book = context.runtime.get_book(project_id)
         config = context.runtime.get_effective_config_payload(project_id)
@@ -297,7 +311,7 @@ def test_app_setup_preview_exposes_recommended_profile(tmp_path: Path) -> None:
                         default_model="deepseek-v4-pro",
                     ),
                 ],
-                target_language="Japanese",
+                target_language="日本語",
             )
         )
 
@@ -305,7 +319,7 @@ def test_app_setup_preview_exposes_recommended_profile(tmp_path: Path) -> None:
         assert preview.recommendation is not None
         assert preview.recommendation.routes
         assert preview.recommendation.name == "Recommended"
-        assert preview.recommendation.target_language == "Japanese"
+        assert preview.recommendation.target_language == "日本語"
     finally:
         context.close()
 
@@ -318,7 +332,7 @@ def test_setup_wizard_creates_curated_connections_and_named_profile(tmp_path: Pa
             SetupWizardRequest(
                 providers=[ProviderKind.GEMINI, ProviderKind.DEEPSEEK],
                 profile_name="Team Default",
-                target_language="Japanese",
+                target_language="日本語",
                 connections=[
                     ConnectionDraft(display_name="Gemini", provider=ProviderKind.GEMINI, api_key="gkey"),
                     ConnectionDraft(display_name="DeepSeek", provider=ProviderKind.DEEPSEEK, api_key="dkey"),
@@ -350,7 +364,7 @@ def test_setup_wizard_creates_curated_connections_and_named_profile(tmp_path: Pa
         detail = context.services.app_setup.get_state()
         assert any(profile.name == "Team Default" for profile in detail.shared_profiles)
         assert created_profile.is_default is True
-        assert created_profile.config["translation_target_language"] == "Japanese"
+        assert created_profile.config["translation_target_language"] == "日语"
         assert created_profile.config["glossary_config"]["model"] == "deepseek-v4-pro"
         assert created_profile.config["glossary_config"]["kwargs"] == _DEEPSEEK_THINKING_KWARGS
         assert created_profile.config["translator_config"]["model"] == "deepseek-v4-pro"

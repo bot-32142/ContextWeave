@@ -290,7 +290,7 @@ class TestConfigWithProfiles:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             config = Config(
-                translation_target_language="Chinese",
+                translation_target_language="简体中文",
                 output_dir=tmpdir,
                 endpoint_profiles=profiles,
                 extractor_config=ExtractorConfig(endpoint_profile="test"),
@@ -317,7 +317,7 @@ class TestConfigWithProfiles:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             config = Config(
-                translation_target_language="Chinese",
+                translation_target_language="简体中文",
                 output_dir=tmpdir,
                 endpoint_profiles=profiles,
                 extractor_config=ExtractorConfig(endpoint_profile="test"),
@@ -346,7 +346,7 @@ class TestConfigWithProfiles:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             config = Config(
-                translation_target_language="Chinese",
+                translation_target_language="简体中文",
                 output_dir=tmpdir,
                 endpoint_profiles=profiles,
                 extractor_config=ExtractorConfig(endpoint_profile="base"),
@@ -381,7 +381,7 @@ class TestConfigWithProfiles:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             config = Config(
-                translation_target_language="Chinese",
+                translation_target_language="简体中文",
                 output_dir=tmpdir,
                 endpoint_profiles=profiles,
                 extractor_config=ExtractorConfig(endpoint_profile="base"),
@@ -429,7 +429,7 @@ llm:
 
         try:
             with tempfile.TemporaryDirectory() as tmpdir:
-                config = load_config_from_yaml(yaml_path, "Chinese", tmpdir)
+                config = load_config_from_yaml(yaml_path, "中文（简体）", tmpdir)
 
                 assert config.extractor_config.api_key == "yaml-key"
                 assert config.extractor_config.base_url == "https://yaml.api"
@@ -469,7 +469,7 @@ llm:
 
         try:
             with tempfile.TemporaryDirectory() as tmpdir:
-                config = load_config_from_yaml(yaml_path, "Chinese", tmpdir)
+                config = load_config_from_yaml(yaml_path, "中文（简体）", tmpdir)
 
                 assert config.extractor_config.api_key == "direct-key"
                 assert config.extractor_config.model == "direct-model"
@@ -487,7 +487,7 @@ class TestValidation:
         """Config without api_key/base_url/model fails validation."""
         with tempfile.TemporaryDirectory() as tmpdir, pytest.raises(ValueError, match="must be provided"):
             Config(
-                translation_target_language="Chinese",
+                translation_target_language="简体中文",
                 output_dir=tmpdir,
                 # No step configs provided
             )
@@ -506,7 +506,7 @@ class TestValidation:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Should not raise
             config = Config(
-                translation_target_language="Chinese",
+                translation_target_language="简体中文",
                 output_dir=tmpdir,
                 endpoint_profiles=profiles,
                 extractor_config=ExtractorConfig(endpoint_profile="complete"),
@@ -530,7 +530,7 @@ class TestRuntimeConfigSnapshot:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             config = Config(
-                translation_target_language="Chinese",
+                translation_target_language="简体中文",
                 output_dir=tmpdir,
                 extractor_config=ExtractorConfig(**base),
                 summarizor_config=SummarizorConfig(**base),
@@ -555,7 +555,7 @@ class TestRuntimeConfigSnapshot:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             config = Config(
-                translation_target_language="Chinese",
+                translation_target_language="简体中文",
                 output_dir=tmpdir,
                 extractor_config=ExtractorConfig(**base),
                 summarizor_config=SummarizorConfig(**base),
@@ -573,12 +573,12 @@ class TestPersistedPayloadValidation:
     """Tests for persistence-time config payload validation."""
 
     def test_validate_persisted_config_payload_detects_missing_sections(self):
-        errors = validate_persisted_config_payload({"translation_target_language": "zh-CN"})
+        errors = validate_persisted_config_payload({"translation_target_language": "简体中文"})
         assert any("extractor_config is required" in e for e in errors)
 
     def test_validate_persisted_config_payload_accepts_endpoint_profile_reference(self):
         config_payload = {
-            "translation_target_language": "zh-CN",
+            "translation_target_language": "简体中文",
             "extractor_config": {"endpoint_profile": "shared"},
             "summarizor_config": {"endpoint_profile": "shared"},
             "translator_config": {"endpoint_profile": "shared"},
@@ -593,7 +593,7 @@ class TestPersistedPayloadValidation:
 
     def test_validate_persisted_config_payload_accepts_endpoint_profile_id_reference(self):
         config_payload = {
-            "translation_target_language": "zh-CN",
+            "translation_target_language": "简体中文",
             "extractor_config": {"endpoint_profile": "shared-id"},
             "summarizor_config": {"endpoint_profile": "shared-id"},
             "translator_config": {"endpoint_profile": "shared-id"},
@@ -608,11 +608,11 @@ class TestPersistedPayloadValidation:
 
     def test_ensure_valid_persisted_config_payload_raises(self):
         with pytest.raises(ValueError, match="Invalid config payload"):
-            ensure_valid_persisted_config_payload({"translation_target_language": "zh-CN"})
+            ensure_valid_persisted_config_payload({"translation_target_language": "简体中文"})
 
     def test_validate_persisted_payload_accepts_translator_batch_without_base_url(self):
         config_payload = {
-            "translation_target_language": "zh-CN",
+            "translation_target_language": "简体中文",
             "extractor_config": {"endpoint_profile": "shared"},
             "summarizor_config": {"endpoint_profile": "shared"},
             "translator_config": {"endpoint_profile": "shared"},
@@ -627,3 +627,19 @@ class TestPersistedPayloadValidation:
             endpoint_profile_exists=lambda name: name == "shared",
         )
         assert errors == []
+
+    def test_validate_persisted_payload_rejects_unsupported_target_language(self):
+        config_payload = {
+            "translation_target_language": "Klingon",
+            "extractor_config": {"endpoint_profile": "shared"},
+            "summarizor_config": {"endpoint_profile": "shared"},
+            "translator_config": {"endpoint_profile": "shared"},
+            "glossary_config": {"endpoint_profile": "shared"},
+        }
+
+        errors = validate_persisted_config_payload(
+            config_payload,
+            endpoint_profile_exists=lambda name: name == "shared",
+        )
+
+        assert "translation_target_language must be one of the supported language presets" in errors

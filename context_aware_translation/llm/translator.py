@@ -15,6 +15,7 @@ from context_aware_translation.documents.epub_support.inline_markers import (
     validate_inline_marker_sanity,
 )
 from context_aware_translation.llm.client import LLMClient
+from context_aware_translation.llm.language_pair_prompts import apply_language_pair_prompt_policy
 from context_aware_translation.llm.session_trace import get_llm_session_id, llm_session_scope
 from context_aware_translation.utils.compression_marker import COMPRESSED_LINE_SENTINEL
 from context_aware_translation.utils.llm_json_cleaner import clean_llm_response, parse_llm_json
@@ -544,6 +545,13 @@ c. 结合上下文，在不造成误解、歧义或信息缺失的前提下，�
 
 {_build_translation_prompt_examples()}
 """
+    system_prompt = apply_language_pair_prompt_policy(
+        system_prompt,
+        source_language=source_language,
+        target_language=target_language,
+        prompt_kind="translation",
+        before_marker="--格式与标记（必须严格遵守）--",
+    )
 
     # Build JSON payload for user prompt with Chinese keys
     terms_json = []

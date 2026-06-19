@@ -188,6 +188,7 @@ def test_workflow_profile_editor_displays_internal_target_language_labels():
     )
     dialog = WorkflowProfileEditorDialog(profile=profile, connection_choices=[], allow_name_edit=True)
 
+    assert dialog.target_language_combo.isEditable() is False
     assert dialog.target_language_combo.currentText() == "English"
 
 
