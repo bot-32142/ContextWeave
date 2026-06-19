@@ -53,6 +53,10 @@ from context_aware_translation.application.events import (
     WorkboardInvalidatedEvent,
 )
 from context_aware_translation.config import Config, infer_async_batch_provider
+from context_aware_translation.languages import (
+    display_target_language_name,
+    require_storage_target_language_name,
+)
 from context_aware_translation.storage.library.book_manager import BookManager
 from context_aware_translation.storage.models.book import Book
 from context_aware_translation.storage.models.config_profile import ConfigProfile
@@ -61,10 +65,6 @@ from context_aware_translation.storage.repositories.document_repository import D
 from context_aware_translation.storage.repositories.task_store import TaskRecord, TaskStore
 from context_aware_translation.storage.repositories.term_repository import TermRepository
 from context_aware_translation.storage.schema.book_db import SQLiteBookDB
-from context_aware_translation.ui.constants import (
-    display_target_language_name,
-    storage_target_language_name,
-)
 from context_aware_translation.workflow.tasks.models import TaskAction
 
 if TYPE_CHECKING:
@@ -900,9 +900,7 @@ def build_workflow_profile_payload(
     source_profile_id: str | None = None,
 ) -> dict[str, Any]:
     payload = dict(base_config or {})
-    payload["translation_target_language"] = (
-        storage_target_language_name(profile.target_language) or profile.target_language
-    )
+    payload["translation_target_language"] = require_storage_target_language_name(profile.target_language)
     if source_profile_id:
         payload[_UI_SOURCE_PROFILE_ID_KEY] = source_profile_id
     else:

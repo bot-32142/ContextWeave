@@ -38,6 +38,7 @@ from context_aware_translation.application.runtime import (
     recommended_workflow_profile_from_drafts,
     wizard_connection_key_for_draft,
 )
+from context_aware_translation.languages import display_target_language_name
 from context_aware_translation.storage.models.config_profile import ConfigProfile
 from context_aware_translation.storage.models.endpoint_profile import EndpointProfile
 
@@ -133,7 +134,12 @@ class DefaultAppSetupService:
             target_language = current_detail.target_language
         requested_target_language = (request.target_language or "").strip()
         if requested_target_language:
-            target_language = requested_target_language
+            target_language = display_target_language_name(requested_target_language) or ""
+            if not target_language:
+                raise_application_error(
+                    ApplicationErrorCode.VALIDATION,
+                    "Target language must be one of the supported language presets.",
+                )
         profile_name = (request.profile_name or "").strip() or None
         recommendation = recommended_workflow_profile_from_drafts(
             request.connections,

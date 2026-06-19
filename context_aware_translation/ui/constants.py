@@ -2,94 +2,16 @@
 
 from typing import Final
 
+from context_aware_translation.languages import (
+    LANGUAGES,
+    display_target_language_name,
+    storage_target_language_name,
+)
+
+__all__ = ("LANGUAGES", "display_target_language_name", "storage_target_language_name")
+
 # Application version
 APP_VERSION: Final[str] = "0.1.1"
-
-# Language presets: (Display Name in native script, Internal Chinese name)
-# All languages supported by Gemini, ranked by population of native speakers
-LANGUAGES: Final[list[tuple[str, str]]] = [
-    ("中文（简体）", "简体中文"),
-    ("中文（繁體）", "繁体中文"),
-    ("Español", "西班牙语"),
-    ("English", "英语"),
-    ("हिन्दी", "印地语"),
-    ("العربية", "阿拉伯语"),
-    ("Português", "葡萄牙语"),
-    ("বাংলা", "孟加拉语"),
-    ("Русский", "俄语"),
-    ("日本語", "日语"),
-    ("ਪੰਜਾਬੀ", "旁遮普语"),
-    ("मराठी", "马拉地语"),
-    ("తెలుగు", "泰卢固语"),
-    ("Türkçe", "土耳其语"),
-    ("தமிழ்", "泰米尔语"),
-    ("Bahasa Melayu", "马来语"),
-    ("Deutsch", "德语"),
-    ("한국어", "韩语"),
-    ("Français", "法语"),
-    ("Tiếng Việt", "越南语"),
-    ("اردو", "乌尔都语"),
-    ("فارسی", "波斯语"),
-    ("Italiano", "意大利语"),
-    ("ไทย", "泰语"),
-    ("ગુજરાતી", "古吉拉特语"),
-    ("Polski", "波兰语"),
-    ("ಕನ್ನಡ", "卡纳达语"),
-    ("Bahasa Indonesia", "印尼语"),
-    ("മലയാളം", "马拉雅拉姆语"),
-    ("Українська", "乌克兰语"),
-    ("Filipino", "菲律宾语"),
-    ("Română", "罗马尼亚语"),
-    ("Nederlands", "荷兰语"),
-    ("Kiswahili", "斯瓦希里语"),
-    ("Ελληνικά", "希腊语"),
-    ("Magyar", "匈牙利语"),
-    ("Čeština", "捷克语"),
-    ("Svenska", "瑞典语"),
-    ("Български", "保加利亚语"),
-    ("עברית", "希伯来语"),
-    ("Dansk", "丹麦语"),
-    ("Suomi", "芬兰语"),
-    ("Hrvatski", "克罗地亚语"),
-    ("Slovenčina", "斯洛伐克语"),
-    ("Norsk", "挪威语"),
-    ("Lietuvių", "立陶宛语"),
-    ("Slovenščina", "斯洛文尼亚语"),
-    ("Latviešu", "拉脱维亚语"),
-    ("Eesti", "爱沙尼亚语"),
-]
-
-
-def _normalize_language_label(value: str) -> str:
-    return " ".join(value.split()).casefold()
-
-
-_DISPLAY_LANGUAGE_BY_KEY: Final[dict[str, str]] = {}
-_STORAGE_LANGUAGE_BY_KEY: Final[dict[str, str]] = {}
-for _display_name, _internal_name in LANGUAGES:
-    _DISPLAY_LANGUAGE_BY_KEY[_normalize_language_label(_display_name)] = _display_name
-    _DISPLAY_LANGUAGE_BY_KEY[_normalize_language_label(_internal_name)] = _display_name
-    _STORAGE_LANGUAGE_BY_KEY[_normalize_language_label(_display_name)] = _internal_name
-    _STORAGE_LANGUAGE_BY_KEY[_normalize_language_label(_internal_name)] = _internal_name
-
-
-def display_target_language_name(value: str | None) -> str | None:
-    if not isinstance(value, str):
-        return None
-    cleaned = value.strip()
-    if not cleaned:
-        return None
-    return _DISPLAY_LANGUAGE_BY_KEY.get(_normalize_language_label(cleaned), cleaned)
-
-
-def storage_target_language_name(value: str | None) -> str | None:
-    if not isinstance(value, str):
-        return None
-    cleaned = value.strip()
-    if not cleaned:
-        return None
-    return _STORAGE_LANGUAGE_BY_KEY.get(_normalize_language_label(cleaned), cleaned)
-
 
 # Default window dimensions
 DEFAULT_WINDOW_WIDTH: Final[int] = 1120

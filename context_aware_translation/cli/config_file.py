@@ -12,6 +12,7 @@ from context_aware_translation.app_identity import default_user_config_dir
 from context_aware_translation.application.contracts.app_setup import ConnectionDraft, WorkflowProfileDetail
 from context_aware_translation.application.runtime import build_workflow_profile_payload
 from context_aware_translation.config import EndpointProfile, ensure_valid_persisted_config_payload
+from context_aware_translation.languages import storage_target_language_name
 
 from .output import EXIT_USAGE, CliError
 
@@ -218,6 +219,13 @@ def load_cli_config(path: Path) -> ResolvedCliConfig:
         )
 
     profile = WorkflowProfileDetail.model_validate(profile_payload)
+    if storage_target_language_name(profile.target_language) is None:
+        raise CliError(
+            "invalid_config",
+            "target_language must be one of the supported language presets.",
+            exit_code=EXIT_USAGE,
+            details={"target_language": profile.target_language},
+        )
     _validate_route_connections(profile, endpoint_profiles)
     custom_config = build_workflow_profile_payload(base_config=None, profile=profile)
     custom_config["endpoint_profiles"] = {

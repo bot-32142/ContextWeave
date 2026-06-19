@@ -664,7 +664,7 @@ class SetupWizardDialog(QDialog):
             )
             self._profile_name_edit = QLineEdit(suggested_name)
             self._target_language_combo = QSearchableComboBox()
-            self._target_language_combo.setEditable(True)
+            self._target_language_combo.setEditable(False)
             seen_languages: set[str] = set()
             for display_name, _internal_name in LANGUAGES:
                 if display_name in seen_languages:
@@ -682,7 +682,7 @@ class SetupWizardDialog(QDialog):
             if index >= 0:
                 self._target_language_combo.setCurrentIndex(index)
             else:
-                self._target_language_combo.setEditText(target_language)
+                self._target_language_combo.setCurrentIndex(0)
             mode_row = QWidget()
             mode_row_layout = QHBoxLayout(mode_row)
             mode_row_layout.setContentsMargins(0, 0, 0, 0)

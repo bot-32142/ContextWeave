@@ -60,9 +60,9 @@ from context_aware_translation.documents.epub_xhtml_utils import (
     flatten_annotationless_ruby_in_xhtml,
     inject_translations_into_xhtml,
 )
+from context_aware_translation.languages import LANGUAGES as UI_LANGUAGE_PRESETS
 from context_aware_translation.llm.epub_ocr import ocr_epub_images
 from context_aware_translation.llm.image_generator import build_text_replacements, create_image_generator
-from context_aware_translation.ui.constants import LANGUAGES as UI_LANGUAGE_PRESETS
 from context_aware_translation.utils.compression_marker import decode_compressed_lines
 from context_aware_translation.utils.hard_wrap import unwrap_hard_wrapped_text
 from context_aware_translation.utils.image_utils import (

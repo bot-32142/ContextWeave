@@ -165,8 +165,9 @@ def test_setup_wizard_dialog_previews_and_saves_through_service():
     QApplication.processEvents()
     assert dialog._profile_name_edit is not None
     assert dialog._target_language_combo is not None
+    assert dialog._target_language_combo.isEditable() is False
     dialog._profile_name_edit.setText("Team Default")
-    dialog._target_language_combo.setEditText("Japanese")
+    dialog._target_language_combo.setCurrentText("日本語")
 
     dialog._finish()
 
@@ -175,7 +176,7 @@ def test_setup_wizard_dialog_previews_and_saves_through_service():
     assert any(call[0] == "run_setup_wizard" for call in service.calls)
     run_request = next(call[1] for call in service.calls if call[0] == "run_setup_wizard")
     assert run_request.profile_name == "Team Default"
-    assert run_request.target_language == "Japanese"
+    assert run_request.target_language == "日本語"
     assert run_request.recommendation_mode is SetupWizardMode.QUALITY
 
 
@@ -479,13 +480,13 @@ def test_setup_wizard_dialog_preserves_target_language_when_going_back():
     _provider_api_key_edit(dialog, ProviderKind.GEMINI).setText("secret")
     dialog._go_next()
     assert dialog._target_language_combo is not None
-    dialog._target_language_combo.setEditText("Japanese")
+    dialog._target_language_combo.setCurrentText("日本語")
 
     dialog._go_back()
     dialog._go_next()
 
     assert dialog._target_language_combo is not None
-    assert dialog._target_language_combo.currentText() == "Japanese"
+    assert dialog._target_language_combo.currentText() == "日本語"
 
 
 def test_setup_wizard_dialog_displays_internal_target_language_labels():
@@ -571,7 +572,7 @@ def test_setup_wizard_dialog_back_from_review_rebuilds_provider_page():
     dialog._go_next()
     assert dialog._page_index == 1
     assert dialog._target_language_combo is not None
-    dialog._target_language_combo.setEditText("Japanese")
+    dialog._target_language_combo.setCurrentText("日本語")
 
     dialog._go_back()
     assert dialog._page_index == 0

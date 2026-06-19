@@ -10,7 +10,12 @@ from context_aware_translation.cli.config_file import CONFIG_ENV_VAR, default_co
 from context_aware_translation.cli.main import run
 
 
-def _config_text(env_name: str = "CAT_TEST_API_KEY", *, unknown_connection: bool = False) -> str:
+def _config_text(
+    env_name: str = "CAT_TEST_API_KEY",
+    *,
+    unknown_connection: bool = False,
+    target_language: str = "English",
+) -> str:
     translator_connection = "missing" if unknown_connection else "test"
     return f"""
 version: 1
@@ -27,7 +32,7 @@ workflow_profiles:
     profile_id: balanced
     name: Balanced
     kind: shared
-    target_language: English
+    target_language: {target_language}
     routes:
       - step_id: extractor
         step_label: Extractor
@@ -178,6 +183,18 @@ def test_config_validate_rejects_unknown_route_connection(tmp_path: Path, monkey
     payload = _json_stdout(capsys)
     assert payload["error"]["code"] == "invalid_config"
     assert "unknown connection" in payload["error"]["message"]
+
+
+def test_config_validate_rejects_unsupported_target_language(tmp_path: Path, monkeypatch: Any, capsys: Any) -> None:
+    monkeypatch.setenv("CAT_TEST_API_KEY", "test-key")
+    config_path = _write_config(tmp_path, _config_text(target_language="Klingon"))
+
+    exit_code = run(["--config", str(config_path), "--json", "config", "validate"])
+
+    assert exit_code == 2
+    payload = _json_stdout(capsys)
+    assert payload["error"]["code"] == "invalid_config"
+    assert "supported language presets" in payload["error"]["message"]
 
 
 def test_books_list_show_delete_json(tmp_path: Path, monkeypatch: Any, capsys: Any) -> None:

@@ -16,11 +16,11 @@ from context_aware_translation.application.runtime import (
     build_project_summary,
     raise_application_error,
 )
-from context_aware_translation.storage.models.book import BookStatus
-from context_aware_translation.ui.constants import (
+from context_aware_translation.languages import (
     display_target_language_name,
     storage_target_language_name,
 )
+from context_aware_translation.storage.models.book import BookStatus
 
 
 class ProjectsService(Protocol):
@@ -75,6 +75,11 @@ class DefaultProjectsService:
                 )
 
         requested_target_language = storage_target_language_name(request.target_language)
+        if request.target_language is not None and requested_target_language is None:
+            raise_application_error(
+                ApplicationErrorCode.VALIDATION,
+                "Target language must be one of the supported language presets.",
+            )
         profile_for_defaults = requested_profile or self._runtime.get_default_profile()
         default_target_language = None
         if profile_for_defaults is not None:
@@ -127,11 +132,15 @@ class DefaultProjectsService:
             if updated is None:
                 raise_application_error(ApplicationErrorCode.NOT_FOUND, f"Project not found: {request.project_id}")
         if request.target_language is not None:
+            target_language = storage_target_language_name(request.target_language)
+            if target_language is None:
+                raise_application_error(
+                    ApplicationErrorCode.VALIDATION,
+                    "Target language must be one of the supported language presets.",
+                )
             book = self._runtime.get_book(request.project_id)
             config = self._runtime.get_effective_config_payload(request.project_id)
-            config["translation_target_language"] = (
-                storage_target_language_name(request.target_language) or request.target_language
-            )
+            config["translation_target_language"] = target_language
             if book.profile_id is not None:
                 config["_ui_source_profile_id"] = book.profile_id
             self._runtime.book_manager.set_book_custom_config(request.project_id, config)

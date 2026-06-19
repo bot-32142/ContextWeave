@@ -40,7 +40,7 @@ def sample_config() -> dict[str, Any]:
         "temperature": 0.5,
     }
     return {
-        "translation_target_language": "zh-CN",
+        "translation_target_language": "简体中文",
         "llm_concurrency": 20,
         "extractor_config": base_settings.copy(),
         "summarizor_config": base_settings.copy(),
@@ -201,11 +201,11 @@ class TestProfileUpdates:
         """Test updating profile config."""
         profile = book_manager.create_profile(name="Test", config=sample_config)
 
-        new_config = {**sample_config, "translation_target_language": "ja"}
+        new_config = {**sample_config, "translation_target_language": "日语"}
         updated = book_manager.update_profile(profile.profile_id, config=new_config)
 
         assert updated is not None
-        assert updated.config["translation_target_language"] == "ja"
+        assert updated.config["translation_target_language"] == "日语"
 
     def test_set_default_profile(self, book_manager: BookManager, sample_config: dict[str, Any]) -> None:
         """Test setting a different profile as default."""
@@ -297,7 +297,7 @@ class TestBookCreationWithProfiles:
         # Create another profile
         other_profile = book_manager_with_profile.create_profile(
             name="Other Profile",
-            config={**sample_config, "translation_target_language": "ja"},
+            config={**sample_config, "translation_target_language": "日语"},
         )
 
         book = book_manager_with_profile.create_book(
@@ -311,7 +311,7 @@ class TestBookCreationWithProfiles:
         self, book_manager_with_profile: BookManager, sample_config: dict[str, Any]
     ) -> None:
         """Test creating a book with custom config (no profile)."""
-        custom_config = {**sample_config, "translation_target_language": "ko"}
+        custom_config = {**sample_config, "translation_target_language": "韩语"}
 
         book = book_manager_with_profile.create_book(
             name="Custom Book",
@@ -324,14 +324,14 @@ class TestBookCreationWithProfiles:
         # Custom config should be retrievable
         config = book_manager_with_profile.get_book_config(book.book_id)
         assert config is not None
-        assert config["translation_target_language"] == "ko"
+        assert config["translation_target_language"] == "韩语"
 
     def test_create_book_custom_config_ignores_profile_id(
         self, book_manager_with_profile: BookManager, sample_config: dict[str, Any]
     ) -> None:
         """Test that custom_config takes precedence over profile_id."""
         default_profile = book_manager_with_profile.get_default_profile()
-        custom_config = {**sample_config, "translation_target_language": "fr"}
+        custom_config = {**sample_config, "translation_target_language": "法语"}
 
         # Provide both custom_config and profile_id
         book = book_manager_with_profile.create_book(
@@ -482,7 +482,7 @@ class TestBookUpdates:
         """Test changing a book's profile."""
         other_profile = book_manager_with_profile.create_profile(
             name="Other",
-            config={**sample_config, "translation_target_language": "ja"},
+            config={**sample_config, "translation_target_language": "日语"},
         )
 
         book = book_manager_with_profile.create_book(name="Test Book")
@@ -503,7 +503,7 @@ class TestBookUpdates:
         book = book_manager_with_profile.create_book(name="Test Book")
         assert book.profile_id is not None
 
-        custom_config = {**sample_config, "translation_target_language": "de"}
+        custom_config = {**sample_config, "translation_target_language": "德语"}
         book_manager_with_profile.set_book_custom_config(book.book_id, custom_config)
 
         # Book should now have no profile_id
@@ -512,7 +512,7 @@ class TestBookUpdates:
 
         # Custom config should be retrievable
         config = book_manager_with_profile.get_book_config(book.book_id)
-        assert config["translation_target_language"] == "de"
+        assert config["translation_target_language"] == "德语"
 
 
 # ============================================================================
@@ -556,7 +556,7 @@ class TestConfigFromBook:
             "model": "custom-model",
         }
         custom_config = {
-            "translation_target_language": "ko",
+            "translation_target_language": "韩语",
             "llm_concurrency": 10,
             "extractor_config": base_settings.copy(),
             "summarizor_config": {**base_settings, "noise_filtering_threshold": 0.5},
@@ -576,7 +576,7 @@ class TestConfigFromBook:
             registry=book_manager_with_profile.registry,
         )
 
-        assert config.translation_target_language == "ko"
+        assert config.translation_target_language == "韩语"
         assert config.llm_concurrency == 10
         assert config.extractor_config.api_key == "custom-key"
         assert config.extractor_config.model == "custom-model"
@@ -638,7 +638,7 @@ class TestGetBookConfig:
         self, book_manager_with_profile: BookManager, sample_config: dict[str, Any]
     ) -> None:
         """Test get_book_config returns custom config."""
-        custom_config = {**sample_config, "translation_target_language": "ru"}
+        custom_config = {**sample_config, "translation_target_language": "俄语"}
 
         book = book_manager_with_profile.create_book(
             name="Custom Book",
@@ -647,7 +647,7 @@ class TestGetBookConfig:
 
         config = book_manager_with_profile.get_book_config(book.book_id)
         assert config is not None
-        assert config["translation_target_language"] == "ru"
+        assert config["translation_target_language"] == "俄语"
 
     def test_get_config_nonexistent_book(self, book_manager_with_profile: BookManager) -> None:
         """Test get_book_config returns None for nonexistent book."""
@@ -783,7 +783,7 @@ class TestConfigPersistenceValidation:
     """Tests for config validation before persistence."""
 
     def test_create_profile_rejects_incomplete_config(self, book_manager: BookManager) -> None:
-        incomplete_config = {"translation_target_language": "zh-CN"}
+        incomplete_config = {"translation_target_language": "简体中文"}
 
         with pytest.raises(ValueError, match="Invalid config payload"):
             book_manager.create_profile(name="Invalid Profile", config=incomplete_config)
@@ -794,7 +794,7 @@ class TestConfigPersistenceValidation:
         profile = book_manager.create_profile(name="Valid Profile", config=sample_config)
 
         with pytest.raises(ValueError, match="Invalid config payload"):
-            book_manager.update_profile(profile.profile_id, config={"translation_target_language": "zh-CN"})
+            book_manager.update_profile(profile.profile_id, config={"translation_target_language": "简体中文"})
 
     def test_set_book_custom_config_rejects_incomplete_config(
         self,
@@ -803,7 +803,7 @@ class TestConfigPersistenceValidation:
         book = book_manager_with_profile.create_book(name="Config Validation Book")
 
         with pytest.raises(ValueError, match="Invalid config payload"):
-            book_manager_with_profile.set_book_custom_config(book.book_id, {"translation_target_language": "zh-CN"})
+            book_manager_with_profile.set_book_custom_config(book.book_id, {"translation_target_language": "简体中文"})
 
     def test_profile_config_can_reference_registry_endpoint_profile_kwargs(
         self,
@@ -827,7 +827,7 @@ class TestConfigPersistenceValidation:
 
         # Verify kwargs flow through Config.from_book
         profile_config = {
-            "translation_target_language": "zh-CN",
+            "translation_target_language": "简体中文",
             "extractor_config": {"endpoint_profile": endpoint.profile_id},
             "summarizor_config": {"endpoint_profile": endpoint.profile_id},
             "translator_config": {"endpoint_profile": endpoint.profile_id},
@@ -895,7 +895,7 @@ class TestConfigPersistenceValidation:
         )
 
         profile_config = {
-            "translation_target_language": "zh-CN",
+            "translation_target_language": "简体中文",
             "extractor_config": {"endpoint_profile": endpoint.profile_id},
             "summarizor_config": {"endpoint_profile": endpoint.profile_id},
             "translator_config": {"endpoint_profile": endpoint.profile_id},
