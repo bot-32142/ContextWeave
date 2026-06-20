@@ -726,6 +726,57 @@ def test_document_translation_view_retranslate_clears_only_target_unit_draft_on_
         view.deleteLater()
 
 
+def test_document_translation_view_retranslate_suppresses_target_draft_until_task_finishes():
+    from context_aware_translation.ui.features.document_translation_view import DocumentTranslationView
+
+    state = _make_state().model_copy(
+        update={
+            "units": [
+                _make_state().units[0].model_copy(update={"translated_text": "server chunk v1"}),
+                _make_state().units[1],
+            ]
+        }
+    )
+    service = FakeDocumentService(
+        workspace=state.workspace,
+        translation=state,
+    )
+
+    def _start_retranslation(request):  # noqa: ANN001
+        service.calls.append(("retranslate", request))
+        service.translation = state.model_copy(update={"active_task_id": "task-retranslate-1"})
+        return AcceptedCommand(command_name="retranslate", command_id="task-retranslate-1")
+
+    service.retranslate = _start_retranslation
+    view = DocumentTranslationView(service, "proj-1", 4)
+    try:
+        view.refresh()
+        view.translation_text.setPlainText("stale local chunk draft")
+
+        with patch.object(_QMESSAGEBOX, "question", return_value=_QMESSAGEBOX.StandardButton.Yes):
+            view.retranslate_button.click()
+
+        # A task-progress refresh must not end draft suppression before the
+        # persisted retranslation becomes available.
+        view.translation_text.setPlainText("stale editor text during retranslation")
+        view.refresh()
+
+        service.translation = state.model_copy(
+            update={
+                "active_task_id": None,
+                "units": [
+                    state.units[0].model_copy(update={"translated_text": "fresh backend chunk result"}),
+                    state.units[1],
+                ],
+            }
+        )
+        view.refresh()
+
+        assert view.translation_text.toPlainText() == "fresh backend chunk result"
+    finally:
+        view.deleteLater()
+
+
 def test_document_translation_view_full_translate_clears_document_drafts_on_refresh():
     from context_aware_translation.ui.features.document_translation_view import DocumentTranslationView
 

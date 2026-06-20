@@ -565,7 +565,10 @@ class DocumentTranslationView(QWidget):
             self._render_selected_unit(state.units[selected_row])
         else:
             self._render_selected_unit(None)
-        self._suppressed_draft_unit_ids -= {unit.unit_id for unit in state.units}
+        # The first refresh happens when the task is queued, before its result is
+        # persisted. Keep stale drafts suppressed until the completion refresh.
+        if state.active_task_id is None:
+            self._suppressed_draft_unit_ids -= {unit.unit_id for unit in state.units}
         self._sync_chrome_state()
 
     def _on_unit_selected(self, row: int) -> None:
