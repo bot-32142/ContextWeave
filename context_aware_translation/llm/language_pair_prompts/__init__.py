@@ -8,10 +8,11 @@ from typing import Literal
 from context_aware_translation.languages import storage_target_language_name
 from context_aware_translation.llm.language_pair_prompts.japanese_to_simplified_chinese import (
     NAME_TRANSLATION_PROMPT,
+    POLISH_PROMPT,
     TRANSLATION_PROMPT,
 )
 
-PromptKind = Literal["translation", "name_translation"]
+PromptKind = Literal["translation", "polish", "name_translation"]
 
 
 @dataclass(frozen=True)
@@ -19,11 +20,13 @@ class LanguagePairPromptPolicy:
     """Optional prompt additions for one canonical language pair."""
 
     translation: str | None = None
+    polish: str | None = None
     name_translation: str | None = None
 
 
 _JAPANESE_TO_SIMPLIFIED_CHINESE_POLICY = LanguagePairPromptPolicy(
     translation=TRANSLATION_PROMPT,
+    polish=POLISH_PROMPT,
     name_translation=NAME_TRANSLATION_PROMPT,
 )
 
@@ -55,7 +58,11 @@ def apply_language_pair_prompt_policy(
     if policy is None:
         return prompt
 
-    guidance = policy.translation if prompt_kind == "translation" else policy.name_translation
+    guidance = {
+        "translation": policy.translation,
+        "polish": policy.polish,
+        "name_translation": policy.name_translation,
+    }[prompt_kind]
     if not guidance:
         return prompt
     if before_marker not in prompt:
