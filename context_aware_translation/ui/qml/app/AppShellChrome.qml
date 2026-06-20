@@ -3,8 +3,8 @@ import QtQuick
 Rectangle {
     id: root
     objectName: "appShellChrome"
-    color: "#f4efe6"
-    height: 78
+    color: "#f6f3ed"
+    height: 88
 
     signal projectsRequested
     signal setupWizardRequested
@@ -24,19 +24,19 @@ Rectangle {
 
     Rectangle {
         anchors.fill: parent
-        color: "#f4efe6"
+        color: "#f6f3ed"
 
         Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             height: 1
-            color: "#d9d0c4"
+            color: "#d8d0c6"
         }
 
         Row {
             anchors.left: parent.left
-            anchors.leftMargin: 22
+            anchors.leftMargin: 24
             anchors.verticalCenter: parent.verticalCenter
             spacing: 10
 
@@ -60,7 +60,7 @@ Rectangle {
 
         Row {
             anchors.right: parent.right
-            anchors.rightMargin: 22
+            anchors.rightMargin: 24
             anchors.verticalCenter: parent.verticalCenter
             spacing: 12
 
