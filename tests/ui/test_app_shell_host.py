@@ -34,6 +34,7 @@ def test_app_shell_host_loads_qml_chrome_and_tracks_project_state():
     root = host.chrome_host.rootObject()
     assert root is not None
     assert root.objectName() == "appShellChrome"
+    assert root.height() == 88
     assert root.property("hasCurrentProject") is True
     assert root.property("surfaceTitle") == "One Piece"
     assert host.current_content_key() == "project_1"

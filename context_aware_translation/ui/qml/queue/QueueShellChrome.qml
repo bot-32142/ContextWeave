@@ -3,8 +3,8 @@ import QtQuick
 Rectangle {
     id: root
     objectName: "queueShellChrome"
-    color: "#f6f3ef"
-    height: 72
+    color: "#f6f3ed"
+    height: 88
 
     signal closeRequested
 
@@ -13,43 +13,43 @@ Rectangle {
 
     Rectangle {
         anchors.fill: parent
-        color: "#f6f3ef"
+        color: "#f6f3ed"
 
         Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             height: 1
-            color: "#d9d0c4"
+            color: "#d8d0c6"
         }
 
         Column {
             anchors.left: parent.left
-            anchors.leftMargin: 18
+            anchors.leftMargin: 24
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 3
+            spacing: 4
 
             Text {
                 text: root.titleText
                 color: "#2f251d"
-                font.pixelSize: 18
+                font.pixelSize: 20
                 font.bold: true
             }
 
             Text {
                 text: root.subtitleText
                 color: "#786b5e"
-                font.pixelSize: 11
+                font.pixelSize: 12
             }
         }
 
         Rectangle {
             anchors.right: parent.right
-            anchors.rightMargin: 18
+            anchors.rightMargin: 24
             anchors.verticalCenter: parent.verticalCenter
-            width: 32
-            height: 32
-            radius: 16
+            width: 36
+            height: 36
+            radius: 18
             color: "#e7ddd0"
 
             Text {

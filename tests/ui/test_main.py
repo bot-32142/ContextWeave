@@ -53,6 +53,16 @@ def test_configure_qt_environment_pins_rounding_policy(monkeypatch: pytest.Monke
     assert "QT_AUTO_SCREEN_SCALE_FACTOR" not in ui_main.os.environ
 
 
+def test_stylesheet_draws_thin_dock_rules_inside_wide_resize_targets() -> None:
+    stylesheet = ui_main.load_stylesheet()
+
+    assert "QMainWindow::separator:vertical" in stylesheet
+    assert "QMainWindow::separator:vertical:hover" in stylesheet
+    assert "width: 7px" in stylesheet
+    assert "stop: 0.45 #d8d0c6" in stylesheet
+    assert "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical" in stylesheet
+
+
 def test_bounds_fit_available_geometries_accepts_secondary_screen() -> None:
     assert bounds_fit_available_geometries(
         (1600, 120, 1120, 760),
