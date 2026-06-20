@@ -7,7 +7,7 @@ from context_aware_translation.llm.language_pair_prompts import (
     apply_language_pair_prompt_policy,
     get_language_pair_prompt_policy,
 )
-from context_aware_translation.llm.translator import build_translation_prompt
+from context_aware_translation.llm.translator import build_polish_prompt, build_translation_prompt
 
 
 @pytest.mark.parametrize("source_language", ["日语", "日本語"])
@@ -70,8 +70,22 @@ def test_japanese_to_simplified_chinese_document_prompt_includes_special_guidanc
 
     assert "--日译简中专项要求--" in system_prompt
     assert "日中同形异义词" in system_prompt
-    assert "日文标点转换为简体中文规范标点" in system_prompt
+    assert "--日译简中标点规范（中国大陆横排）--" in system_prompt
+    assert "对话和直接引语使用弯双引号“……”" in system_prompt
+    assert "不采用港澳台地区或竖排文稿使用直角引号的习惯" in system_prompt
     assert system_prompt.index("--日译简中专项要求--") < system_prompt.index("--格式与标记（必须严格遵守）--")
+
+
+def test_japanese_to_simplified_chinese_polish_prompt_includes_punctuation_guidance() -> None:
+    system_prompt, _user_prompt = build_polish_prompt(
+        ["彼说：「我读过『雪国』。」"],
+        "简体中文",
+        "日语",
+    )
+
+    assert "--日译简中标点规范（中国大陆横排）--" in system_prompt
+    assert "引语内的引语使用弯单引号‘……’" in system_prompt
+    assert system_prompt.index("--日译简中标点规范（中国大陆横排）--") < system_prompt.index("--输出--")
 
 
 def test_japanese_to_simplified_chinese_name_prompt_includes_special_guidance() -> None:
@@ -84,7 +98,9 @@ def test_japanese_to_simplified_chinese_name_prompt_includes_special_guidance() 
 
 def test_other_pairs_do_not_receive_japanese_guidance() -> None:
     translation_prompt, _user_prompt = build_translation_prompt([], [], "英语", "简体中文")
+    polish_prompt, _polish_user_prompt = build_polish_prompt([], "简体中文", "英语")
     name_prompt = _build_batch_system_prompt("英语", "简体中文")
 
     assert "--日译简中专项要求--" not in translation_prompt
+    assert "--日译简中标点规范（中国大陆横排）--" not in polish_prompt
     assert "---日语名称译简中专项要求---" not in name_prompt

@@ -620,6 +620,13 @@ def build_polish_prompt(
 只输出一个 JSON 对象，且仅包含字段 "翻译文本"。
 "翻译文本" 中的每个元素都必须包含字段 "id" 和 "文本"。
 不得输出任何额外说明、前后缀文本或代码块围栏。"""
+    system_prompt = apply_language_pair_prompt_policy(
+        system_prompt,
+        source_language=source_language,
+        target_language=target_language,
+        prompt_kind="polish",
+        before_marker="--输出--",
+    )
 
     user_payload = {"翻译文本": _indexed_text_entries(translated_blocks)}
     user_prompt = _render_json_payload(user_payload)
