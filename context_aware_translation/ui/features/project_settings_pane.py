@@ -68,7 +68,6 @@ class ProjectSettingsPane(QWidget):
             context_objects={"projectSettingsPane": self.viewmodel},
             parent=self,
         )
-        layout.addWidget(self.chrome_host)
 
         self.profile_section = QWidget(self)
         profile_layout = QVBoxLayout(self.profile_section)
@@ -92,7 +91,7 @@ class ProjectSettingsPane(QWidget):
         profile_layout.addWidget(self.profile_combo)
         self.profile_detail_label = QLabel(self.profile_section)
         self.profile_detail_label.setWordWrap(True)
-        self.profile_detail_label.setStyleSheet("color: #6e6154; font-size: 12px;")
+        self.profile_detail_label.setStyleSheet("color: #6e6154; font-size: 13px;")
         profile_layout.addWidget(self.profile_detail_label)
         layout.addWidget(self.profile_section)
 
@@ -115,6 +114,7 @@ class ProjectSettingsPane(QWidget):
         self._custom_rows = self.routes_editor.rows
         group_layout.addWidget(self.routes_editor)
         layout.addWidget(self.routes_group, 0, Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(self.chrome_host)
         layout.addStretch(1)
         self.routes_group.hide()
 

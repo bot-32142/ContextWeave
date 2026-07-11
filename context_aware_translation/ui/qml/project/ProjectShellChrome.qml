@@ -45,8 +45,8 @@ Rectangle {
             Text {
                 text: root.surfaceTitle
                 color: "#2d241d"
-                font.pixelSize: 20
-                font.bold: true
+                font.pixelSize: 21
+                font.weight: Font.DemiBold
             }
 
             Row {
@@ -63,8 +63,8 @@ Rectangle {
                         anchors.centerIn: parent
                         text: root.workLabel
                         color: root.workSelected ? "#fcfaf6" : "#2d241d"
-                        font.pixelSize: 13
-                        font.bold: true
+                        font.pixelSize: 14
+                        font.weight: Font.DemiBold
                     }
 
                     MouseArea {
@@ -85,8 +85,8 @@ Rectangle {
                         anchors.centerIn: parent
                         text: root.termsLabel
                         color: root.termsSelected ? "#fcfaf6" : "#2d241d"
-                        font.pixelSize: 13
-                        font.bold: true
+                        font.pixelSize: 14
+                        font.weight: Font.DemiBold
                     }
 
                     MouseArea {
@@ -115,8 +115,8 @@ Rectangle {
                     anchors.centerIn: parent
                     text: root.queueLabelText
                     color: "#2d241d"
-                    font.pixelSize: 13
-                    font.bold: true
+                    font.pixelSize: 14
+                    font.weight: Font.DemiBold
                 }
 
                 MouseArea {
@@ -137,8 +137,8 @@ Rectangle {
                     anchors.centerIn: parent
                     text: root.projectSettingsLabelText
                     color: "#2d241d"
-                    font.pixelSize: 13
-                    font.bold: true
+                    font.pixelSize: 14
+                    font.weight: Font.DemiBold
                 }
 
                 MouseArea {
@@ -161,8 +161,8 @@ Rectangle {
                     anchors.centerIn: parent
                     text: root.backToProjectsLabelText
                     color: "#2d241d"
-                    font.pixelSize: 13
-                    font.bold: true
+                    font.pixelSize: 14
+                    font.weight: Font.DemiBold
                 }
 
                 MouseArea {

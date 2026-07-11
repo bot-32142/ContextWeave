@@ -26,27 +26,36 @@ Rectangle {
 
         Column {
             anchors.left: parent.left
-            anchors.leftMargin: 24
+            anchors.leftMargin: 20
+            anchors.right: closeButton.left
+            anchors.rightMargin: 16
             anchors.verticalCenter: parent.verticalCenter
             spacing: 4
 
             Text {
+                width: parent.width
                 text: root.titleText
                 color: "#2f251d"
-                font.pixelSize: 20
-                font.bold: true
+                font.pixelSize: 21
+                font.weight: Font.DemiBold
+                elide: Text.ElideRight
             }
 
             Text {
+                width: parent.width
                 text: root.subtitleText
                 color: "#786b5e"
-                font.pixelSize: 12
+                font.pixelSize: 13
+                wrapMode: Text.WordWrap
+                maximumLineCount: 2
+                elide: Text.ElideRight
             }
         }
 
         Rectangle {
+            id: closeButton
             anchors.right: parent.right
-            anchors.rightMargin: 24
+            anchors.rightMargin: 16
             anchors.verticalCenter: parent.verticalCenter
             width: 36
             height: 36
@@ -58,7 +67,7 @@ Rectangle {
                 text: "×"
                 color: "#2f251d"
                 font.pixelSize: 18
-                font.bold: true
+                font.weight: Font.DemiBold
             }
 
             MouseArea {

@@ -4,8 +4,8 @@ import QtQuick.Controls
 Rectangle {
     id: root
     objectName: "projectSettingsPaneChrome"
-    color: "#fcfaf6"
-    implicitHeight: contentColumn.implicitHeight + 36
+    color: "#f8f3ea"
+    implicitHeight: contentColumn.implicitHeight + 24
 
     signal saveRequested
     signal openAppSetupRequested
@@ -57,12 +57,20 @@ Rectangle {
         return kind === "error" ? "#b42318" : "#027a48"
     }
 
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: 1
+        color: "#e5ddd0"
+    }
+
     Column {
         id: contentColumn
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.margins: 18
+        anchors.margins: 12
         spacing: 12
 
         Text {
@@ -72,7 +80,7 @@ Rectangle {
             text: root.titleText
             color: "#2f251d"
             font.pixelSize: 24
-            font.bold: true
+            font.weight: Font.DemiBold
             wrapMode: Text.WordWrap
         }
 
@@ -112,7 +120,7 @@ Rectangle {
                     width: parent.width
                     text: root.blockerText
                     color: "#9a3412"
-                    font.pixelSize: 12
+                    font.pixelSize: 13
                     wrapMode: Text.WordWrap
                 }
 
@@ -128,8 +136,8 @@ Rectangle {
                         anchors.centerIn: parent
                         text: root.openAppSetupLabel
                         color: root.secondaryLabelColor()
-                        font.pixelSize: 12
-                        font.bold: true
+                        font.pixelSize: 13
+                        font.weight: Font.DemiBold
                     }
 
                     MouseArea {
@@ -163,17 +171,19 @@ Rectangle {
                 anchors.margins: 10
                 text: root.messageText
                 color: root.messageTextColor(root.messageKind)
-                font.pixelSize: 12
-                font.bold: true
+                font.pixelSize: 13
+                font.weight: Font.DemiBold
                 wrapMode: Text.WordWrap
             }
         }
 
-        Row {
+        Item {
             id: actionRow
-            spacing: 8
+            width: parent.width
+            height: 40
 
             Rectangle {
+                anchors.right: parent.right
                 width: saveButtonLabel.implicitWidth + 28
                 height: 40
                 radius: 14
@@ -184,8 +194,8 @@ Rectangle {
                     anchors.centerIn: parent
                     text: root.saveLabel
                     color: root.primaryLabelColor(root.canSave)
-                    font.pixelSize: 12
-                    font.bold: true
+                    font.pixelSize: 13
+                    font.weight: Font.DemiBold
                 }
 
                 MouseArea {

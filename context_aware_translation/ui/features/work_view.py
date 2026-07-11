@@ -51,6 +51,7 @@ from context_aware_translation.ui.i18n import translate_backend_text
 from context_aware_translation.ui.shell_hosts.hybrid import QmlChromeHost
 from context_aware_translation.ui.tips import create_tip_label
 from context_aware_translation.ui.viewmodels.work_home import WorkHomeViewModel
+from context_aware_translation.ui.widgets.hybrid_controls import apply_hybrid_control_theme, set_button_tone
 from context_aware_translation.ui.widgets.table_support import (
     apply_header_resize_modes,
     configure_readonly_row_table,
@@ -69,25 +70,6 @@ _TARGET_TO_SECTION: dict[NavigationTargetKind, DocumentSection] = {
 class WorkView(QWidget):
     _TABLE_MAX_VISIBLE_ROWS = 10
     _HARD_WRAP_IMPORT_TYPES = frozenset({"text", "epub"})
-    _TOOLBAR_BUTTON_STYLE = """
-        QPushButton {
-            min-width: 150px;
-            min-height: 38px;
-            padding: 0 16px;
-            border-radius: 14px;
-            border: 1px solid #d9d0c4;
-            background: #f8f3ea;
-            color: #2f251d;
-            font-weight: 600;
-        }
-        QPushButton:hover:enabled {
-            background: #efe7da;
-        }
-        QPushButton:disabled {
-            background: #efe7da;
-            color: #8b8174;
-        }
-    """
 
     open_app_setup_requested = Signal()
     open_project_setup_requested = Signal()
@@ -186,20 +168,17 @@ class WorkView(QWidget):
         row_actions = QHBoxLayout()
         self.translate_and_export_button = QPushButton(self.tr("Translate and Export"))
         self.translate_and_export_button.setEnabled(False)
-        self.translate_and_export_button.setStyleSheet(self._TOOLBAR_BUTTON_STYLE)
         self.translate_and_export_button.clicked.connect(self._open_selected_translate_and_export_dialog)
         row_actions.addWidget(self.translate_and_export_button)
+        row_actions.addStretch()
         self.reset_document_button = QPushButton(self.tr("Reset Document"))
         self.reset_document_button.setEnabled(False)
-        self.reset_document_button.setStyleSheet(self._TOOLBAR_BUTTON_STYLE)
         self.reset_document_button.clicked.connect(self._reset_selected_document)
         row_actions.addWidget(self.reset_document_button)
         self.delete_document_button = QPushButton(self.tr("Delete Document"))
         self.delete_document_button.setEnabled(False)
-        self.delete_document_button.setStyleSheet(self._TOOLBAR_BUTTON_STYLE)
         self.delete_document_button.clicked.connect(self._delete_selected_document)
         row_actions.addWidget(self.delete_document_button)
-        row_actions.addStretch()
         home_layout.addLayout(row_actions)
 
         self.empty_label = create_tip_label(self.tr("No documents imported yet."))
@@ -209,6 +188,10 @@ class WorkView(QWidget):
 
         self.stack.addWidget(self.home_page)
         layout.addWidget(self.stack)
+        apply_hybrid_control_theme(self)
+        set_button_tone(self.translate_and_export_button, "primary", size="wide")
+        set_button_tone(self.reset_document_button, "ghost", size="wide")
+        set_button_tone(self.delete_document_button, "danger", size="wide")
         self._sync_import_chrome_state()
         self._schedule_chrome_resize()
 

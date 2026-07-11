@@ -64,6 +64,9 @@ def test_stylesheet_draws_thin_dock_rules_inside_wide_resize_targets() -> None:
     assert "stop: 0.45 #d8d0c6" in stylesheet
     assert "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical" in stylesheet
     assert "-apple-system" not in stylesheet
+    assert "font-size: 14px" in stylesheet
+    assert "background-color: #f7f4ee" in stylesheet
+    assert "#0078d4" not in stylesheet
 
 
 def test_ui_version_matches_source_package_version() -> None:

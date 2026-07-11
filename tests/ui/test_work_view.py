@@ -245,6 +245,9 @@ def test_work_view_renders_workboard_from_service():
         assert view.rows_table.cellWidget(0, 4) is not None
         assert view.rows_table.cellWidget(0, 5) is not None
         assert view.rows_table.rowHeight(0) >= 44
+        assert view.translate_and_export_button.property("catTone") == "primary"
+        assert view.reset_document_button.property("catTone") == "ghost"
+        assert view.delete_document_button.property("catTone") == "danger"
         assert view.rows_table.horizontalHeader().sectionResizeMode(1) == QHeaderView.ResizeMode.Stretch
         assert view.rows_table.columnWidth(3) == 170
         status_badge = view.rows_table.cellWidget(0, 3)

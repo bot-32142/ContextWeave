@@ -34,15 +34,15 @@ Rectangle {
             Text {
                 text: root.titleText
                 color: "#2f251d"
-                font.pixelSize: 20
-                font.bold: true
+                font.pixelSize: 21
+                font.weight: Font.DemiBold
                 elide: Text.ElideRight
             }
 
             Text {
                 text: root.subtitleText
                 color: "#786b5e"
-                font.pixelSize: 12
+                font.pixelSize: 13
                 wrapMode: Text.WordWrap
                 maximumLineCount: 2
                 elide: Text.ElideRight
@@ -64,7 +64,7 @@ Rectangle {
                 text: "\u00d7"
                 color: "#2f251d"
                 font.pixelSize: 20
-                font.bold: true
+                font.weight: Font.DemiBold
             }
 
             MouseArea {

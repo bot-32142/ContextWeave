@@ -166,6 +166,8 @@ class LibraryView(QWidget):
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(18, 14, 18, 18)
+        layout.setSpacing(12)
 
         self.tip_label = create_tip_label(self._tip_text())
         layout.addWidget(self.tip_label)
@@ -188,8 +190,12 @@ class LibraryView(QWidget):
         self.table_view.setSortingEnabled(True)
         self.table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_view.verticalHeader().setVisible(False)
+        self.table_view.verticalHeader().setDefaultSectionSize(44)
+        self.table_view.verticalHeader().setMinimumSectionSize(44)
+        self.table_view.setShowGrid(False)
 
         header = self.table_view.horizontalHeader()
+        header.setMinimumHeight(40)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)

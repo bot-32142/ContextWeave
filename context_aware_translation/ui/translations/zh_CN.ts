@@ -892,8 +892,8 @@
     </message>
     <message>
         <location filename="../viewmodels/document_translation_pane.py" line="36"/>
-        <source>Enable polish pass</source>
-        <translation>启用润色阶段</translation>
+        <source>Polish pass</source>
+        <translation>润色流程</translation>
     </message>
     <message>
         <location filename="../viewmodels/document_translation_pane.py" line="40"/>

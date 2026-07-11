@@ -177,6 +177,8 @@ def test_project_settings_pane_renders_backend_state():
         assert "QComboBox::down-arrow" in view.styleSheet()
         assert view.profile_detail_label.text() == "Shared workflow profile"
         assert view.routes_group.isHidden()
+        assert view.layout().indexOf(view.profile_section) < view.layout().indexOf(view.chrome_host)
+        assert view.layout().indexOf(view.routes_group) < view.layout().indexOf(view.chrome_host)
         assert view.chrome_host.minimumHeight() >= int(root.property("implicitHeight"))
         assert service.calls == [("get_state", "proj-1")]
     finally:
@@ -494,13 +496,6 @@ def test_project_settings_pane_screenshot_restores_shared_layout_after_custom_ro
         shared_after = _grab_image(view)
         shared_after_height = float(root.property("implicitHeight"))
 
-        shared_before_crop = _crop_rect(
-            shared_before,
-            x=custom_region.x(),
-            y=custom_region.y(),
-            width=custom_region.width(),
-            height=custom_region.height(),
-        )
         custom_crop = _crop_rect(
             custom_image,
             x=custom_region.x(),
@@ -508,23 +503,14 @@ def test_project_settings_pane_screenshot_restores_shared_layout_after_custom_ro
             width=custom_region.width(),
             height=custom_region.height(),
         )
-        shared_after_crop = _crop_rect(
-            shared_after,
-            x=custom_region.x(),
-            y=custom_region.y(),
-            width=custom_region.width(),
-            height=custom_region.height(),
-        )
-        background = shared_before_crop.pixelColor(0, 0)
+        custom_background = custom_crop.pixelColor(0, 0)
+        shared_background = shared_before.pixelColor(0, 0)
 
-        assert (
-            _ink_ratio(custom_crop, background=background)
-            > _ink_ratio(shared_before_crop, background=background) + 0.08
-        )
+        assert _ink_ratio(custom_crop, background=custom_background) > 0.10
         assert (
             abs(
-                _ink_ratio(shared_after_crop, background=background)
-                - _ink_ratio(shared_before_crop, background=background)
+                _ink_ratio(shared_after, background=shared_background)
+                - _ink_ratio(shared_before, background=shared_background)
             )
             <= 0.02
         )
