@@ -38,6 +38,8 @@ def test_project_shell_host_loads_qml_chrome_and_switches_work_and_terms():
     assert root is not None
     assert root.objectName() == "projectShellChrome"
     assert root.property("currentProjectName") == "One Piece"
+    assert host.chrome_host.minimumHeight() == 88
+    assert host.chrome_host.maximumHeight() == 88
     assert root.property("workSelected") is True
     assert host.current_content_key() == "work"
 

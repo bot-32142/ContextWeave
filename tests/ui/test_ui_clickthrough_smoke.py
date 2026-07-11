@@ -686,6 +686,10 @@ def test_project_surface_smoke_keeps_controls_in_bounds_and_project_setup_dropdo
         work_view = shell.work_widget
         assert work_view is not None
 
+        window.resize(800, 600)
+        _flush(80)
+        assert shell.chrome_host.height() == 88
+
         _flush(80)
         chrome_root = _qml_root(work_view, object_name="workHomeChrome")
         assert chrome_root.property("selectFilesLabelText") == "Select Files"

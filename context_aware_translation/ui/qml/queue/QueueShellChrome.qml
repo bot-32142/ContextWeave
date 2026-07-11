@@ -4,7 +4,8 @@ Rectangle {
     id: root
     objectName: "queueShellChrome"
     color: "#f6f3ed"
-    height: 88
+    implicitHeight: 88
+    height: implicitHeight
 
     signal closeRequested
 
