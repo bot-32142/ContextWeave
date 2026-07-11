@@ -6,6 +6,7 @@ from PySide6.QtCore import QEvent, Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QMessageBox,
     QPushButton,
@@ -283,6 +284,8 @@ class WorkView(QWidget):
         self._schedule_chrome_resize()
 
     def _apply_state(self, state: WorkboardState) -> None:
+        selected = self._selected_row_state()
+        selected_document_id = selected.document.document_id if selected is not None else None
         self._state = state
         context_summary = (
             translate_backend_text(state.context_frontier.summary)
@@ -308,10 +311,19 @@ class WorkView(QWidget):
         for row_state in state.rows:
             self._append_row(row_state)
         self.rows_table.resizeColumnsToContents()
-        apply_header_resize_modes(self.rows_table, (), column_widths=((1, 280), (3, 170), (4, 170), (5, 170)))
+        apply_header_resize_modes(
+            self.rows_table,
+            ((1, QHeaderView.ResizeMode.Stretch),),
+            column_widths=((3, 170), (4, 170), (5, 170)),
+        )
         self.rows_table.horizontalHeader().setStretchLastSection(False)
         self._ensure_row_heights()
         self._fit_table_height()
+        if selected_document_id is not None:
+            for row, row_state in enumerate(self._row_states):
+                if row_state.document.document_id == selected_document_id:
+                    self.rows_table.selectRow(row)
+                    break
         self._on_selection_changed()
         self._schedule_chrome_resize()
 
@@ -339,6 +351,7 @@ class WorkView(QWidget):
     def _build_status_badge(self, text: str, *, tooltip: str) -> QWidget:
         background, foreground = self._status_colors(text)
         label = QLabel(text)
+        label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         label.setToolTip(tooltip)
         label.setStyleSheet(
@@ -351,6 +364,7 @@ class WorkView(QWidget):
             "}"
         )
         container = QWidget(self.rows_table)
+        container.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         layout = QHBoxLayout(container)
         layout.setContentsMargins(6, 2, 6, 2)
         layout.setSpacing(0)

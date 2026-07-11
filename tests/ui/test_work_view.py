@@ -60,7 +60,7 @@ from tests.application.fakes import FakeDocumentService, FakeTermsService, FakeW
 try:
     from PySide6.QtCore import Qt
     from PySide6.QtTest import QTest
-    from PySide6.QtWidgets import QApplication, QMessageBox
+    from PySide6.QtWidgets import QApplication, QHeaderView, QLabel, QMessageBox
 
     HAS_PYSIDE6 = True
 except ImportError:  # pragma: no cover - environment dependent
@@ -245,7 +245,40 @@ def test_work_view_renders_workboard_from_service():
         assert view.rows_table.cellWidget(0, 4) is not None
         assert view.rows_table.cellWidget(0, 5) is not None
         assert view.rows_table.rowHeight(0) >= 44
+        assert view.rows_table.horizontalHeader().sectionResizeMode(1) == QHeaderView.ResizeMode.Stretch
+        assert view.rows_table.columnWidth(3) == 170
+        status_badge = view.rows_table.cellWidget(0, 3)
+        assert status_badge.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        assert all(
+            child.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+            for child in status_badge.findChildren(QLabel)
+        )
         assert work_service.calls == [("get_workboard", "proj-1")]
+    finally:
+        view.cleanup()
+
+
+def test_work_view_preserves_selected_document_during_refresh():
+    action = DocumentRowAction(
+        kind=DocumentRowActionKind.OPEN_TRANSLATION,
+        label="Open Translation",
+        target=NavigationTarget(
+            kind=NavigationTargetKind.DOCUMENT_TRANSLATION,
+            project_id="proj-1",
+            document_id=4,
+        ),
+    )
+    view, _bus, work_service, _document_service, _terms_service = _make_view(work_state=_make_workboard(action=action))
+    try:
+        view.rows_table.selectRow(0)
+        assert view.reset_document_button.isEnabled()
+
+        work_service.state_by_project["proj-1"] = _make_workboard(action=action, summary="Updated")
+        view.refresh()
+
+        assert view.rows_table.currentRow() == 0
+        assert view.reset_document_button.isEnabled()
+        assert view.delete_document_button.isEnabled()
     finally:
         view.cleanup()
 

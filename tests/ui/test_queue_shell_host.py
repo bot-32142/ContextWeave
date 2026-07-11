@@ -35,6 +35,8 @@ def test_queue_shell_host_loads_qml_chrome_and_tracks_scope() -> None:
     assert root is not None
     assert root.objectName() == "queueShellChrome"
     assert root.height() == 88
+    assert host.chrome_host.minimumHeight() == 88
+    assert host.chrome_host.maximumHeight() == 88
     assert root.property("titleText") == "Queue"
     assert "One Piece" in root.property("subtitleText")
     assert host.current_content_key() == "queue"

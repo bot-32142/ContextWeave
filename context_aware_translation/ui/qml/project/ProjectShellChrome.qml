@@ -4,7 +4,8 @@ Rectangle {
     id: root
     objectName: "projectShellChrome"
     color: "#f6f3ed"
-    height: 88
+    implicitHeight: 88
+    height: implicitHeight
 
     signal workRequested
     signal termsRequested

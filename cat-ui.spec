@@ -20,6 +20,8 @@ APP_VERSION = _pyproject['project']['version']
 
 # Collect data files
 datas = [
+    # Runtime version source used by the About dialog.
+    (str(project_root / 'pyproject.toml'), '.'),
     # UI resources
     (str(project_root / 'context_aware_translation' / 'ui' / 'resources'),
      'context_aware_translation/ui/resources'),

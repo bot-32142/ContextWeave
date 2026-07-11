@@ -4,7 +4,8 @@ Rectangle {
     id: root
     objectName: "appShellChrome"
     color: "#f6f3ed"
-    height: 88
+    implicitHeight: 88
+    height: implicitHeight
 
     signal projectsRequested
     signal setupWizardRequested

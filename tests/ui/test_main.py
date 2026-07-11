@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import tomllib
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -61,6 +63,14 @@ def test_stylesheet_draws_thin_dock_rules_inside_wide_resize_targets() -> None:
     assert "width: 7px" in stylesheet
     assert "stop: 0.45 #d8d0c6" in stylesheet
     assert "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical" in stylesheet
+    assert "-apple-system" not in stylesheet
+
+
+def test_ui_version_matches_source_package_version() -> None:
+    from context_aware_translation.ui.constants import APP_VERSION
+
+    pyproject = tomllib.loads((Path(__file__).parents[2] / "pyproject.toml").read_text(encoding="utf-8"))
+    assert pyproject["project"]["version"] == APP_VERSION
 
 
 def test_bounds_fit_available_geometries_accepts_secondary_screen() -> None:

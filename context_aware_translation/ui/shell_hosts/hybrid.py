@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtQuickWidgets import QQuickWidget
 from PySide6.QtWidgets import QDialog, QHBoxLayout, QSizePolicy, QStackedWidget, QVBoxLayout, QWidget
 
+from context_aware_translation.ui.chrome_sizing import sync_qml_host_height
 from context_aware_translation.ui.qml_resources import qml_root_path, qml_source
 from context_aware_translation.ui.window_controllers import cleanup_widget
 
@@ -62,6 +63,8 @@ class HybridShellHost(QWidget):
         self._layout = _new_layout(orientation, self)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(0)
+        if orientation == Qt.Orientation.Vertical:
+            sync_qml_host_height(self.chrome_host)
         if chrome_first:
             self._layout.addWidget(self.chrome_host)
             self._layout.addWidget(self.content_stack, 1)
