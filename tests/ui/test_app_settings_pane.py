@@ -27,6 +27,7 @@ from tests.application.fakes import FakeAppSetupService
 
 try:
     from PySide6.QtCore import QItemSelectionModel
+    from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QWidget
 
     HAS_PYSIDE6 = True
@@ -198,6 +199,38 @@ def test_app_settings_pane_switches_tabs_and_updates_actions():
     root = view.chrome_host.rootObject()
     assert root is not None
     assert view.chrome_host.minimumHeight() >= int(root.property("implicitHeight"))
+
+
+def test_app_settings_pane_content_geometry_is_stable_when_opened_and_switching_tabs():
+    from context_aware_translation.ui.features.app_settings_pane import AppSettingsPane
+    from context_aware_translation.ui.shell_hosts.app_settings_dialog_host import AppSettingsDialogHost
+
+    host = AppSettingsDialogHost()
+    try:
+        view = AppSettingsPane(FakeAppSetupService(state=_make_state()))
+        host.set_app_settings_widget(view)
+        host.show()
+
+        opening_geometry = view.content_stack.geometry()
+        opening_chrome_height = view.chrome_host.height()
+        QTest.qWait(100)
+
+        assert view.content_stack.geometry() == opening_geometry
+        assert view.chrome_host.height() == opening_chrome_height
+
+        view._on_tab_requested("profiles")
+        QTest.qWait(100)
+        assert view.content_stack.geometry() == opening_geometry
+        assert view.chrome_host.height() == opening_chrome_height
+
+        view._on_tab_requested("connections")
+        QTest.qWait(100)
+        assert view.content_stack.geometry() == opening_geometry
+        assert view.chrome_host.height() == opening_chrome_height
+    finally:
+        host.close()
+        host.deleteLater()
+        QApplication.processEvents()
 
 
 def test_app_settings_pane_add_delete_test_and_edit_profile_calls_service():

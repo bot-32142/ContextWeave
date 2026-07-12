@@ -91,6 +91,7 @@ Rectangle {
 
         Flow {
             width: parent.width
+            height: Math.max(40, childrenRect.height)
             spacing: 8
 
             Repeater {

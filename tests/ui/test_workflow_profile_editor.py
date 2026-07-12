@@ -178,6 +178,49 @@ def test_workflow_profile_editor_uses_scrollable_dialog_layout():
     assert "palette(base)" not in dialog.routes_table.styleSheet()
 
 
+def test_workflow_profile_editor_content_geometry_is_stable_when_opened():
+    profile = WorkflowProfileDetail(
+        profile_id="profile:recommended",
+        name="Recommended",
+        kind=WorkflowProfileKind.SHARED,
+        target_language="English",
+        routes=[
+            WorkflowStepRoute(
+                step_id=WorkflowStepId.TRANSLATOR,
+                step_label="Translator",
+                connection_id="conn-gemini",
+                connection_label="Gemini",
+                model="gemini-3-flash-preview",
+            )
+        ],
+    )
+    dialog = WorkflowProfileEditorDialog(
+        profile=profile,
+        connection_choices=[
+            ConnectionChoice(
+                connection_id="conn-gemini",
+                label="Gemini",
+                default_model="gemini-3-flash-preview",
+            )
+        ],
+        allow_name_edit=True,
+    )
+
+    dialog.show()
+    opening_geometry = (
+        dialog.general_section.geometry(),
+        dialog.routes_section.geometry(),
+        dialog.routes_table.geometry(),
+    )
+    QTest.qWait(100)
+
+    assert (
+        dialog.general_section.geometry(),
+        dialog.routes_section.geometry(),
+        dialog.routes_table.geometry(),
+    ) == opening_geometry
+
+
 def test_workflow_profile_editor_displays_internal_target_language_labels():
     profile = WorkflowProfileDetail(
         profile_id="profile:recommended",

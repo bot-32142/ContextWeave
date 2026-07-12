@@ -726,8 +726,10 @@ def test_connection_editor_dialog_keeps_its_opening_and_user_selected_size():
     opening_size = (dialog.width(), dialog.height())
 
     dialog.show()
+    opening_content_geometry = (dialog.form.geometry(), dialog.form.tabs.geometry())
     QTest.qWait(260)
     assert (dialog.width(), dialog.height()) == opening_size
+    assert (dialog.form.geometry(), dialog.form.tabs.geometry()) == opening_content_geometry
 
     dialog.resize(1000, 650)
     dialog.form.advanced_section.expand()

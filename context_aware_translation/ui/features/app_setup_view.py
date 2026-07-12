@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from PySide6.QtCore import QT_TRANSLATE_NOOP, QCoreApplication, Qt, QTimer
+from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
@@ -441,6 +442,10 @@ class ConnectionEditorDialog(QDialog):
 
     def request(self) -> SaveConnectionRequest:
         return SaveConnectionRequest(connection=self.form.to_draft(), connection_id=self._connection_id)
+
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        self._refresh_content_layout()
 
     def _accept_if_valid(self) -> None:
         valid, message = self.form.validate(require_api_key=self._connection_id is None)

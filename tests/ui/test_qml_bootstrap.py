@@ -49,7 +49,7 @@ def test_qml_bootstrap_resolves_nested_shell_resources():
 
     nested_urls = [
         qml_source("app/AppShellChrome.qml"),
-        qml_source("dialogs/project_settings/ProjectSettingsDialogChrome.qml"),
+        qml_source("dialogs/project_settings/ProjectSettingsPane.qml"),
         qml_source("document/DocumentShellChrome.qml"),
     ]
     assert all(url.isLocalFile() for url in nested_urls)
