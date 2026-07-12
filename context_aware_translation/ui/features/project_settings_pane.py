@@ -71,7 +71,7 @@ class ProjectSettingsPane(QWidget):
 
         self.profile_section = QWidget(self)
         profile_layout = QVBoxLayout(self.profile_section)
-        profile_layout.setContentsMargins(18, 0, 18, 0)
+        profile_layout.setContentsMargins(18, 14, 18, 0)
         profile_layout.setSpacing(6)
         self.profile_label = QLabel(self.tr("Workflow profile"), self.profile_section)
         self.profile_label.setStyleSheet("font-size: 14px; font-weight: 600; color: #2f251d;")
@@ -105,7 +105,7 @@ class ProjectSettingsPane(QWidget):
             [],
             [],
             hint_text=self.tr("Use the Advanced column to edit step-specific settings."),
-            max_visible_rows=6,
+            max_visible_rows=3,
             parent=self.routes_group,
         )
         self.routes_editor.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
@@ -114,8 +114,8 @@ class ProjectSettingsPane(QWidget):
         self._custom_rows = self.routes_editor.rows
         group_layout.addWidget(self.routes_editor)
         layout.addWidget(self.routes_group, 0, Qt.AlignmentFlag.AlignTop)
-        layout.addWidget(self.chrome_host)
         layout.addStretch(1)
+        layout.addWidget(self.chrome_host)
         self.routes_group.hide()
 
         apply_hybrid_control_theme(self)
@@ -210,7 +210,7 @@ class ProjectSettingsPane(QWidget):
 
         options: list[dict[str, object]] = []
         option_values: list[str] = []
-        shared_detail = self.tr("Shared workflow profile")
+        shared_detail = ""
         for profile in state.shared_profiles:
             options.append(
                 {

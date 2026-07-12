@@ -6,9 +6,7 @@ from context_aware_translation.ui.viewmodels.base import ViewModelBase
 
 _TIP_TEXT = QT_TRANSLATE_NOOP(
     "AppSettingsPane",
-    "App Setup manages reusable connections and shared workflow profiles. "
-    "The wizard creates a concrete shared workflow profile using the existing "
-    "step-based config system.",
+    "Manage reusable connections and workflow profiles. Use the wizard for guided setup.",
 )
 
 

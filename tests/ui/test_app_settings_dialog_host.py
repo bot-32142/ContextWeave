@@ -31,8 +31,11 @@ def test_app_settings_dialog_host_uses_native_title_bar_and_wraps_body_widget():
         host.set_app_settings_widget(body)
 
         assert host.chrome_host is None
+        assert host.top_separator is not None
+        assert host.top_separator.height() == 1
         assert host.findChildren(QQuickWidget) == []
         assert bool(host.windowFlags() & Qt.WindowType.WindowCloseButtonHint)
+        assert (host.width(), host.height()) == (940, 580)
         assert host.body_widget is body
         assert host.viewmodel.title == "App Settings"
     finally:

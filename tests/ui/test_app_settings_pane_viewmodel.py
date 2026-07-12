@@ -33,7 +33,7 @@ def test_app_settings_pane_viewmodel_tracks_tabs_and_actions():
         ],
     )
 
-    assert "shared workflow profiles" in viewmodel.tip_text
+    assert viewmodel.tip_text == "Manage reusable connections and workflow profiles. Use the wizard for guided setup."
     assert viewmodel.connections_tab_label == "Connections"
     assert viewmodel.profiles_tab_label == "Workflow Profiles"
     assert viewmodel.current_tab == "profiles"

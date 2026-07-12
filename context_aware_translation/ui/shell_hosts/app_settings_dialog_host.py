@@ -14,7 +14,7 @@ class AppSettingsDialogHost(HybridDialogHost):
         super().__init__(None, parent=parent)
         self.setModal(False)
         self.setWindowTitle(self.viewmodel.title)
-        self.resize(1120, 760)
+        self.resize(940, 580)
         self.finished.connect(lambda _result: self.viewmodel.dismiss())
 
     def set_app_settings_widget(self, widget: QWidget) -> QWidget:
