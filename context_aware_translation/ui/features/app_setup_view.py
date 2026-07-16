@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from PySide6.QtCore import QT_TRANSLATE_NOOP, QCoreApplication, Qt, QTimer
+from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
@@ -435,12 +436,16 @@ class ConnectionEditorDialog(QDialog):
         set_button_tone(self.button_box.button(QDialogButtonBox.StandardButton.Save), "primary")
         set_button_tone(self.button_box.button(QDialogButtonBox.StandardButton.Cancel), "ghost")
         set_button_tone(self.test_button)
-        self.form.advanced_section.toggled.connect(self._schedule_resize)
-        self.form.tabs.currentChanged.connect(lambda _index: self._schedule_resize())
-        self._schedule_resize()
+        self.form.advanced_section.toggled.connect(self._schedule_content_layout)
+        self.form.tabs.currentChanged.connect(lambda _index: self._schedule_content_layout())
+        self._schedule_content_layout()
 
     def request(self) -> SaveConnectionRequest:
         return SaveConnectionRequest(connection=self.form.to_draft(), connection_id=self._connection_id)
+
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        self._refresh_content_layout()
 
     def _accept_if_valid(self) -> None:
         valid, message = self.form.validate(require_api_key=self._connection_id is None)
@@ -473,14 +478,11 @@ class ConnectionEditorDialog(QDialog):
         self.uncached_input_label.setText(f"{summary.uncached_input_tokens_used:,}")
         self.output_used_label.setText(f"{summary.output_tokens_used:,}")
 
-    def _schedule_resize(self, *_args: object) -> None:
-        QTimer.singleShot(0, self._resize_to_content)
-        QTimer.singleShot(220, self._resize_to_content)
+    def _schedule_content_layout(self, *_args: object) -> None:
+        QTimer.singleShot(0, self._refresh_content_layout)
+        QTimer.singleShot(220, self._refresh_content_layout)
 
-    def _resize_to_content(self) -> None:
-        current_tab = self.form.tabs.currentIndex()
-        is_advanced = current_tab == 0 and self.form.advanced_section.isExpanded()
-        target_width = 960 if is_advanced else 860
+    def _refresh_content_layout(self) -> None:
         current_widget = self.form.tabs.currentWidget()
         if current_widget is not None:
             current_widget.adjustSize()
@@ -489,13 +491,6 @@ class ConnectionEditorDialog(QDialog):
             self.form.tabs.setFixedHeight(tab_height)
         self.layout().activate()
         self.form.adjustSize()
-        if current_tab == 0 and not is_advanced:
-            target_height = 520
-        elif current_tab == 1:
-            target_height = 560 if self._connection_summary is not None else 500
-        else:
-            target_height = min(max(self.sizeHint().height(), 620), 760)
-        self.resize(max(self.width(), self.minimumWidth(), target_width), max(self.minimumHeight(), target_height))
 
     def _show_test_result(self, result: ConnectionTestResult) -> None:
         lines = [result.connection_label]
@@ -748,8 +743,8 @@ class SetupWizardDialog(QDialog):
             self.page_layout.addWidget(profile_group)
             self.page_layout.addStretch()
         self._update_buttons()
-        QTimer.singleShot(0, self._resize_to_page)
-        QTimer.singleShot(120, self._resize_to_page)
+        QTimer.singleShot(0, self._refresh_page_layout)
+        QTimer.singleShot(120, self._refresh_page_layout)
 
     def selected_providers(self) -> list[ProviderKind]:
         checked = [provider for provider, (checkbox, _) in self._provider_inputs.items() if checkbox.isChecked()]
@@ -903,12 +898,9 @@ class SetupWizardDialog(QDialog):
         self.next_button.setVisible(self._page_index < 1)
         self.finish_button.setVisible(self._page_index == 1)
 
-    def _resize_to_page(self) -> None:
+    def _refresh_page_layout(self) -> None:
         self.layout().activate()
         self.page_content.adjustSize()
-        minimum_height = 360 if self._page_index == 0 else 520
-        target_height = min(max(self.sizeHint().height(), minimum_height), 760)
-        self.resize(max(self.width(), 780), target_height)
 
     def _clear_page_layout(self) -> None:
         while self.page_layout.count():

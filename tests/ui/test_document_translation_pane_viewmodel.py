@@ -26,6 +26,7 @@ def test_document_translation_pane_viewmodel_tracks_toolbar_state():
     viewmodel = DocumentTranslationPaneViewModel()
 
     assert viewmodel.translate_label == "Translate"
+    assert viewmodel.polish_label == "Polish pass"
     assert viewmodel.can_translate is False
     assert viewmodel.supports_batch is False
 

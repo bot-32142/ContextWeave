@@ -5,7 +5,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from PySide6.QtCore import QT_TRANSLATE_NOOP, Qt, QTimer
-from PySide6.QtGui import QResizeEvent
+from PySide6.QtGui import QResizeEvent, QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -1249,6 +1249,10 @@ class WorkflowProfileEditorDialog(QDialog):
             routes=self.routes_editor.build_routes(),
             is_default=self._original_profile.is_default,
         )
+
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        self._refresh_body_layout()
 
     def _accept_if_valid(self) -> None:
         target_language = self.target_language_combo.currentText().strip()

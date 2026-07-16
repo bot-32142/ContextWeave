@@ -4,7 +4,7 @@ from collections.abc import Mapping
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtQuickWidgets import QQuickWidget
-from PySide6.QtWidgets import QDialog, QHBoxLayout, QSizePolicy, QStackedWidget, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QSizePolicy, QStackedWidget, QVBoxLayout, QWidget
 
 from context_aware_translation.ui.chrome_sizing import sync_qml_host_height
 from context_aware_translation.ui.qml_resources import qml_root_path, qml_source
@@ -123,24 +123,35 @@ class HybridShellHost(QWidget):
 
 
 class HybridDialogHost(QDialog):
-    """Simple dialog container for QML chrome plus one hosted QWidget body."""
+    """Simple dialog container with optional QML chrome and one hosted QWidget body."""
 
     def __init__(
         self,
-        qml_relative_path: str,
+        qml_relative_path: str | None,
         *,
         context_objects: Mapping[str, object] | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self.chrome_host = QmlChromeHost(qml_relative_path, context_objects=context_objects, parent=self)
+        self.chrome_host: QmlChromeHost | None = None
+        self.top_separator: QFrame | None = None
         self.body_widget: QWidget | None = None
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(0)
-        self._layout.addWidget(self.chrome_host)
+        if qml_relative_path is not None:
+            self.chrome_host = QmlChromeHost(qml_relative_path, context_objects=context_objects, parent=self)
+            self._layout.addWidget(self.chrome_host)
+        else:
+            self.top_separator = QFrame(self)
+            self.top_separator.setObjectName("dialogTopSeparator")
+            self.top_separator.setFixedHeight(1)
+            self.top_separator.setStyleSheet("background-color: #d9d0c4; border: none;")
+            self._layout.addWidget(self.top_separator)
 
     def set_context_property(self, name: str, value: object) -> None:
+        if self.chrome_host is None:
+            raise RuntimeError("Cannot set a QML context property on a dialog without QML chrome.")
         self.chrome_host.set_context_property(name, value)
 
     def set_body_widget(self, widget: QWidget) -> QWidget:

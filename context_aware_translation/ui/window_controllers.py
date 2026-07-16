@@ -52,6 +52,7 @@ class QueueDockController:
         title_text: Callable[[], str],
         dismiss_project_modal_callback: Callable[[], None] | None = None,
     ) -> None:
+        self._parent_window = parent_window
         self._app_shell = app_shell
         self._title_text = title_text
         self._dismiss_project_modal_callback = dismiss_project_modal_callback
@@ -82,6 +83,7 @@ class QueueDockController:
         self.queue_shell.set_scope(project_id, project_name=project_name)
         self.dock.setWindowTitle(self._title_text())
         self.dock.show()
+        self._resize_dock()
         self.dock.raise_()
 
     def handle_visibility_changed(self, visible: bool) -> None:
@@ -111,6 +113,15 @@ class QueueDockController:
     def cleanup(self) -> None:
         self.queue_shell.cleanup()
         self.queue_drawer.cleanup()
+
+    def _resize_dock(self) -> None:
+        window_width = max(int(self._parent_window.width()), 0)
+        preferred_width = 380 if window_width >= 1200 else max(260, min(340, window_width // 3))
+        self._parent_window.resizeDocks(
+            [self.dock],
+            [preferred_width],
+            Qt.Orientation.Horizontal,
+        )
 
     def _dismiss_queue_modal_state(self) -> None:
         self._app_shell.dismiss_modal()

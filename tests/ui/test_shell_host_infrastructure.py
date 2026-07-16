@@ -76,5 +76,6 @@ def test_hybrid_dialog_host_replaces_body_widget():
     dialog.set_body_widget(first)
     dialog.set_body_widget(second)
 
+    assert dialog.chrome_host is not None
     assert dialog.chrome_host.rootObject() is not None
     assert dialog.body_widget is second

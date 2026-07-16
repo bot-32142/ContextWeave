@@ -30,6 +30,7 @@ from context_aware_translation.ui.constants import LANGUAGES
 from tests.application.fakes import FakeAppSetupService
 
 try:
+    from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QTableWidget
 
     HAS_PYSIDE6 = True
@@ -399,6 +400,33 @@ def test_setup_wizard_dialog_collects_api_keys_on_provider_page():
     assert _provider_api_key_edit(dialog, ProviderKind.GEMINI).isEnabled() is True
 
 
+def test_setup_wizard_dialog_keeps_its_opening_and_user_selected_size():
+    from context_aware_translation.ui.features.app_setup_view import SetupWizardDialog
+
+    wizard_state = SetupWizardState(
+        available_providers=[
+            ProviderCard(
+                provider=ProviderKind.GEMINI,
+                label="Gemini",
+                helper_text="Good for image text reading and image editing.",
+            )
+        ],
+    )
+    service = FakeAppSetupService(state=_make_state(needs_wizard=True), wizard_state=wizard_state)
+    dialog = SetupWizardDialog(service, wizard_state)
+
+    opening_size = (dialog.width(), dialog.height())
+    dialog.show()
+    QTest.qWait(180)
+    assert (dialog.width(), dialog.height()) == opening_size
+
+    dialog.resize(900, 720)
+    dialog._build_page()
+    QTest.qWait(180)
+    assert (dialog.width(), dialog.height()) == (900, 720)
+    dialog.close()
+
+
 def test_setup_wizard_dialog_preserves_draft_when_going_back():
     from context_aware_translation.ui.features.app_setup_view import SetupWizardDialog
 
@@ -689,6 +717,29 @@ def test_connection_editor_dialog_uses_scrollable_form_layout():
     assert dialog.height() >= 480
     assert dialog.maximumWidth() > dialog.width()
     assert dialog.maximumHeight() > dialog.height()
+
+
+def test_connection_editor_dialog_keeps_its_opening_and_user_selected_size():
+    from context_aware_translation.ui.features.app_setup_view import ConnectionEditorDialog
+
+    dialog = ConnectionEditorDialog()
+    opening_size = (dialog.width(), dialog.height())
+
+    dialog.show()
+    opening_content_geometry = (dialog.form.geometry(), dialog.form.tabs.geometry())
+    QTest.qWait(260)
+    assert (dialog.width(), dialog.height()) == opening_size
+    assert (dialog.form.geometry(), dialog.form.tabs.geometry()) == opening_content_geometry
+
+    dialog.resize(1000, 650)
+    dialog.form.advanced_section.expand()
+    QTest.qWait(260)
+    assert (dialog.width(), dialog.height()) == (1000, 650)
+
+    dialog.form.tabs.setCurrentIndex(1)
+    QTest.qWait(260)
+    assert (dialog.width(), dialog.height()) == (1000, 650)
+    dialog.close()
 
 
 def test_connection_editor_dialog_tests_inside_dialog():

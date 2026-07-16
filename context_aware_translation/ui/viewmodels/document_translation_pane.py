@@ -33,7 +33,7 @@ class DocumentTranslationPaneViewModel(ViewModelBase):
 
     @Property(str, notify=labels_changed)
     def polish_label(self) -> str:
-        return QCoreApplication.translate("DocumentTranslationView", "Enable polish pass")
+        return QCoreApplication.translate("DocumentTranslationView", "Polish pass")
 
     @Property(str, notify=labels_changed)
     def translate_label(self) -> str:

@@ -56,8 +56,8 @@ Rectangle {
                     anchors.centerIn: parent
                     text: root.backToWorkLabelText
                     color: "#2f251d"
-                    font.pixelSize: 13
-                    font.bold: true
+                    font.pixelSize: 14
+                    font.weight: Font.DemiBold
                 }
 
                 MouseArea {
@@ -75,8 +75,8 @@ Rectangle {
                     width: parent.width
                     text: root.surfaceTitleText
                     color: "#2f251d"
-                    font.pixelSize: 22
-                    font.bold: true
+                    font.pixelSize: 23
+                    font.weight: Font.DemiBold
                     wrapMode: Text.WordWrap
                 }
 
@@ -84,7 +84,7 @@ Rectangle {
                     width: parent.width
                     text: root.scopeTipText
                     color: "#76695d"
-                    font.pixelSize: 12
+                    font.pixelSize: 13
                     lineHeight: 1.2
                     wrapMode: Text.WordWrap
                 }
@@ -104,8 +104,8 @@ Rectangle {
                         anchors.centerIn: parent
                         text: root.ocrLabelText
                         color: root.ocrSelected ? "#fcfaf6" : "#2f251d"
-                        font.pixelSize: 13
-                        font.bold: true
+                        font.pixelSize: 14
+                        font.weight: Font.DemiBold
                     }
 
                     MouseArea {
@@ -125,8 +125,8 @@ Rectangle {
                         anchors.centerIn: parent
                         text: root.termsLabelText
                         color: root.termsSelected ? "#fcfaf6" : "#2f251d"
-                        font.pixelSize: 13
-                        font.bold: true
+                        font.pixelSize: 14
+                        font.weight: Font.DemiBold
                     }
 
                     MouseArea {
@@ -146,8 +146,8 @@ Rectangle {
                         anchors.centerIn: parent
                         text: root.translationLabelText
                         color: root.translationSelected ? "#fcfaf6" : "#2f251d"
-                        font.pixelSize: 13
-                        font.bold: true
+                        font.pixelSize: 14
+                        font.weight: Font.DemiBold
                     }
 
                     MouseArea {
@@ -167,8 +167,8 @@ Rectangle {
                         anchors.centerIn: parent
                         text: root.imagesLabelText
                         color: root.imagesSelected ? "#fcfaf6" : "#2f251d"
-                        font.pixelSize: 13
-                        font.bold: true
+                        font.pixelSize: 14
+                        font.weight: Font.DemiBold
                     }
 
                     MouseArea {
@@ -188,8 +188,8 @@ Rectangle {
                         anchors.centerIn: parent
                         text: root.exportLabelText
                         color: root.exportSelected ? "#fcfaf6" : "#2f251d"
-                        font.pixelSize: 13
-                        font.bold: true
+                        font.pixelSize: 14
+                        font.weight: Font.DemiBold
                     }
 
                     MouseArea {

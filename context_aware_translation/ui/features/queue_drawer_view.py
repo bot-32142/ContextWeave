@@ -247,7 +247,7 @@ class QueueDrawerView(QWidget):
 
         self.message_label = QLabel()
         self.message_label.setWordWrap(True)
-        self.message_label.setStyleSheet("color: #475467;")
+        self.message_label.setStyleSheet("color: #675b4e;")
         layout.addWidget(self.message_label)
 
         self.body_stack = QStackedWidget(self)

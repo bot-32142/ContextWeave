@@ -94,28 +94,34 @@ Rectangle {
                         ]
 
                         delegate: Rectangle {
+                            readonly property bool isImportAction: modelData.signalName === "import"
+                            readonly property bool actionEnabled: !isImportAction || root.canImport
                             width: Math.max(
                                 buttonLabel.implicitWidth + 36,
-                                modelData.signalName === "import" ? 108 : 124
+                                isImportAction ? 108 : 124
                             )
                             height: 40
                             radius: 14
-                            color: modelData.signalName === "import" && !root.canImport ? "#ddd4c8" : "#2f251d"
-                            opacity: modelData.signalName === "import" && !root.canImport ? 0.65 : 1.0
+                            color: isImportAction
+                                ? (root.canImport ? "#2f251d" : "#ddd4c8")
+                                : "#fffaf1"
+                            border.color: isImportAction ? color : "#d9d0c4"
+                            border.width: isImportAction ? 0 : 1
+                            opacity: actionEnabled ? 1.0 : 0.65
 
                             Text {
                                 id: buttonLabel
                                 anchors.centerIn: parent
                                 text: modelData.label
-                                color: "#fcfaf6"
+                                color: isImportAction ? "#fcfaf6" : "#2f251d"
                                 font.pixelSize: root.buttonFontSize
-                                font.bold: true
+                                font.weight: Font.DemiBold
                             }
 
                             MouseArea {
                                 id: importActionMouseArea
                                 anchors.fill: parent
-                                enabled: modelData.signalName !== "import" || root.canImport
+                                enabled: actionEnabled
                                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                                 onClicked: {
                                     if (modelData.signalName === "files") {

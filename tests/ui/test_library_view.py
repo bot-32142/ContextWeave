@@ -73,6 +73,12 @@ def test_library_view_renders_projects_from_service() -> None:
         assert view.model.item(0, 3).text() == (
             datetime.fromtimestamp(1_700_000_000.0, tz=UTC).astimezone().strftime("%Y-%m-%d %H:%M")
         )
+        margins = view.layout().contentsMargins()
+        assert (margins.left(), margins.top(), margins.right(), margins.bottom()) == (18, 14, 18, 18)
+        assert view.layout().spacing() == 12
+        assert view.table_view.verticalHeader().defaultSectionSize() == 44
+        assert view.table_view.horizontalHeader().minimumHeight() == 40
+        assert not view.table_view.showGrid()
         assert not view.open_button.isEnabled()
         view.table_view.selectRow(0)
         QApplication.processEvents()

@@ -12,7 +12,7 @@ Rectangle {
     signal batchRequested
 
     property string tipText: translationPane ? translationPane.tip_text : ""
-    property string polishLabelText: translationPane ? translationPane.polish_label : "Enable polish pass"
+    property string polishLabelText: translationPane ? translationPane.polish_label : "Polish pass"
     property string translateLabelText: translationPane ? translationPane.translate_label : "Translate"
     property string batchLabelText: translationPane ? translationPane.batch_label : "Submit Batch Task"
     property string translateTooltipText: translationPane ? translationPane.translate_tooltip : ""
@@ -40,7 +40,7 @@ Rectangle {
             width: parent.width
             text: root.tipText
             color: "#5f5447"
-            font.pixelSize: 12
+            font.pixelSize: 13
             wrapMode: Text.WordWrap
         }
 
@@ -48,7 +48,7 @@ Rectangle {
             width: parent.width
             text: root.progressText
             color: "#666666"
-            font.pixelSize: 12
+            font.pixelSize: 13
             wrapMode: Text.WordWrap
             visible: text.length > 0
         }
@@ -61,13 +61,30 @@ Rectangle {
                 height: 38
                 radius: 14
                 color: root.polishEnabled ? "#c79c5d" : "#e6dccd"
+                border.color: root.polishEnabled ? "#b3884c" : "#d0c4b4"
+                border.width: 1
 
-                Text {
+                Row {
                     anchors.centerIn: parent
-                    text: root.polishLabelText
-                    color: "#2f251d"
-                    font.pixelSize: 12
-                    font.bold: root.polishEnabled
+                    spacing: 7
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 12
+                        height: 12
+                        radius: 6
+                        color: root.polishEnabled ? "#2f251d" : "#fffaf1"
+                        border.color: "#8b765e"
+                        border.width: 1
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.polishLabelText
+                        color: "#2f251d"
+                        font.pixelSize: 13
+                        font.weight: root.polishEnabled ? Font.DemiBold : Font.Normal
+                    }
                 }
 
                 MouseArea {
@@ -87,8 +104,8 @@ Rectangle {
                     anchors.centerIn: parent
                     text: root.translateLabelText
                     color: root.labelColor(root.canTranslate)
-                    font.pixelSize: 12
-                    font.bold: true
+                    font.pixelSize: 13
+                    font.weight: Font.DemiBold
                 }
 
                 MouseArea {
@@ -109,14 +126,16 @@ Rectangle {
                 width: 156
                 height: 38
                 radius: 14
-                color: root.buttonColor(root.canBatch)
+                color: root.canBatch ? "#fffaf1" : "#eee7dd"
+                border.color: root.canBatch ? "#d0c4b4" : "#ddd4c8"
+                border.width: 1
 
                 Text {
                     anchors.centerIn: parent
                     text: root.batchLabelText
-                    color: root.labelColor(root.canBatch)
-                    font.pixelSize: 12
-                    font.bold: true
+                    color: root.canBatch ? "#2f251d" : "#8b8174"
+                    font.pixelSize: 13
+                    font.weight: Font.DemiBold
                 }
 
                 MouseArea {

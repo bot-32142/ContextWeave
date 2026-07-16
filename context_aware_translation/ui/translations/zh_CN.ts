@@ -228,9 +228,13 @@
     </message>
     <message>
         <location filename="../viewmodels/app_settings_dialog.py" line="7"/>
-        <location filename="../viewmodels/app_settings_pane.py" line="7"/>
         <source>App Setup manages reusable connections and shared workflow profiles. The wizard creates a concrete shared workflow profile using the existing step-based config system.</source>
         <translation>应用设置负责管理可复用连接和共享工作流配置档案。向导会基于现有的分步骤配置体系创建一个具体的共享工作流配置档案。</translation>
+    </message>
+    <message>
+        <location filename="../viewmodels/app_settings_pane.py" line="7"/>
+        <source>Manage reusable connections and workflow profiles. Use the wizard for guided setup.</source>
+        <translation>管理可复用连接和工作流配置档案；如需引导式配置，请使用向导。</translation>
     </message>
 </context>
 <context>
@@ -892,8 +896,8 @@
     </message>
     <message>
         <location filename="../viewmodels/document_translation_pane.py" line="36"/>
-        <source>Enable polish pass</source>
-        <translation>启用润色阶段</translation>
+        <source>Polish pass</source>
+        <translation>润色流程</translation>
     </message>
     <message>
         <location filename="../viewmodels/document_translation_pane.py" line="40"/>
@@ -1587,11 +1591,6 @@ All completed results are already saved and won&apos;t be lost.</source>
         <location filename="../features/project_settings_pane.py" line="108"/>
         <source>Use the Advanced column to edit step-specific settings.</source>
         <translation>使用“高级”列编辑步骤专用设置。</translation>
-    </message>
-    <message>
-        <location filename="../features/project_settings_pane.py" line="213"/>
-        <source>Shared workflow profile</source>
-        <translation>共享工作流配置档案</translation>
     </message>
     <message>
         <location filename="../features/project_settings_pane.py" line="226"/>

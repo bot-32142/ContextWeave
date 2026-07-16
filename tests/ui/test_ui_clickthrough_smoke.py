@@ -669,6 +669,7 @@ def test_main_window_clickthrough_smoke_has_no_stray_windows_or_duplicate_queue_
         _flush(80)
         assert window._queue_dock.isVisible()
         assert isinstance(window._queue_dock, QDockWidget)
+        assert window._queue_dock.width() >= 340
         assert _count_visible_text(window._queue_shell, "Queue") == 1
         _assert_no_unexpected_top_levels(window, window._queue_dock)
     finally:

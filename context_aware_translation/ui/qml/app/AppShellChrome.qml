@@ -4,7 +4,7 @@ Rectangle {
     id: root
     objectName: "appShellChrome"
     color: "#f6f3ed"
-    implicitHeight: 88
+    implicitHeight: 64
     height: implicitHeight
 
     signal projectsRequested
@@ -41,21 +41,11 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 10
 
-            Column {
-                spacing: 3
-
-                Text {
-                    text: root.appName
-                    color: "#2f251d"
-                    font.pixelSize: 20
-                    font.bold: true
-                }
-
-                Text {
-                    text: root.surfaceTitle
-                    color: "#786b5e"
-                    font.pixelSize: 12
-                }
+            Text {
+                text: root.appName
+                color: "#2f251d"
+                font.pixelSize: 21
+                font.weight: Font.DemiBold
             }
         }
 
@@ -77,8 +67,8 @@ Rectangle {
                     anchors.centerIn: parent
                     text: root.queueLabelText
                     color: "#2f251d"
-                    font.pixelSize: 13
-                    font.bold: true
+                    font.pixelSize: 14
+                    font.weight: Font.DemiBold
                 }
 
                 MouseArea {
@@ -99,8 +89,8 @@ Rectangle {
                     anchors.centerIn: parent
                     text: root.appSettingsLabelText
                     color: "#2f251d"
-                    font.pixelSize: 13
-                    font.bold: true
+                    font.pixelSize: 14
+                    font.weight: Font.DemiBold
                 }
 
                 MouseArea {
@@ -122,8 +112,8 @@ Rectangle {
                     anchors.centerIn: parent
                     text: root.setupWizardLabelText
                     color: "#2f251d"
-                    font.pixelSize: 13
-                    font.bold: true
+                    font.pixelSize: 14
+                    font.weight: Font.DemiBold
                 }
 
                 MouseArea {
@@ -147,8 +137,8 @@ Rectangle {
                     anchors.centerIn: parent
                     text: root.backToProjectsLabelText
                     color: "#2f251d"
-                    font.pixelSize: 13
-                    font.bold: true
+                    font.pixelSize: 14
+                    font.weight: Font.DemiBold
                 }
 
                 MouseArea {

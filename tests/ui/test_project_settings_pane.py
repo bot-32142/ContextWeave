@@ -175,8 +175,12 @@ def test_project_settings_pane_renders_backend_state():
         assert view.profile_combo.view().minimumWidth() == view.profile_combo.minimumWidth()
         assert "combobox-popup: 0" in view.styleSheet()
         assert "QComboBox::down-arrow" in view.styleSheet()
-        assert view.profile_detail_label.text() == "Shared workflow profile"
+        assert view.profile_detail_label.text() == ""
+        assert view.profile_detail_label.isHidden()
         assert view.routes_group.isHidden()
+        assert view.layout().indexOf(view.profile_section) < view.layout().indexOf(view.chrome_host)
+        assert view.layout().indexOf(view.routes_group) < view.layout().indexOf(view.chrome_host)
+        assert view.profile_section.layout().contentsMargins().top() == 14
         assert view.chrome_host.minimumHeight() >= int(root.property("implicitHeight"))
         assert service.calls == [("get_state", "proj-1")]
     finally:
@@ -245,6 +249,7 @@ def test_project_settings_pane_can_select_custom_profile():
         assert not view.routes_group.isHidden()
         assert view.routes_table.rowCount() == 2
         assert view.routes_table.columnCount() == 4
+        assert view.routes_editor._max_visible_rows == 3
         assert view.routes_table.item(0, 0).text() == "Translator"
         assert view.routes_table.item(1, 0).text() == "OCR"
         assert view.viewmodel.show_custom_profile is True
@@ -270,6 +275,50 @@ def test_project_settings_pane_can_select_custom_profile():
         assert translator_route.connection_id == "conn-openai"
         assert translator_route.model == "gpt-4.1-mini"
     finally:
+        view.cleanup()
+
+
+def test_project_settings_compact_dialog_keeps_many_custom_routes_scrollable():
+    from context_aware_translation.ui.features.project_settings_pane import ProjectSettingsPane
+    from context_aware_translation.ui.shell_hosts.project_settings_dialog_host import ProjectSettingsDialogHost
+
+    state = _make_state(project_specific=True)
+    assert state.project_profile is not None
+    routes = [
+        WorkflowStepRoute(
+            step_id=step_id,
+            step_label=step_id.value.replace("_", " ").title(),
+            connection_id="conn-gemini",
+            connection_label="Gemini Shared",
+            model="gemini-3-flash-preview",
+        )
+        for step_id in (
+            WorkflowStepId.EXTRACTOR,
+            WorkflowStepId.SUMMARIZER,
+            WorkflowStepId.GLOSSARY_TRANSLATOR,
+            WorkflowStepId.TRANSLATOR,
+            WorkflowStepId.POLISH,
+            WorkflowStepId.REVIEWER,
+            WorkflowStepId.OCR,
+        )
+    ]
+    state = state.model_copy(update={"project_profile": state.project_profile.model_copy(update={"routes": routes})})
+    service = FakeProjectSetupService(state=state)
+    bus = InMemoryApplicationEventBus()
+    host = ProjectSettingsDialogHost()
+    view = ProjectSettingsPane("proj-1", service, bus)
+    host.set_project_settings_widget(view)
+    try:
+        opening_size = host.size()
+        host.show()
+        QTest.qWait(100)
+
+        assert host.size() == opening_size
+        assert view.routes_editor._scroll_area.verticalScrollBarPolicy() == Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        assert view.routes_editor._scroll_area.verticalScrollBar().maximum() > 0
+        assert view.routes_group.geometry().bottom() < view.chrome_host.geometry().top()
+    finally:
+        host.close()
         view.cleanup()
 
 
@@ -477,6 +526,7 @@ def test_project_settings_pane_screenshot_restores_shared_layout_after_custom_ro
 
         shared_before = _grab_image(view)
         shared_before_height = float(root.property("implicitHeight"))
+        assert view.chrome_host.geometry().bottom() == view.contentsRect().bottom()
 
         custom_index = next(
             index for index, option in enumerate(view.viewmodel.profile_options) if option["label"] == "Custom profile"
@@ -494,13 +544,6 @@ def test_project_settings_pane_screenshot_restores_shared_layout_after_custom_ro
         shared_after = _grab_image(view)
         shared_after_height = float(root.property("implicitHeight"))
 
-        shared_before_crop = _crop_rect(
-            shared_before,
-            x=custom_region.x(),
-            y=custom_region.y(),
-            width=custom_region.width(),
-            height=custom_region.height(),
-        )
         custom_crop = _crop_rect(
             custom_image,
             x=custom_region.x(),
@@ -508,23 +551,14 @@ def test_project_settings_pane_screenshot_restores_shared_layout_after_custom_ro
             width=custom_region.width(),
             height=custom_region.height(),
         )
-        shared_after_crop = _crop_rect(
-            shared_after,
-            x=custom_region.x(),
-            y=custom_region.y(),
-            width=custom_region.width(),
-            height=custom_region.height(),
-        )
-        background = shared_before_crop.pixelColor(0, 0)
+        custom_background = custom_crop.pixelColor(0, 0)
+        shared_background = shared_before.pixelColor(0, 0)
 
-        assert (
-            _ink_ratio(custom_crop, background=background)
-            > _ink_ratio(shared_before_crop, background=background) + 0.08
-        )
+        assert _ink_ratio(custom_crop, background=custom_background) > 0.10
         assert (
             abs(
-                _ink_ratio(shared_after_crop, background=background)
-                - _ink_ratio(shared_before_crop, background=background)
+                _ink_ratio(shared_after, background=shared_background)
+                - _ink_ratio(shared_before, background=shared_background)
             )
             <= 0.02
         )
