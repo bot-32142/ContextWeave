@@ -59,9 +59,8 @@ from context_aware_translation.ui.widgets.table_support import (
 
 _PROVIDER_DEFAULTS: dict[ProviderKind, tuple[str, str]] = {
     ProviderKind.GEMINI: ("https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-3.1-pro"),
-    ProviderKind.OPENAI: ("https://api.openai.com/v1", "gpt-5.4"),
+    ProviderKind.OPENAI: ("https://api.openai.com/v1", "gpt-5.6-luna"),
     ProviderKind.DEEPSEEK: ("https://api.deepseek.com", "deepseek-v4-pro"),
-    ProviderKind.ANTHROPIC: ("https://api.anthropic.com/v1", "claude-opus-4-6"),
     ProviderKind.OPENAI_COMPATIBLE: ("", ""),
 }
 
@@ -69,7 +68,6 @@ _PROVIDER_LABELS: dict[ProviderKind, str] = {
     ProviderKind.GEMINI: "Gemini",
     ProviderKind.OPENAI: "OpenAI",
     ProviderKind.DEEPSEEK: "DeepSeek",
-    ProviderKind.ANTHROPIC: "Anthropic",
     ProviderKind.OPENAI_COMPATIBLE: "OpenAI-compatible / Custom",
 }
 
@@ -215,6 +213,16 @@ class ConnectionDraftForm(QWidget):
         self.temperature_spin.setRange(0.0, 2.0)
         self.temperature_spin.setSingleStep(0.1)
         self.temperature_spin.setValue(0.0)
+        self.temperature_spin.setEnabled(False)
+        self.temperature_checkbox = QCheckBox(self.tr("Enable"))
+        self.temperature_checkbox.toggled.connect(self.temperature_spin.setEnabled)
+        temperature_layout = QHBoxLayout()
+        temperature_layout.setContentsMargins(0, 0, 0, 0)
+        temperature_layout.addWidget(self.temperature_checkbox)
+        temperature_layout.addWidget(self.temperature_spin)
+        temperature_layout.addStretch()
+        temperature_widget = QWidget()
+        temperature_widget.setLayout(temperature_layout)
         self.custom_parameters_edit = QTextEdit()
         self.custom_parameters_edit.setMaximumHeight(90)
         self.custom_parameters_edit.setMinimumWidth(440)
@@ -227,7 +235,7 @@ class ConnectionDraftForm(QWidget):
         advanced_form.addRow(self.tr("Description"), self.description_edit)
         advanced_form.addRow(self.tr("Base URL"), self.base_url_edit)
         advanced_form.addRow(self.tr("Default model"), self.default_model_edit)
-        advanced_form.addRow(self.tr("Temperature"), self.temperature_spin)
+        advanced_form.addRow(self.tr("Temperature"), temperature_widget)
         advanced_form.addRow(self.tr("Custom parameters"), self.custom_parameters_edit)
         self._build_spin_fields(advanced_form)
         advanced_form.addRow(self.advanced_note)
@@ -285,7 +293,9 @@ class ConnectionDraftForm(QWidget):
         self.description_edit.setPlainText(draft.description or "")
         self.base_url_edit.setText(draft.base_url or "")
         self.default_model_edit.setText(draft.default_model or "")
-        self.temperature_spin.setValue(draft.temperature)
+        self.temperature_checkbox.setChecked(draft.temperature is not None)
+        if draft.temperature is not None:
+            self.temperature_spin.setValue(draft.temperature)
         self.custom_parameters_edit.setPlainText(draft.custom_parameters_json or "")
         self.timeout_spin.setValue(draft.timeout)
         self.retries_spin.setValue(draft.max_retries)
@@ -311,7 +321,7 @@ class ConnectionDraftForm(QWidget):
             api_key=(api_key if api_key else (None if allow_empty_api_key else "")),
             base_url=self.base_url_edit.text().strip() or None,
             default_model=self.default_model_edit.text().strip() or None,
-            temperature=float(self.temperature_spin.value()),
+            temperature=(float(self.temperature_spin.value()) if self.temperature_checkbox.isChecked() else None),
             timeout=int(self.timeout_spin.value()),
             max_retries=int(self.retries_spin.value()),
             concurrency=int(self.concurrency_spin.value()),
@@ -760,7 +770,7 @@ class SetupWizardDialog(QDialog):
             provider=provider,
             base_url=base_url,
             default_model=default_model,
-            temperature=0.0,
+            temperature=None,
             timeout=60,
             max_retries=3,
             concurrency=default_connection_concurrency(provider, default_model),

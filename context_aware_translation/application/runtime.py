@@ -87,11 +87,6 @@ _HIDDEN_CONNECTION_KWARG_KEYS = frozenset(
 )
 
 
-def _openai_supports_reasoning_effort_none(model: str | None) -> bool:
-    normalized = str(model or "").strip().lower()
-    return normalized.startswith("o") or normalized.startswith("gpt-5")
-
-
 def _wizard_reasoning_effort(
     step_id: WorkflowStepId,
     provider: ProviderKind,
@@ -124,12 +119,6 @@ def _wizard_reasoning_kwargs(
     reasoning_effort = _wizard_reasoning_effort(step_id, selected.provider, recommendation_mode)
     if reasoning_effort is None:
         return None
-    if (
-        selected.provider is ProviderKind.OPENAI
-        and reasoning_effort == "none"
-        and not _openai_supports_reasoning_effort_none(selected.default_model)
-    ):
-        return None
     return {"reasoning_effort": reasoning_effort}
 
 
@@ -147,7 +136,7 @@ def _wizard_translator_limits(selected: ConnectionDraft | None) -> dict[str, int
         return {}
     if selected.provider is ProviderKind.DEEPSEEK:
         return {"max_tokens_per_llm_call": 3500, "chunk_size": 1000}
-    if selected.provider in {ProviderKind.OPENAI, ProviderKind.ANTHROPIC}:
+    if selected.provider is ProviderKind.OPENAI:
         return {"max_tokens_per_llm_call": 4000, "chunk_size": 1000}
     if selected.provider is ProviderKind.GEMINI:
         return {"max_tokens_per_llm_call": 3000, "chunk_size": 1000}
@@ -247,15 +236,20 @@ _WIZARD_MODEL_CATALOG: dict[ProviderKind, tuple[WizardModelTemplate, ...]] = {
         ),
     ),
     ProviderKind.OPENAI: (
-        WizardModelTemplate(ProviderKind.OPENAI, "GPT-5.4", "gpt-5.4", "https://api.openai.com/v1", timeout=300),
-        WizardModelTemplate(ProviderKind.OPENAI, "GPT-4.1", "gpt-4.1", "https://api.openai.com/v1"),
-        WizardModelTemplate(ProviderKind.OPENAI, "GPT-4.1 Mini", "gpt-4.1-mini", "https://api.openai.com/v1"),
         WizardModelTemplate(
-            ProviderKind.OPENAI, "GPT-4.1 Nano", "gpt-4.1-nano", "https://api.openai.com/v1", timeout=120
+            ProviderKind.OPENAI,
+            "GPT-5.6 Luna",
+            "gpt-5.6-luna",
+            "https://api.openai.com/v1",
+            timeout=300,
         ),
-        WizardModelTemplate(ProviderKind.OPENAI, "o4-mini", "o4-mini", "https://api.openai.com/v1", timeout=300),
         WizardModelTemplate(
-            ProviderKind.OPENAI, "GPT Image 1", "gpt-image-1", "https://api.openai.com/v1", timeout=300, concurrency=2
+            ProviderKind.OPENAI,
+            "GPT Image 2",
+            "gpt-image-2",
+            "https://api.openai.com/v1",
+            timeout=300,
+            concurrency=2,
         ),
     ),
     ProviderKind.DEEPSEEK: (
@@ -275,59 +269,35 @@ _WIZARD_MODEL_CATALOG: dict[ProviderKind, tuple[WizardModelTemplate, ...]] = {
             concurrency=default_connection_concurrency(ProviderKind.DEEPSEEK, "deepseek-v4-pro"),
         ),
     ),
-    ProviderKind.ANTHROPIC: (
-        WizardModelTemplate(
-            ProviderKind.ANTHROPIC,
-            "Claude Opus 4.6",
-            "claude-opus-4-6",
-            "https://api.anthropic.com/v1",
-            timeout=300,
-        ),
-        WizardModelTemplate(
-            ProviderKind.ANTHROPIC,
-            "Claude Sonnet 3.5",
-            "claude-3-5-sonnet-latest",
-            "https://api.anthropic.com/v1",
-            timeout=300,
-        ),
-        WizardModelTemplate(
-            ProviderKind.ANTHROPIC, "Claude Haiku 3.5", "claude-3-5-haiku-latest", "https://api.anthropic.com/v1"
-        ),
-    ),
 }
 
 _STEP_RECOMMENDATION_ORDER: dict[WorkflowStepId, tuple[StepModelPreference, ...]] = {
     WorkflowStepId.EXTRACTOR: (
         StepModelPreference(ProviderKind.DEEPSEEK, "deepseek-v4-flash"),
         StepModelPreference(ProviderKind.GEMINI, "gemini-2.5-flash-lite"),
-        StepModelPreference(ProviderKind.OPENAI, "o4-mini"),
-        StepModelPreference(ProviderKind.ANTHROPIC, "claude-3-5-haiku-latest"),
+        StepModelPreference(ProviderKind.OPENAI, "gpt-5.6-luna"),
     ),
     WorkflowStepId.SUMMARIZER: (
         StepModelPreference(ProviderKind.DEEPSEEK, "deepseek-v4-flash"),
         StepModelPreference(ProviderKind.GEMINI, "gemini-2.5-flash-lite"),
-        StepModelPreference(ProviderKind.OPENAI, "gpt-4.1-nano"),
-        StepModelPreference(ProviderKind.ANTHROPIC, "claude-3-5-haiku-latest"),
+        StepModelPreference(ProviderKind.OPENAI, "gpt-5.6-luna"),
     ),
     WorkflowStepId.REVIEWER: (
         StepModelPreference(ProviderKind.DEEPSEEK, "deepseek-v4-pro"),
         StepModelPreference(ProviderKind.GEMINI, "gemini-2.5-pro"),
-        StepModelPreference(ProviderKind.OPENAI, "o4-mini"),
-        StepModelPreference(ProviderKind.ANTHROPIC, "claude-3-5-sonnet-latest"),
+        StepModelPreference(ProviderKind.OPENAI, "gpt-5.6-luna"),
     ),
     WorkflowStepId.OCR: (
         StepModelPreference(ProviderKind.GEMINI, "gemini-3.1-flash"),
-        StepModelPreference(ProviderKind.OPENAI, "gpt-4.1-mini"),
-        StepModelPreference(ProviderKind.ANTHROPIC, "claude-3-5-sonnet-latest"),
+        StepModelPreference(ProviderKind.OPENAI, "gpt-5.6-luna"),
     ),
     WorkflowStepId.IMAGE_REEMBEDDING: (
         StepModelPreference(ProviderKind.GEMINI, "gemini-3-pro-image-preview"),
-        StepModelPreference(ProviderKind.OPENAI, "gpt-image-1"),
+        StepModelPreference(ProviderKind.OPENAI, "gpt-image-2"),
     ),
     WorkflowStepId.MANGA_TRANSLATOR: (
         StepModelPreference(ProviderKind.GEMINI, "gemini-2.5-pro"),
-        StepModelPreference(ProviderKind.OPENAI, "gpt-4.1"),
-        StepModelPreference(ProviderKind.ANTHROPIC, "claude-3-5-sonnet-latest"),
+        StepModelPreference(ProviderKind.OPENAI, "gpt-5.6-luna"),
     ),
 }
 
@@ -337,8 +307,7 @@ def _glossary_translator_recommendations(recommendation_mode: SetupWizardMode) -
     return (
         StepModelPreference(ProviderKind.DEEPSEEK, deepseek_model),
         StepModelPreference(ProviderKind.GEMINI, "gemini-2.5-flash"),
-        StepModelPreference(ProviderKind.OPENAI, "gpt-4.1-mini"),
-        StepModelPreference(ProviderKind.ANTHROPIC, "claude-3-5-haiku-latest"),
+        StepModelPreference(ProviderKind.OPENAI, "gpt-5.6-luna"),
     )
 
 
@@ -347,8 +316,7 @@ def _translator_recommendations(recommendation_mode: SetupWizardMode) -> tuple[S
     return (
         StepModelPreference(ProviderKind.DEEPSEEK, deepseek_model),
         StepModelPreference(ProviderKind.GEMINI, "gemini-3.1-pro"),
-        StepModelPreference(ProviderKind.OPENAI, "gpt-5.4"),
-        StepModelPreference(ProviderKind.ANTHROPIC, "claude-opus-4-6"),
+        StepModelPreference(ProviderKind.OPENAI, "gpt-5.6-luna"),
     )
 
 
@@ -357,8 +325,7 @@ def _polish_recommendations(recommendation_mode: SetupWizardMode) -> tuple[StepM
     return (
         StepModelPreference(ProviderKind.DEEPSEEK, deepseek_model),
         StepModelPreference(ProviderKind.GEMINI, "gemini-3.1-pro"),
-        StepModelPreference(ProviderKind.OPENAI, "gpt-5.4"),
-        StepModelPreference(ProviderKind.ANTHROPIC, "claude-opus-4-6"),
+        StepModelPreference(ProviderKind.OPENAI, "gpt-5.6-luna"),
     )
 
 
@@ -366,13 +333,11 @@ def _manga_translator_recommendations(recommendation_mode: SetupWizardMode) -> t
     if recommendation_mode is SetupWizardMode.QUALITY:
         return (
             StepModelPreference(ProviderKind.GEMINI, "gemini-3.1-pro"),
-            StepModelPreference(ProviderKind.OPENAI, "o4-mini"),
-            StepModelPreference(ProviderKind.ANTHROPIC, "claude-3-5-sonnet-latest"),
+            StepModelPreference(ProviderKind.OPENAI, "gpt-5.6-luna"),
         )
     return (
         StepModelPreference(ProviderKind.GEMINI, "gemini-2.5-pro"),
-        StepModelPreference(ProviderKind.OPENAI, "gpt-4.1"),
-        StepModelPreference(ProviderKind.ANTHROPIC, "claude-3-5-sonnet-latest"),
+        StepModelPreference(ProviderKind.OPENAI, "gpt-5.6-luna"),
     )
 
 
@@ -532,8 +497,6 @@ def infer_provider_kind(base_url: str | None, model: str | None = None) -> Provi
         return ProviderKind.GEMINI
     if "api.deepseek.com" in base or model_name.startswith("deepseek"):
         return ProviderKind.DEEPSEEK
-    if "api.anthropic.com" in base or model_name.startswith("claude"):
-        return ProviderKind.ANTHROPIC
     if "api.openai.com" in base or model_name.startswith("gpt") or model_name.startswith("o"):
         return ProviderKind.OPENAI
     return ProviderKind.OPENAI_COMPATIBLE
@@ -553,8 +516,6 @@ def infer_capabilities(provider: ProviderKind) -> list[CapabilityCode]:
             CapabilityCode.IMAGE_TEXT_READING,
             CapabilityCode.IMAGE_EDITING,
         ]
-    if provider is ProviderKind.ANTHROPIC:
-        return [CapabilityCode.TRANSLATION, CapabilityCode.IMAGE_TEXT_READING]
     if provider is ProviderKind.DEEPSEEK:
         return [CapabilityCode.TRANSLATION]
     return [CapabilityCode.TRANSLATION]

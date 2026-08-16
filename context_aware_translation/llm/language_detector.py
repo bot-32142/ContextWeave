@@ -111,7 +111,6 @@ async def detect_source_language(
                         {"role": "user", "content": user_prompt},
                     ],
                     extractor_config,
-                    temperature=0.0,  # Use low temperature for deterministic results
                     response_format={"type": "json_object"},
                     cancel_check=cancel_check,
                 )

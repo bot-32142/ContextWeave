@@ -53,7 +53,7 @@ class TestEndpointProfile:
         assert profile.base_url is None
         assert profile.timeout == 120.0
         assert profile.max_retries == 3
-        assert profile.temperature == 0.0
+        assert profile.temperature is None
         assert profile.concurrency == 5
         assert profile.kwargs == {}
 

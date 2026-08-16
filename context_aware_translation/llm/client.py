@@ -22,8 +22,7 @@ from context_aware_translation.llm.token_tracker import TokenTracker
 
 logger = logging.getLogger(__name__)
 
-_UNSUPPORTED_OPENAI_CREATE_KWARGS = frozenset({"provider", "_ui_display_name", "_wizard_template_key"})
-_OPENAI_BASE_URL_PREFIX = "https://api.openai.com/"
+_INTERNAL_CREATE_KWARGS = frozenset({"provider", "_ui_display_name", "_wizard_template_key"})
 
 
 def _text_for_stream(text: str, stream: Any) -> str:
@@ -41,11 +40,6 @@ def _print_stderr_safely(text: str) -> None:
         logger.debug("Could not write LLM preview to stderr", exc_info=True)
 
 
-def _openai_supports_reasoning_effort_none(model: str) -> bool:
-    normalized = model.strip().lower()
-    return normalized.startswith("o") or normalized.startswith("gpt-5")
-
-
 # Suppress OpenAI library's DEBUG/INFO/WARNING logging to avoid duplicate logs
 # Our custom logger already logs all necessary information
 logging.getLogger("openai").setLevel(logging.ERROR)
@@ -60,24 +54,15 @@ class LLMAuthError(LLMError):
     pass
 
 
-def _sanitize_openai_create_kwargs(
+def _sanitize_create_kwargs(
     *,
-    model: str,
-    base_url: str | None,
     kwargs: dict[str, Any],
 ) -> dict[str, Any]:
-    removed = set(_UNSUPPORTED_OPENAI_CREATE_KWARGS.intersection(kwargs))
-    if (
-        kwargs.get("reasoning_effort") == "none"
-        and isinstance(base_url, str)
-        and base_url.startswith(_OPENAI_BASE_URL_PREFIX)
-        and not _openai_supports_reasoning_effort_none(model)
-    ):
-        removed.add("reasoning_effort")
+    removed = set(_INTERNAL_CREATE_KWARGS.intersection(kwargs))
     if not removed:
         return kwargs
     sanitized = {key: value for key, value in kwargs.items() if key not in removed}
-    logger.debug("Dropping unsupported OpenAI create kwargs: %s", ", ".join(sorted(removed)))
+    logger.debug("Dropping internal create kwargs: %s", ", ".join(sorted(removed)))
     return sanitized
 
 
@@ -117,7 +102,7 @@ def _first_nonzero(container: Any, field_paths: Sequence[tuple[str, ...]]) -> in
 
 
 def _cache_creation_tokens(usage: Any) -> int:
-    """Read cache-creation token fields used by Anthropic/Qwen variants."""
+    """Read cache-creation token fields used by cache-aware provider variants."""
     direct = _to_int(_usage_get(usage, "cache_creation_input_tokens"))
     if direct > 0:
         return direct
@@ -172,7 +157,7 @@ def _extract_token_usage(response: Any) -> dict[str, int] | None:
     # Provider cache field variants:
     # - DeepSeek: prompt_cache_hit_tokens / prompt_cache_miss_tokens
     # - OpenAI/Qwen/Z.ai: prompt_tokens_details.cached_tokens
-    # - Anthropic native: cache_read_input_tokens / cache_creation_input_tokens
+    # - Cache-aware providers: cache_read_input_tokens / cache_creation_input_tokens
     cached_input = _to_int(_usage_get(usage, "prompt_cache_hit_tokens"))
     uncached_input = _to_int(_usage_get(usage, "prompt_cache_miss_tokens"))
 
@@ -184,10 +169,10 @@ def _extract_token_usage(response: Any) -> dict[str, int] | None:
     if cached_input == 0 and uncached_input == 0:
         cache_read = _to_int(_usage_get(usage, "cache_read_input_tokens"))
         cache_creation = _cache_creation_tokens(usage)
-        anthropic_input = _to_int(_usage_get(usage, "input_tokens"))
-        if cache_read > 0 or cache_creation > 0 or anthropic_input > 0:
+        provider_input = _to_int(_usage_get(usage, "input_tokens"))
+        if cache_read > 0 or cache_creation > 0 or provider_input > 0:
             cached_input = cache_read
-            uncached_input = anthropic_input + cache_creation
+            uncached_input = provider_input + cache_creation
             if prompt_tokens == 0:
                 prompt_tokens = cached_input + uncached_input
 
@@ -297,7 +282,7 @@ class LLMClient:
         self,
         messages: list[dict[str, Any]],
         model: str,
-        temperature: float,
+        temperature: float | None,
         client: OpenAI,
         endpoint_profile_name: str | None = None,
         **kwargs: Any,
@@ -305,8 +290,13 @@ class LLMClient:
         session_id = get_llm_session_id()
         session_prefix = f"[llm_session={session_id}] " if session_id else ""
         # Log user prompts only; skip system prompts to avoid leaking them
+        temperature_log_value: float | str = temperature if temperature is not None else "default"
         logger.debug(
-            "%sLLM request - Model: %s, Temperature: %s, Kwargs: %s", session_prefix, model, temperature, kwargs
+            "%sLLM request - Model: %s, Temperature: %s, Kwargs: %s",
+            session_prefix,
+            model,
+            temperature_log_value,
+            kwargs,
         )
         for i, msg in enumerate(messages):
             role = (msg.get("role") or "unknown").lower()
@@ -316,10 +306,14 @@ class LLMClient:
             logger.info("%sLLM user message[%d]: %s", session_prefix, i, content)
 
         create_kwargs: dict[str, Any] = {
-            "model": model,
-            "messages": messages,
-            "temperature": temperature,
-            **kwargs,
+            key: value
+            for key, value in {
+                "model": model,
+                "messages": messages,
+                "temperature": temperature,
+                **kwargs,
+            }.items()
+            if value is not None
         }
 
         response = client.chat.completions.create(**create_kwargs)
@@ -389,9 +383,7 @@ class LLMClient:
             client = self._get_client_for_step(step_config)
             # Merge step_config.kwargs with passed kwargs (passed kwargs take precedence)
             # step_config is already resolved at config initialization time, so all values are filled
-            merged_kwargs = _sanitize_openai_create_kwargs(
-                model=str(kwargs.get("model") or step_config.model or ""),
-                base_url=step_config.base_url,
+            merged_kwargs = _sanitize_create_kwargs(
                 kwargs={**step_config.kwargs, **kwargs},
             )
 
@@ -402,11 +394,13 @@ class LLMClient:
 
             async def _call() -> str:
                 request_kwargs = dict(merged_kwargs)
+                request_model = request_kwargs.pop("model", step_config.model)
+                request_temperature: float | None = request_kwargs.pop("temperature", step_config.temperature)
                 return await asyncio.to_thread(
                     self._chat_impl,
                     messages,
-                    request_kwargs.pop("model", step_config.model),
-                    request_kwargs.pop("temperature", step_config.temperature),
+                    request_model,
+                    request_temperature,
                     client,
                     endpoint_profile_name=step_config.endpoint_profile,
                     **request_kwargs,

@@ -267,11 +267,6 @@ def _wizard_service() -> FakeAppSetupService:
                 label="OpenAI",
                 helper_text="General-purpose text and image-capable models.",
             ),
-            ProviderCard(
-                provider=ProviderKind.ANTHROPIC,
-                label="Anthropic",
-                helper_text="Claude models for high-quality reasoning and editorial passes.",
-            ),
         ]
     )
     preview_state = SetupWizardState(

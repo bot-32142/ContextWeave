@@ -80,7 +80,14 @@ def test_build_application_context_exposes_services(tmp_path: Path) -> None:
         setup_state = context.services.app_setup.get_state()
         assert setup_state.connections == []
         assert setup_state.shared_profiles == []
-        assert context.services.app_setup.get_wizard_state().available_providers
+        wizard_providers = {card.provider for card in context.services.app_setup.get_wizard_state().available_providers}
+        assert wizard_providers == {ProviderKind.GEMINI, ProviderKind.OPENAI, ProviderKind.DEEPSEEK}
+        assert set(ProviderKind) == {
+            ProviderKind.GEMINI,
+            ProviderKind.OPENAI,
+            ProviderKind.DEEPSEEK,
+            ProviderKind.OPENAI_COMPATIBLE,
+        }
     finally:
         context.close()
 

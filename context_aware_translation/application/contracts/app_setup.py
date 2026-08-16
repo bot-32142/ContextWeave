@@ -71,7 +71,7 @@ class ConnectionSummary(ContractModel):
     description: str | None = None
     base_url: str | None = None
     default_model: str | None = None
-    temperature: float = 0.0
+    temperature: float | None = None
     timeout: int = 60
     max_retries: int = 3
     concurrency: int = _DEFAULT_CONNECTION_CONCURRENCY
@@ -94,7 +94,7 @@ class ConnectionDraft(ContractModel):
     api_key: str | None = None
     base_url: str | None = None
     default_model: str | None = None
-    temperature: float = 0.0
+    temperature: float | None = None
     timeout: int = 60
     max_retries: int = 3
     concurrency: int = _DEFAULT_CONNECTION_CONCURRENCY

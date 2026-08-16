@@ -26,7 +26,7 @@ connections:
     # Human-readable name. The mapping key, deepseek_flash, is what routes use as connection_id.
     display_name: DeepSeek V4 Flash
 
-    # Supported values include: deepseek, gemini, openai, anthropic, openai_compatible.
+    # Supported values include: deepseek, gemini, openai, openai_compatible.
     provider: deepseek
 
     # Prefer api_key_env so secrets stay out of config files, book configs, and task snapshots.

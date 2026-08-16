@@ -110,11 +110,6 @@ class DefaultAppSetupService:
                     label="DeepSeek",
                     helper_text="Low-cost text translation and context building.",
                 ),
-                ProviderCard(
-                    provider=ProviderKind.ANTHROPIC,
-                    label="Anthropic",
-                    helper_text="Text translation and image understanding.",
-                ),
             ],
             target_language=target_language,
             recommendation_mode=SetupWizardMode.BALANCED,

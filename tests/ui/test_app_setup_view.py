@@ -188,8 +188,8 @@ def test_setup_wizard_dialog_switches_recommended_model_when_mode_changes():
     class _ModePreviewService(FakeAppSetupService):
         def preview_setup_wizard(self, request):  # noqa: ANN001
             self.calls.append(("preview_setup_wizard", request))
-            translator_model = "gpt-5.4"
-            polish_model = "gpt-5.4"
+            translator_model = "gpt-5.6-luna"
+            polish_model = "gpt-5.6-luna"
             recommendation = WorkflowProfileDetail(
                 profile_id="recommended",
                 name=request.profile_name or "Recommended",
@@ -242,8 +242,8 @@ def test_setup_wizard_dialog_switches_recommended_model_when_mode_changes():
     assert dialog._provider_inputs == {}
     table = dialog.findChild(QTableWidget)
     assert table is not None
-    assert table.item(0, 2).text() == "gpt-5.4"
-    assert table.item(1, 2).text() == "gpt-5.4"
+    assert table.item(0, 2).text() == "gpt-5.6-luna"
+    assert table.item(1, 2).text() == "gpt-5.6-luna"
 
     assert dialog._quality_mode_radio is not None
     dialog._quality_mode_radio.setChecked(True)
@@ -251,8 +251,8 @@ def test_setup_wizard_dialog_switches_recommended_model_when_mode_changes():
 
     table = dialog.findChild(QTableWidget)
     assert table is not None
-    assert table.item(0, 2).text() == "gpt-5.4"
-    assert table.item(1, 2).text() == "gpt-5.4"
+    assert table.item(0, 2).text() == "gpt-5.6-luna"
+    assert table.item(1, 2).text() == "gpt-5.6-luna"
 
     assert dialog._balanced_mode_radio is not None
     dialog._balanced_mode_radio.setChecked(True)
@@ -260,8 +260,8 @@ def test_setup_wizard_dialog_switches_recommended_model_when_mode_changes():
 
     table = dialog.findChild(QTableWidget)
     assert table is not None
-    assert table.item(0, 2).text() == "gpt-5.4"
-    assert table.item(1, 2).text() == "gpt-5.4"
+    assert table.item(0, 2).text() == "gpt-5.6-luna"
+    assert table.item(1, 2).text() == "gpt-5.6-luna"
 
     assert dialog._budget_mode_radio is not None
     dialog._budget_mode_radio.setChecked(True)
@@ -270,8 +270,8 @@ def test_setup_wizard_dialog_switches_recommended_model_when_mode_changes():
     assert dialog._profile_name_edit is not None
     table = dialog.findChild(QTableWidget)
     assert table is not None
-    assert table.item(0, 2).text() == "gpt-5.4"
-    assert table.item(1, 2).text() == "gpt-5.4"
+    assert table.item(0, 2).text() == "gpt-5.6-luna"
+    assert table.item(1, 2).text() == "gpt-5.6-luna"
     preview_requests = [call[1] for call in service.calls if call[0] == "preview_setup_wizard"]
     assert [request.recommendation_mode for request in preview_requests] == [
         SetupWizardMode.BALANCED,
@@ -297,18 +297,13 @@ def test_connection_draft_form_prefills_curated_defaults_for_supported_providers
 
     _select_provider(ProviderKind.OPENAI)
     assert form.base_url_edit.text() == "https://api.openai.com/v1"
-    assert form.default_model_edit.text() == "gpt-5.4"
+    assert form.default_model_edit.text() == "gpt-5.6-luna"
     assert form.concurrency_spin.value() == 5
 
     _select_provider(ProviderKind.DEEPSEEK)
     assert form.base_url_edit.text() == "https://api.deepseek.com"
     assert form.default_model_edit.text() == "deepseek-v4-pro"
     assert form.concurrency_spin.value() == 500
-
-    _select_provider(ProviderKind.ANTHROPIC)
-    assert form.base_url_edit.text() == "https://api.anthropic.com/v1"
-    assert form.default_model_edit.text() == "claude-opus-4-6"
-    assert form.concurrency_spin.value() == 5
 
 
 def test_setup_wizard_dialog_renders_provider_cards_on_first_page():
@@ -677,6 +672,25 @@ def test_connection_draft_form_round_trips_advanced_fields():
     assert round_tripped.input_token_limit == 80000
     assert round_tripped.output_token_limit == 40000
     assert json.loads(round_tripped.custom_parameters_json or "{}") == {"reasoning_effort": "medium"}
+
+
+def test_connection_draft_form_omits_disabled_temperature():
+    from context_aware_translation.ui.features.app_setup_view import ConnectionDraftForm
+
+    form = ConnectionDraftForm()
+    form.set_draft(
+        ConnectionDraft(
+            display_name="Provider defaults",
+            provider=ProviderKind.OPENAI_COMPATIBLE,
+            api_key="secret",
+            base_url="https://example.com/v1",
+            default_model="custom-model",
+            temperature=None,
+        )
+    )
+
+    assert form.temperature_checkbox.isChecked() is False
+    assert form.to_draft().temperature is None
 
 
 def test_connection_draft_form_rejects_invalid_custom_json():
