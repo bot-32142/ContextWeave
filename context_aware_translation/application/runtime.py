@@ -57,6 +57,10 @@ from context_aware_translation.languages import (
     display_target_language_name,
     require_storage_target_language_name,
 )
+from context_aware_translation.llm.response_formats import (
+    json_object_response_format,
+    translation_json_schema_response_format,
+)
 from context_aware_translation.storage.library.book_manager import BookManager
 from context_aware_translation.storage.models.book import Book
 from context_aware_translation.storage.models.config_profile import ConfigProfile
@@ -129,6 +133,19 @@ def _wizard_deepseek_thinking_kwargs(selected: ConnectionDraft | None) -> dict[s
     if not model.startswith("deepseek-v4-"):
         return None
     return {"extra_body": {"thinking": {"type": "enabled"}}}
+
+
+def _wizard_translation_response_format(
+    step_id: WorkflowStepId,
+    selected: ConnectionDraft | None,
+) -> dict[str, Any] | None:
+    if selected is None or step_id not in {WorkflowStepId.TRANSLATOR, WorkflowStepId.POLISH}:
+        return None
+    if selected.provider is ProviderKind.OPENAI:
+        return translation_json_schema_response_format()
+    if selected.provider in {ProviderKind.DEEPSEEK, ProviderKind.GEMINI}:
+        return json_object_response_format()
+    return None
 
 
 def _wizard_translator_limits(selected: ConnectionDraft | None) -> dict[str, int]:
@@ -970,6 +987,7 @@ def _recommended_step_route(
     llm_kwargs: dict[str, Any] = {}
     deepseek_thinking_kwargs = _wizard_deepseek_thinking_kwargs(selected)
     reasoning_kwargs = _wizard_reasoning_kwargs(step_id, selected, recommendation_mode)
+    response_format = _wizard_translation_response_format(step_id, selected)
     if step_id is WorkflowStepId.EXTRACTOR:
         step_config["max_gleaning"] = 1
     if step_id is WorkflowStepId.TRANSLATOR:
@@ -978,6 +996,8 @@ def _recommended_step_route(
         llm_kwargs.update(deepseek_thinking_kwargs)
     if reasoning_kwargs is not None:
         llm_kwargs.update(reasoning_kwargs)
+    if response_format is not None:
+        llm_kwargs["response_format"] = response_format
     if llm_kwargs:
         step_config["kwargs"] = llm_kwargs
     if step_id is WorkflowStepId.IMAGE_REEMBEDDING and selected is not None:

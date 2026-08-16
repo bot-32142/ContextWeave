@@ -127,7 +127,7 @@ async def test_translate_chunk_uses_block_lists_and_reconstructs(temp_config: Co
         {"id": 2, "文本": "B"},
     ]
     assert isinstance(user_payload["原文"], list)
-    assert translate_call[1]["response_format"] == {"type": "json_object"}
+    assert "response_format" not in translate_call[1]
 
 
 @pytest.mark.asyncio

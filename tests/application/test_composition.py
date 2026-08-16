@@ -19,10 +19,15 @@ from context_aware_translation.application.contracts.project_setup import SavePr
 from context_aware_translation.application.contracts.projects import CreateProjectRequest, UpdateProjectRequest
 from context_aware_translation.application.contracts.terms import UpdateTermRequest
 from context_aware_translation.application.errors import ApplicationError
+from context_aware_translation.llm.response_formats import json_object_response_format
 from context_aware_translation.storage.repositories.document_repository import DocumentRepository
 from context_aware_translation.storage.schema.book_db import TermRecord
 
 _DEEPSEEK_THINKING_KWARGS = {"extra_body": {"thinking": {"type": "enabled"}}}
+_DEEPSEEK_TRANSLATION_KWARGS = {
+    **_DEEPSEEK_THINKING_KWARGS,
+    "response_format": json_object_response_format(),
+}
 
 
 def _ensure_qt_app() -> QApplication:
@@ -377,9 +382,9 @@ def test_setup_wizard_creates_curated_connections_and_named_profile(tmp_path: Pa
         assert created_profile.config["translator_config"]["model"] == "deepseek-v4-pro"
         assert created_profile.config["translator_config"]["max_tokens_per_llm_call"] == 3500
         assert created_profile.config["translator_config"]["chunk_size"] == 1000
-        assert created_profile.config["translator_config"]["kwargs"] == _DEEPSEEK_THINKING_KWARGS
+        assert created_profile.config["translator_config"]["kwargs"] == _DEEPSEEK_TRANSLATION_KWARGS
         assert created_profile.config["polish_config"]["model"] == "deepseek-v4-pro"
-        assert created_profile.config["polish_config"]["kwargs"] == _DEEPSEEK_THINKING_KWARGS
+        assert created_profile.config["polish_config"]["kwargs"] == _DEEPSEEK_TRANSLATION_KWARGS
         assert created_profile.config["review_config"]["model"] == "deepseek-v4-pro"
         assert created_profile.config["review_config"]["kwargs"] == _DEEPSEEK_THINKING_KWARGS
         assert created_profile.config["ocr_config"]["kwargs"] == {"reasoning_effort": "none"}

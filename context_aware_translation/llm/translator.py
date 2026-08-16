@@ -667,7 +667,6 @@ async def validated_chat(
             raw = await llm_client.chat(
                 messages,
                 config,
-                response_format={"type": "json_object"},
                 cancel_check=cancel_check,
             )
         raw = clean_llm_response(raw)

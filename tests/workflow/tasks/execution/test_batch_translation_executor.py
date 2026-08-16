@@ -21,6 +21,7 @@ from context_aware_translation.workflow.tasks.execution.batch_translation_execut
 from context_aware_translation.workflow.tasks.execution.batch_translation_ops import (
     _TRANSLATION_STAGE,
     _execute_stage,
+    _stage_request_kwargs,
     ensure_payload_prepared,
 )
 from context_aware_translation.workflow.tasks.models import (
@@ -61,6 +62,17 @@ def _build_executor(tmp_path) -> BatchTranslationExecutor:
         task_store=task_store,
         llm_batch_store=llm_batch_store,
     )
+
+
+def test_stage_request_kwargs_preserves_configured_response_format() -> None:
+    configured = {"type": "json_schema", "json_schema": {"name": "translation_response"}}
+    payload = {"translation_request_kwargs": {"response_format": configured}}
+
+    assert _stage_request_kwargs(payload, "translation") == {"response_format": configured}
+
+
+def test_stage_request_kwargs_omits_unconfigured_response_format() -> None:
+    assert _stage_request_kwargs({}, "translation") == {}
 
 
 def _create_task(
