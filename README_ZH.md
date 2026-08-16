@@ -52,7 +52,7 @@
 
 ### 2. 选择服务商并填入 API key
 
-向导会先收集需要的连接。对大多数用户来说，`DeepSeek` + `Gemini` 是最实用的起点。
+向导会先收集需要的连接。对大多数用户来说，推荐从 OpenAI 的 [`GPT-5.6 Luna`](https://developers.openai.com/api/docs/models/gpt-5.6-luna) 开始：一个高性价比模型就能覆盖所有文本生成和图像理解步骤。
 
 ![设置向导服务商选择](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/CN/latest_setup_wizard_provider_selection.png)
 
@@ -62,7 +62,7 @@
 
 ![工作流配置档案检查](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/CN/latest_setup_wizard_workflow_profile_review.png)
 
-`质量优先` 会非常非常贵，除非你只用 `DeepSeek`。`均衡` 适合作为默认选择。`预算优先` 适合优先压低成本。
+`质量优先` 会投入更多推理资源，成本可能很高。`均衡` 适合作为默认选择。`预算优先` 适合优先压低成本。
 
 </details>
 
@@ -90,7 +90,7 @@
 
 这个示例 EPUB 是直接从 Project Gutenberg 上的法语《基督山伯爵》第一卷 EPUB [17989](https://www.gutenberg.org/ebooks/17989) 用 `翻译并导出` 一键生成的。模型为 `DeepSeek`。
 
-如果换成 `Gemini` 或 `GPT`，质量通常会明显更好，但成本也会显著上升。
+如果换成 `Gemini` 或 `GPT`，质量通常会明显更好。重视成本时，建议从 `GPT-5.6 Luna` 开始。
 
 - [基督山伯爵.epub](https://github.com/bot-32142/ContextWeave/raw/master/demo/%E5%9F%BA%E7%9D%A3%E5%B1%B1%E4%BC%AF%E7%88%B5.epub) - 简体中文版，每本成本不到 `18 元人民币`。
 
@@ -118,8 +118,8 @@ CLI 会依次从 `--config`、`CONTEXTWEAVE_CONFIG`、向上查找最近的 `con
 
 ## 使用前需要知道
 
-- 目前主要测试过的是 `DeepSeek` + `Gemini` 的向导配置路径。`Claude` 和 `GPT` 应该也能工作得很好，但不建议使用低于 `DeepSeek` 水平的模型。
-- 图片编辑成本很高，而且仍然容易出现幻觉。图像回填推荐优先使用 `GPT Image 2`。
+- 推荐的 OpenAI 配置档案会让所有文本生成和图像理解步骤都使用 `GPT-5.6 Luna`。同时也支持 `DeepSeek` + `Gemini`，但不建议使用低于 `DeepSeek` 水平的模型。
+- 图片编辑成本很高，而且仍然容易出现幻觉。推荐的 OpenAI 配置档案会让图像回填改用专门的 [`GPT Image 2`](https://developers.openai.com/api/docs/models/gpt-image-2)，而不是 Luna。
 - OCR 不会保留 PDF 和扫描书的原始排版，而是根据识别出的内容重建输出。漫画是例外。
 - 如果你希望术语和上下文持续累积，请按阅读顺序导入。
 - 由于跨格式测试成本较高，目前样本仍然有限。欢迎报告 bug。

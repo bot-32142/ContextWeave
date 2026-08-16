@@ -194,5 +194,6 @@ async def test_detect_language_uses_correct_model(mock_llm_client, config):
         assert call_args[1]["model"] == config.extractor_config.model
     else:
         assert step_config_arg.model == config.extractor_config.model
-    assert call_args[1].get("temperature", step_config_arg.temperature) == 0.0  # Should use low temperature
+    assert "temperature" not in call_args[1]
+    assert step_config_arg.temperature is None
     assert call_args[1]["response_format"] == {"type": "json_object"}

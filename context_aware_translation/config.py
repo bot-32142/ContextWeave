@@ -62,13 +62,13 @@ class EndpointProfile:
     timeout: float = 120.0
     max_retries: int = 3
     model: str | None = None
-    temperature: float = 0.0
+    temperature: float | None = None
     concurrency: int = 5
     kwargs: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary for JSON storage."""
-        return {
+        payload = {
             "name": self.name,
             "api_key": self.api_key,
             "api_key_env": self.api_key_env,
@@ -81,6 +81,9 @@ class EndpointProfile:
             "concurrency": self.concurrency,
             "kwargs": self.kwargs,
         }
+        if self.temperature is None:
+            payload.pop("temperature")
+        return payload
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> EndpointProfile:
@@ -105,7 +108,7 @@ class LLMConfig:
 
     # Model Settings (can be overridden per-step)
     model: str | None = None  # Required: must be set in base or step config
-    temperature: float = 0.0
+    temperature: float | None = None
     concurrency: int = 5  # Optional: per-step concurrency
     # Profile reference (resolved at config load time); stores endpoint profile ID.
     endpoint_profile: str | None = None
@@ -129,6 +132,8 @@ class LLMConfig:
         }
         if self.api_key is not None and (self.endpoint_profile is None or "api_key" in self._explicit_fields):
             payload["api_key"] = self.api_key
+        if self.temperature is None:
+            payload.pop("temperature")
         return payload
 
     @classmethod
@@ -170,7 +175,7 @@ class ExtractorConfig(LLMConfig):
             timeout=data.get("timeout", 60),
             max_retries=data.get("max_retries", 3),
             model=data.get("model"),
-            temperature=data.get("temperature", 0.0),
+            temperature=data.get("temperature"),
             concurrency=data.get("concurrency", 5),
             endpoint_profile=data.get("endpoint_profile"),
             kwargs=data.get("kwargs", {}),
@@ -207,7 +212,7 @@ class SummarizorConfig(LLMConfig):
             timeout=data.get("timeout", 60),
             max_retries=data.get("max_retries", 3),
             model=data.get("model"),
-            temperature=data.get("temperature", 0.0),
+            temperature=data.get("temperature"),
             concurrency=data.get("concurrency", 5),
             endpoint_profile=data.get("endpoint_profile"),
             kwargs=data.get("kwargs", {}),
@@ -255,7 +260,7 @@ class TranslatorConfig(LLMConfig):
             timeout=data.get("timeout", 60),
             max_retries=data.get("max_retries", 3),
             model=data.get("model"),
-            temperature=data.get("temperature", 0.0),
+            temperature=data.get("temperature"),
             concurrency=data.get("concurrency", 5),
             endpoint_profile=data.get("endpoint_profile"),
             kwargs=data.get("kwargs", {}),
@@ -403,7 +408,7 @@ class MangaTranslatorConfig(LLMConfig):
             timeout=data.get("timeout", 300),
             max_retries=data.get("max_retries", 3),
             model=data.get("model"),
-            temperature=data.get("temperature", 0.0),
+            temperature=data.get("temperature"),
             concurrency=data.get("concurrency", 5),
             endpoint_profile=data.get("endpoint_profile"),
             kwargs=data.get("kwargs", {}),
@@ -451,7 +456,7 @@ class ImageReembeddingConfig(LLMConfig):
             timeout=data.get("timeout", 60),
             max_retries=data.get("max_retries", 3),
             model=data.get("model"),
-            temperature=data.get("temperature", 0.0),
+            temperature=data.get("temperature"),
             concurrency=data.get("concurrency", 5),
             endpoint_profile=data.get("endpoint_profile"),
             kwargs=data.get("kwargs", {}),
@@ -491,7 +496,7 @@ class OCRConfig(LLMConfig):
             timeout=data.get("timeout", 60),
             max_retries=data.get("max_retries", 3),
             model=data.get("model"),
-            temperature=data.get("temperature", 0.0),
+            temperature=data.get("temperature"),
             concurrency=data.get("concurrency", 5),
             endpoint_profile=data.get("endpoint_profile"),
             kwargs=data.get("kwargs", {}),

@@ -52,7 +52,7 @@ This is the home screen for projects. Use `Setup Wizard` for the quickest first-
 
 ### 2. Choose providers and paste API keys
 
-The wizard collects the providers it needs up front. For most users, `DeepSeek` + `Gemini` is the most practical starting point.
+The wizard collects the providers it needs up front. For most users, OpenAI with [`GPT-5.6 Luna`](https://developers.openai.com/api/docs/models/gpt-5.6-luna) is the recommended starting point: one cost-efficient model covers every text-generation and image-understanding step.
 
 ![Setup wizard provider selection](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/EN/latest_setup_wizard_provider_selection.png)
 
@@ -62,7 +62,7 @@ The review step shows which connection and model ContextWeave will use for each 
 
 ![Workflow profile review](https://raw.githubusercontent.com/bot-32142/ContextWeave/master/docs/screenshots/EN/latest_setup_wizard_workflow_profile_review.png)
 
-`Quality` spends more for better reasoning and can get very, very expensive unless you are using only `DeepSeek`. `Balanced` is the safest default. `Budget` is the cheapest option when you want to minimize cost.
+`Quality` spends more for better reasoning and can get very expensive. `Balanced` is the safest default. `Budget` is the cheapest option when you want to minimize cost.
 
 </details>
 
@@ -90,7 +90,7 @@ Open `Terms`, then use `Import Terms` if you already have a terminology list you
 
 This sample EPUB was generated with `Translate and Export` directly from the French Project Gutenberg EPUB for [The Count of Monte Cristo, Tome I](https://www.gutenberg.org/ebooks/17989), using `DeepSeek`.
 
-Quality can be dramatically better with `Gemini` or `GPT`, but the cost is also significantly higher.
+Quality can be dramatically better with `Gemini` or `GPT`. `GPT-5.6 Luna` is the recommended OpenAI starting point when cost matters.
 
 - [The Count of Monte Cristo.epub](https://github.com/bot-32142/ContextWeave/raw/master/demo/The%20Count%20of%20Monte%20Cristo.epub) - English output. Cost: under `$2.5`.
 
@@ -123,8 +123,8 @@ A commented starting point is available at [docs/examples/contextweave-cli.yaml]
 
 ## What To Know Before Using ContextWeave
 
-- The setup wizard path is mainly tested with `DeepSeek` + `Gemini`. `Claude` and `GPT` should also work well, but I do not recommend going below `DeepSeek`-class models.
-- Image editing is expensive, and hallucinations are still common. For image reembedding, `GPT Image 2` is recommended when available.
+- The recommended OpenAI profile uses `GPT-5.6 Luna` for every text-generation and image-understanding step. `DeepSeek` + `Gemini` is also supported, but I do not recommend going below `DeepSeek`-class models.
+- Image editing is expensive, and hallucinations are still common. For image reembedding, the recommended OpenAI profile uses the specialized [`GPT Image 2`](https://developers.openai.com/api/docs/models/gpt-image-2) model instead of Luna.
 - OCR does not preserve original layout for PDFs and scanned books. It rebuilds from content instead. Manga is the exception.
 - Import in reading order if you want the glossary and context to build correctly.
 - Samples are still limited because testing across formats is expensive. Bug reports are very welcome.

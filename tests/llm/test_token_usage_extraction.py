@@ -44,7 +44,7 @@ def test_extract_token_usage_deepseek_cache_fields() -> None:
     }
 
 
-def test_extract_token_usage_anthropic_native_cache_fields() -> None:
+def test_extract_token_usage_cache_read_and_creation_fields() -> None:
     response = SimpleNamespace(
         usage=SimpleNamespace(
             input_tokens=100,

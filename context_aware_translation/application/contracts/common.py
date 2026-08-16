@@ -57,7 +57,6 @@ class ProviderKind(StrEnum):
     GEMINI = "gemini"
     OPENAI = "openai"
     DEEPSEEK = "deepseek"
-    ANTHROPIC = "anthropic"
     OPENAI_COMPATIBLE = "openai_compatible"
 
 

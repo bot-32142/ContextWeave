@@ -369,7 +369,10 @@ class GeminiBatchJobGateway(BatchJobGateway):
         if not contents:
             raise ValueError("Gemini batch request requires at least one non-system message.")
 
-        config_kwargs: dict[str, Any] = {"temperature": float(request_kwargs.pop("temperature", 0.0) or 0.0)}
+        config_kwargs: dict[str, Any] = {}
+        temperature = request_kwargs.pop("temperature", None)
+        if temperature is not None:
+            config_kwargs["temperature"] = float(temperature)
         if system_parts:
             config_kwargs["system_instruction"] = "\n\n".join(system_parts)
 

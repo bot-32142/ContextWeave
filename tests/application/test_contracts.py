@@ -301,7 +301,7 @@ def test_connection_draft_defaults_deepseek_concurrency() -> None:
     assert flash_draft.concurrency == 2500
 
 
-def test_recommended_workflow_profile_skips_unsupported_openai_ocr_reasoning_none() -> None:
+def test_recommended_workflow_profile_uses_luna_for_all_text_and_vision_steps() -> None:
     detail = recommended_workflow_profile_from_drafts(
         [ConnectionDraft(display_name="OpenAI", provider=ProviderKind.OPENAI, api_key="okey")],
         name="Wizard Profile",
@@ -310,16 +310,24 @@ def test_recommended_workflow_profile_skips_unsupported_openai_ocr_reasoning_non
     )
 
     route_map = {route.step_id: route for route in detail.routes}
-    assert route_map[WorkflowStepId.EXTRACTOR].model == "o4-mini"
+    luna_steps = {
+        WorkflowStepId.EXTRACTOR,
+        WorkflowStepId.SUMMARIZER,
+        WorkflowStepId.GLOSSARY_TRANSLATOR,
+        WorkflowStepId.TRANSLATOR,
+        WorkflowStepId.POLISH,
+        WorkflowStepId.REVIEWER,
+        WorkflowStepId.OCR,
+        WorkflowStepId.MANGA_TRANSLATOR,
+    }
+    assert {route_map[step_id].model for step_id in luna_steps} == {"gpt-5.6-luna"}
     assert route_map[WorkflowStepId.EXTRACTOR].step_config == {"max_gleaning": 1}
-    assert route_map[WorkflowStepId.OCR].model == "gpt-4.1-mini"
-    assert route_map[WorkflowStepId.OCR].step_config == {}
-    assert route_map[WorkflowStepId.TRANSLATOR].model == "gpt-5.4"
+    assert route_map[WorkflowStepId.OCR].step_config == {"kwargs": {"reasoning_effort": "none"}}
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"] == {"reasoning_effort": "high"}
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["max_tokens_per_llm_call"] == 4000
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["chunk_size"] == 1000
-    assert route_map[WorkflowStepId.POLISH].model == "gpt-5.4"
     assert route_map[WorkflowStepId.POLISH].step_config["kwargs"] == {"reasoning_effort": "high"}
+    assert route_map[WorkflowStepId.IMAGE_REEMBEDDING].model == "gpt-image-2"
     assert route_map[WorkflowStepId.IMAGE_REEMBEDDING].step_config == {"backend": "openai"}
 
 
@@ -362,11 +370,11 @@ def test_recommended_workflow_profile_uses_budget_translator_rules() -> None:
     )
 
     route_map = {route.step_id: route for route in detail.routes}
-    assert route_map[WorkflowStepId.TRANSLATOR].model == "gpt-5.4"
+    assert route_map[WorkflowStepId.TRANSLATOR].model == "gpt-5.6-luna"
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"] == {"reasoning_effort": "low"}
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["max_tokens_per_llm_call"] == 4000
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["chunk_size"] == 1000
-    assert route_map[WorkflowStepId.POLISH].model == "gpt-5.4"
+    assert route_map[WorkflowStepId.POLISH].model == "gpt-5.6-luna"
     assert route_map[WorkflowStepId.POLISH].step_config["kwargs"] == {"reasoning_effort": "low"}
 
 
@@ -379,34 +387,12 @@ def test_recommended_workflow_profile_uses_balanced_mode_rules() -> None:
     )
 
     route_map = {route.step_id: route for route in detail.routes}
-    assert route_map[WorkflowStepId.TRANSLATOR].model == "gpt-5.4"
+    assert route_map[WorkflowStepId.TRANSLATOR].model == "gpt-5.6-luna"
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"] == {"reasoning_effort": "none"}
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["max_tokens_per_llm_call"] == 4000
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["chunk_size"] == 1000
-    assert route_map[WorkflowStepId.POLISH].model == "gpt-5.4"
+    assert route_map[WorkflowStepId.POLISH].model == "gpt-5.6-luna"
     assert route_map[WorkflowStepId.POLISH].step_config["kwargs"] == {"reasoning_effort": "medium"}
-
-
-def test_recommended_workflow_profile_keeps_anthropic_translator_and_polish_on_opus() -> None:
-    for recommendation_mode, expected_translator_kwargs, expected_polish_kwargs in (
-        (SetupWizardMode.QUALITY, {"reasoning_effort": "high"}, {"reasoning_effort": "high"}),
-        (SetupWizardMode.BALANCED, {"reasoning_effort": "none"}, {"reasoning_effort": "medium"}),
-        (SetupWizardMode.BUDGET, {"reasoning_effort": "low"}, {"reasoning_effort": "low"}),
-    ):
-        detail = recommended_workflow_profile_from_drafts(
-            [ConnectionDraft(display_name="Anthropic", provider=ProviderKind.ANTHROPIC, api_key="akey")],
-            name="Wizard Profile",
-            target_language="English",
-            recommendation_mode=recommendation_mode,
-        )
-
-        route_map = {route.step_id: route for route in detail.routes}
-        assert route_map[WorkflowStepId.TRANSLATOR].model == "claude-opus-4-6"
-        assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"] == expected_translator_kwargs
-        assert route_map[WorkflowStepId.TRANSLATOR].step_config["max_tokens_per_llm_call"] == 4000
-        assert route_map[WorkflowStepId.TRANSLATOR].step_config["chunk_size"] == 1000
-        assert route_map[WorkflowStepId.POLISH].model == "claude-opus-4-6"
-        assert route_map[WorkflowStepId.POLISH].step_config["kwargs"] == expected_polish_kwargs
 
 
 def test_terms_queue_and_errors_expose_ui_safe_contracts() -> None:

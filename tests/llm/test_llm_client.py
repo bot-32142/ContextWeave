@@ -48,6 +48,7 @@ async def test_llm_client_success():
         api_key="test-key",
         base_url="https://api.test.com/v1",
         model="test-model",
+        temperature=0.0,
     )
     with patch("context_aware_translation.llm.client.OpenAI") as mock_openai:
         mock_response = MagicMock()
@@ -69,6 +70,72 @@ async def test_llm_client_success():
         mock_client.chat.completions.create.assert_called_once()
         call_kwargs = mock_client.chat.completions.create.call_args[1]
         assert call_kwargs["temperature"] == 0.0
+
+
+@pytest.mark.asyncio
+async def test_llm_client_omits_unconfigured_parameters():
+    from context_aware_translation.config import ExtractorConfig
+
+    config = LLMConfig(api_key="test-key", base_url="https://api.test.com/v1")
+    step_config = ExtractorConfig(
+        api_key="test-key",
+        base_url="https://api.test.com/v1",
+        model="test-model",
+        temperature=None,
+        kwargs={"seed": None, "response_format": {"type": "json_object"}},
+    )
+    with patch("context_aware_translation.llm.client.OpenAI") as mock_openai:
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message = MagicMock()
+        mock_response.choices[0].message.content = "Test response"
+        mock_response.usage = None
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_response
+        mock_openai.return_value = mock_client
+
+        client = LLMClient(config)
+        result = await client.chat(
+            messages=[{"role": "user", "content": "test"}],
+            step_config=step_config,
+        )
+
+        assert result == "Test response"
+        call_kwargs = mock_client.chat.completions.create.call_args.kwargs
+        assert "temperature" not in call_kwargs
+        assert "seed" not in call_kwargs
+        assert call_kwargs["response_format"] == {"type": "json_object"}
+
+
+@pytest.mark.asyncio
+async def test_llm_client_sends_configured_temperature():
+    from context_aware_translation.config import ExtractorConfig
+
+    config = LLMConfig(api_key="test-key", base_url="https://api.example.com/v1")
+    step_config = ExtractorConfig(
+        api_key="test-key",
+        base_url="https://api.example.com/v1",
+        model="test-model",
+        temperature=0.2,
+    )
+    with patch("context_aware_translation.llm.client.OpenAI") as mock_openai:
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message = MagicMock()
+        mock_response.choices[0].message.content = "Test response"
+        mock_response.usage = None
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_response
+        mock_openai.return_value = mock_client
+
+        client = LLMClient(config)
+        await client.chat(
+            messages=[{"role": "user", "content": "test"}],
+            step_config=step_config,
+        )
+
+        call_kwargs = mock_client.chat.completions.create.call_args.kwargs
+        assert call_kwargs["temperature"] == 0.2
 
 
 @pytest.mark.asyncio
@@ -147,7 +214,7 @@ async def test_llm_client_drops_internal_metadata_kwargs():
 
 
 @pytest.mark.asyncio
-async def test_llm_client_drops_unsupported_openai_reasoning_none_for_gpt41_mini():
+async def test_llm_client_sends_explicit_reasoning_effort_without_model_policy():
     from context_aware_translation.config import ExtractorConfig
 
     config = LLMConfig(api_key="test-key", base_url="https://api.openai.com/v1")
@@ -175,7 +242,7 @@ async def test_llm_client_drops_unsupported_openai_reasoning_none_for_gpt41_mini
 
         assert result == "Test response"
         call_kwargs = mock_client.chat.completions.create.call_args.kwargs
-        assert "reasoning_effort" not in call_kwargs
+        assert call_kwargs["reasoning_effort"] == "none"
 
 
 @pytest.mark.asyncio

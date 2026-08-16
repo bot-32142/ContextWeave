@@ -219,7 +219,7 @@ class BookManager:
         api_key: str = "",
         base_url: str = "",
         model: str = "",
-        temperature: float = 0.0,
+        temperature: float | None = None,
         kwargs: dict[str, Any] | None = None,
         timeout: int = 60,
         max_retries: int = 3,
@@ -238,7 +238,7 @@ class BookManager:
             api_key: API key (optional, can use environment variable)
             base_url: Base URL for the API endpoint
             model: Model identifier
-            temperature: Temperature for generation (0.0-1.0)
+            temperature: Temperature for generation, or None to use the provider default
             timeout: Request timeout in seconds
             max_retries: Maximum number of retries
             concurrency: Maximum concurrent requests

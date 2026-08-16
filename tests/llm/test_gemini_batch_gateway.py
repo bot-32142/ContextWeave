@@ -58,6 +58,18 @@ def test_build_inlined_request_applies_explicit_thinking_mode() -> None:
     )
 
     assert request["config"]["thinking_config"] == {"thinking_budget": 0}
+    assert "temperature" not in request["config"]
+
+
+def test_build_inlined_request_sends_configured_temperature() -> None:
+    gateway = GeminiBatchJobGateway()
+    _, request = gateway.build_inlined_request(
+        messages=_messages(),
+        model="gemini-2.5-flash",
+        request_kwargs={"temperature": 0.0},
+    )
+
+    assert request["config"]["temperature"] == 0.0
 
 
 def test_build_inlined_request_unsupported_thinking_mode_emits_warning(caplog) -> None:
