@@ -124,6 +124,7 @@ A commented starting point is available at [docs/examples/contextweave-cli.yaml]
 ## What To Know Before Using ContextWeave
 
 - The recommended OpenAI profile uses `GPT-5.6 Luna` for every text-generation and image-understanding step. `DeepSeek` + `Gemini` is also supported, but I do not recommend going below `DeepSeek`-class models.
+- Translation response formatting is configurable per workflow step. Recommended OpenAI translation and polish steps use strict JSON Schema output; DeepSeek and Gemini use JSON object mode. Removing `response_format` from a step's advanced custom parameters omits it from API requests.
 - Image editing is expensive, and hallucinations are still common. For image reembedding, the recommended OpenAI profile uses the specialized [`GPT Image 2`](https://developers.openai.com/api/docs/models/gpt-image-2) model instead of Luna.
 - OCR does not preserve original layout for PDFs and scanned books. It rebuilds from content instead. Manga is the exception.
 - Import in reading order if you want the glossary and context to build correctly.

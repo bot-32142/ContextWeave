@@ -301,14 +301,11 @@ def _build_stage_request_kwargs(step_config: Any) -> dict[str, Any]:
 
 
 def _stage_request_kwargs(payload: dict[str, Any], stage: str) -> dict[str, Any]:
-    """Return per-request batch options with enforced JSON response format."""
+    """Return the configured per-request batch options for a stage."""
     raw_kwargs = payload.get(f"{stage}_request_kwargs")
     if not isinstance(raw_kwargs, dict):
         raw_kwargs = payload.get("batch_request_kwargs", {})
-    resolved = dict(raw_kwargs)
-    # Validation expects a JSON object payload for both translation and polish stages.
-    resolved["response_format"] = {"type": "json_object"}
-    return resolved
+    return dict(raw_kwargs)
 
 
 def _stage_model(payload: dict[str, Any], stage: str) -> str:

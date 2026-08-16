@@ -61,9 +61,24 @@ from context_aware_translation.application.runtime import (
     build_workflow_profile_payload,
     recommended_workflow_profile_from_drafts,
 )
+from context_aware_translation.llm.response_formats import (
+    json_object_response_format,
+    translation_json_schema_response_format,
+)
 from context_aware_translation.storage.models.endpoint_profile import EndpointProfile
 
 _DEEPSEEK_THINKING_KWARGS = {"extra_body": {"thinking": {"type": "enabled"}}}
+_DEEPSEEK_TRANSLATION_KWARGS = {
+    **_DEEPSEEK_THINKING_KWARGS,
+    "response_format": json_object_response_format(),
+}
+
+
+def _openai_translation_kwargs(reasoning_effort: str) -> dict[str, object]:
+    return {
+        "reasoning_effort": reasoning_effort,
+        "response_format": translation_json_schema_response_format(),
+    }
 
 
 def _profile(*, profile_id: str, name: str, kind: WorkflowProfileKind) -> WorkflowProfileDetail:
@@ -269,13 +284,13 @@ def test_recommended_workflow_profile_uses_ranked_step_rules() -> None:
     assert route_map[WorkflowStepId.GLOSSARY_TRANSLATOR].model == "deepseek-v4-pro"
     assert route_map[WorkflowStepId.GLOSSARY_TRANSLATOR].step_config["kwargs"] == _DEEPSEEK_THINKING_KWARGS
     assert route_map[WorkflowStepId.TRANSLATOR].model == "deepseek-v4-pro"
-    assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"] == _DEEPSEEK_THINKING_KWARGS
+    assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"] == _DEEPSEEK_TRANSLATION_KWARGS
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["max_tokens_per_llm_call"] == 3500
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["chunk_size"] == 1000
     assert route_map[WorkflowStepId.POLISH].model == "deepseek-v4-pro"
     assert route_map[WorkflowStepId.POLISH].connection_id == "recommended-DeepSeek V4 Pro"
     assert route_map[WorkflowStepId.POLISH].connection_label == "DeepSeek V4 Pro"
-    assert route_map[WorkflowStepId.POLISH].step_config["kwargs"] == _DEEPSEEK_THINKING_KWARGS
+    assert route_map[WorkflowStepId.POLISH].step_config["kwargs"] == _DEEPSEEK_TRANSLATION_KWARGS
     assert route_map[WorkflowStepId.REVIEWER].model == "deepseek-v4-pro"
     assert route_map[WorkflowStepId.REVIEWER].step_config["kwargs"] == _DEEPSEEK_THINKING_KWARGS
     assert route_map[WorkflowStepId.OCR].model == "gemini-3.1-flash"
@@ -323,12 +338,26 @@ def test_recommended_workflow_profile_uses_luna_for_all_text_and_vision_steps() 
     assert {route_map[step_id].model for step_id in luna_steps} == {"gpt-5.6-luna"}
     assert route_map[WorkflowStepId.EXTRACTOR].step_config == {"max_gleaning": 1}
     assert route_map[WorkflowStepId.OCR].step_config == {"kwargs": {"reasoning_effort": "none"}}
-    assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"] == {"reasoning_effort": "high"}
+    assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"] == _openai_translation_kwargs("high")
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["max_tokens_per_llm_call"] == 4000
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["chunk_size"] == 1000
-    assert route_map[WorkflowStepId.POLISH].step_config["kwargs"] == {"reasoning_effort": "high"}
+    assert route_map[WorkflowStepId.POLISH].step_config["kwargs"] == _openai_translation_kwargs("high")
     assert route_map[WorkflowStepId.IMAGE_REEMBEDDING].model == "gpt-image-2"
     assert route_map[WorkflowStepId.IMAGE_REEMBEDDING].step_config == {"backend": "openai"}
+
+
+def test_recommended_workflow_profile_preserves_gemini_json_mode() -> None:
+    detail = recommended_workflow_profile_from_drafts(
+        [ConnectionDraft(display_name="Gemini", provider=ProviderKind.GEMINI, api_key="gkey")],
+        name="Wizard Profile",
+        target_language="English",
+        recommendation_mode=SetupWizardMode.QUALITY,
+    )
+
+    route_map = {route.step_id: route for route in detail.routes}
+    expected_response_format = json_object_response_format()
+    assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"]["response_format"] == expected_response_format
+    assert route_map[WorkflowStepId.POLISH].step_config["kwargs"]["response_format"] == expected_response_format
 
 
 def test_recommended_workflow_profile_uses_deepseek_v4_mode_rules() -> None:
@@ -352,10 +381,10 @@ def test_recommended_workflow_profile_uses_deepseek_v4_mode_rules() -> None:
         assert route_map[WorkflowStepId.TRANSLATOR].step_config == {
             "max_tokens_per_llm_call": 3500,
             "chunk_size": 1000,
-            "kwargs": _DEEPSEEK_THINKING_KWARGS,
+            "kwargs": _DEEPSEEK_TRANSLATION_KWARGS,
         }
         assert route_map[WorkflowStepId.POLISH].model == expected_primary_model
-        assert route_map[WorkflowStepId.POLISH].step_config == {"kwargs": _DEEPSEEK_THINKING_KWARGS}
+        assert route_map[WorkflowStepId.POLISH].step_config == {"kwargs": _DEEPSEEK_TRANSLATION_KWARGS}
         assert route_map[WorkflowStepId.REVIEWER].model == "deepseek-v4-pro"
         for route in route_map.values():
             assert route.step_config.get("kwargs", {}).get("reasoning_effort") is None
@@ -371,11 +400,11 @@ def test_recommended_workflow_profile_uses_budget_translator_rules() -> None:
 
     route_map = {route.step_id: route for route in detail.routes}
     assert route_map[WorkflowStepId.TRANSLATOR].model == "gpt-5.6-luna"
-    assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"] == {"reasoning_effort": "low"}
+    assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"] == _openai_translation_kwargs("low")
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["max_tokens_per_llm_call"] == 4000
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["chunk_size"] == 1000
     assert route_map[WorkflowStepId.POLISH].model == "gpt-5.6-luna"
-    assert route_map[WorkflowStepId.POLISH].step_config["kwargs"] == {"reasoning_effort": "low"}
+    assert route_map[WorkflowStepId.POLISH].step_config["kwargs"] == _openai_translation_kwargs("low")
 
 
 def test_recommended_workflow_profile_uses_balanced_mode_rules() -> None:
@@ -388,11 +417,11 @@ def test_recommended_workflow_profile_uses_balanced_mode_rules() -> None:
 
     route_map = {route.step_id: route for route in detail.routes}
     assert route_map[WorkflowStepId.TRANSLATOR].model == "gpt-5.6-luna"
-    assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"] == {"reasoning_effort": "none"}
+    assert route_map[WorkflowStepId.TRANSLATOR].step_config["kwargs"] == _openai_translation_kwargs("none")
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["max_tokens_per_llm_call"] == 4000
     assert route_map[WorkflowStepId.TRANSLATOR].step_config["chunk_size"] == 1000
     assert route_map[WorkflowStepId.POLISH].model == "gpt-5.6-luna"
-    assert route_map[WorkflowStepId.POLISH].step_config["kwargs"] == {"reasoning_effort": "medium"}
+    assert route_map[WorkflowStepId.POLISH].step_config["kwargs"] == _openai_translation_kwargs("medium")
 
 
 def test_terms_queue_and_errors_expose_ui_safe_contracts() -> None:
